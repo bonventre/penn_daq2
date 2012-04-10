@@ -7,13 +7,13 @@ CC = g++
 CFLAGS = $(patsubst %,-I%,$(CDIRS))
 LIBS = -levent 
 
-_CDIRS = core net
+_CDIRS = .
 CDIRS = $(patsubst %,$(CDIR)/%,$(_CDIRS))
 
 vpath %.h $(CDIRS)
 vpath %.cpp $(CDIRS)
 
-_OBJ = Main.o NetUtils.o
+_OBJ = Main.o NetUtils.o XL3.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 _DEPS = $(_OBJ:.o=.h)
