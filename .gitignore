@@ -1,0 +1,9 @@
+bin/*
+build/*
+logs/*
+*.swp
+*.log
+ssh_key*
+data/config.cfg
+trig_scan*.txt
+*.png
