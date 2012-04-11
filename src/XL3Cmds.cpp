@@ -1,20 +1,34 @@
 #include <cstdio>
 
-#include "Main.h"
+#include "Globals.h"
+
 #include "NetUtils.h"
 #include "XL3Link.h"
+#include "XL3Model.h"
 #include "XL3Cmds.h"
-
-extern XL3Link *xl3[MAX_XL3_CON];
 
 void *doXL3RW(void *arg)
 {
   char *buffer = (char *) arg;
-  //printf("buffer is %s\n",buffer);
-  pthread_mutex_lock(&startTestLock);
-  printf("waiting for data\n");
-  int curCount = xl3[3]->fRecvCount;
-  while (xl3[3]->fRecvCount < curCount+3){}
-  pthread_mutex_unlock(&startTestLock);
+
+  int crate = 2;
+  uint32_t address = 0x02000007;
+  uint32_t data = 0x0;
+
+  int sbc = 0;
+  uint32_t xl3Mask = 0x1<<crate;
+  int busy = LockConnections(sbc,xl3Mask);
+  if (busy){
+    printf("Those connections are currently in use.\n");
+    return NULL;
+  }
+
+  int errors = xl3s[crate]->RW(address,data);
+  if (errors)
+    printf("There was a bus error.\n");
+  else
+    printf("Wrote to %08x\n",address);
+  
+  UnlockConnections(sbc,xl3Mask);
   printf("exiting\n");
 }

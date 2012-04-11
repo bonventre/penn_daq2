@@ -15,10 +15,10 @@
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
 
+#include "Globals.h"
+
 #include "NetUtils.h"
 #include "Main.h"
-
-pthread_mutex_t startTestLock;
 
 static void cont_accept_cb(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen, void *ctx)
 {
@@ -35,12 +35,6 @@ int main(int argc, char *argv[])
 
   pthread_mutex_init(&startTestLock,NULL);
 
-  struct sockaddr_in sin;
-  memset(&sin,0,sizeof(sin));
-  sin.sin_family = AF_INET;
-  sin.sin_addr.s_addr = INADDR_ANY;
-  sin.sin_port = htons(44599);
-  contListener = evconnlistener_new_bind(evBase,cont_accept_cb,NULL,LEV_OPT_CLOSE_ON_FREE|LEV_OPT_REUSEABLE,-1,(struct sockaddr*)&sin,sizeof(sin));; 
   //pthread_t mythread;
   //int ret = pthread_create(&mythread,NULL,threadfunc,NULL);
   event_base_dispatch(evBase);

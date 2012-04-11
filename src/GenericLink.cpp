@@ -1,11 +1,16 @@
 #include <cstring>
 
+#include "Globals.h"
+
 #include "NetUtils.h"
 #include "GenericLink.h"
 
 
 GenericLink::GenericLink(int port)
 {
+  fConnected = 0;
+  fLock = 0;
+
   // set up listener
   struct sockaddr_in sin;
   memset(&sin,0,sizeof(sin));
@@ -25,6 +30,7 @@ GenericLink::~GenericLink()
 
 void GenericLink::AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen)
 {
+  fConnected = 1;
   fFD = fd;
   fBev = bufferevent_socket_new(evBase,fFD,BEV_OPT_CLOSE_ON_FREE);
   bufferevent_setcb(fBev,&GenericLink::RecvCallbackHandler,&GenericLink::SentCallbackHandler,&GenericLink::EventCallbackHandler,this);

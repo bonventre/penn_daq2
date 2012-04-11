@@ -8,6 +8,9 @@ class GenericLink{
     GenericLink(int port);
     virtual ~GenericLink();
 
+    int fLock;
+    int fConnected;
+
     virtual void AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen);
     static void AcceptCallbackHandler(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen, void *ctx){
       (static_cast<GenericLink*>(ctx))->AcceptCallback(listener,fd,address,socklen);
@@ -32,6 +35,7 @@ class GenericLink{
     struct evconnlistener *fListener;
     int fFD;
     struct bufferevent *fBev;
+
 };
 
 #endif

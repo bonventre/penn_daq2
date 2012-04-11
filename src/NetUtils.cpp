@@ -3,14 +3,11 @@
 #include <csignal>
 #include <cstring>
 
+#include "Globals.h"
+
 #include "XL3Link.h"
 #include "ControllerLink.h"
 #include "NetUtils.h"
-
-struct event_base *evBase;
-struct evconnlistener *contListener, *viewListener, *xl3Listener[MAX_XL3_CON];
-XL3Link *xl3[MAX_XL3_CON];
-ControllerLink *controller;
 
 int setupListeners()
 {
@@ -32,9 +29,11 @@ int setupListeners()
   }
   printf("done\n");
 
-  controller = new ControllerLink();
-  for (int i=0;i<MAX_XL3_CON;i++)
-    xl3[i] = new XL3Link(i);
+  contConnection = new ControllerLink();
+  for (int i=0;i<MAX_XL3_CON;i++){
+    xl3s[i] = new XL3Model();
+    xl3Connections[i] = new XL3Link(i);
+  }
 
   return 0;
 }
@@ -42,8 +41,10 @@ int setupListeners()
 void signalCallback(evutil_socket_t sig, short events, void *user_data)
 {
   printf("\nCaught an interrupt signal, exiting.\n");
-  for (int i=0;i<MAX_XL3_CON;i++)
-    delete xl3[i];
-  delete controller;
+  for (int i=0;i<MAX_XL3_CON;i++){
+    delete xl3s[i];
+    delete xl3Connections[i];
+  }
+  delete contConnection;
   exit(1);
 }
