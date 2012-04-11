@@ -18,6 +18,8 @@
 #include "NetUtils.h"
 #include "Main.h"
 
+pthread_mutex_t startTestLock;
+
 static void cont_accept_cb(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen, void *ctx)
 {
   bufferevent *bev = bufferevent_socket_new(evBase,fd,BEV_OPT_CLOSE_ON_FREE);
@@ -30,6 +32,8 @@ static void cont_accept_cb(struct evconnlistener *listener, evutil_socket_t fd, 
 int main(int argc, char *argv[])
 {
   setupListeners();
+
+  pthread_mutex_init(&startTestLock,NULL);
 
   struct sockaddr_in sin;
   memset(&sin,0,sizeof(sin));

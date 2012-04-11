@@ -1,13 +1,13 @@
-#ifndef _XL3_H
-#define _XL3_H
+#ifndef _XL3_LINK_H
+#define _XL3_LINK_H
 
 #include "NetUtils.h"
-#include "GenericCallback.h"
+#include "GenericLink.h"
 
-class XL3 : public GenericCallback {
+class XL3Link : public GenericLink {
   public:
-    XL3(int crateNum);
-    ~XL3();
+    XL3Link(int crateNum);
+    ~XL3Link();
 
     int fRecvCount;
 
