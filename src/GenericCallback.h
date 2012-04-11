@@ -28,7 +28,7 @@ class GenericCallback{
       (static_cast<GenericCallback*>(arg))->EventCallback(bev,what);
     };
 
-  private:
+  protected:
     struct evconnlistener *fListener;
     int fFD;
     struct bufferevent *fBev;

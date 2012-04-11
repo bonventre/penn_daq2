@@ -2,6 +2,8 @@
 #include <cstdio>
 #include <csignal>
 #include <cstring>
+#include <pthread.h>
+#include <unistd.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -34,9 +36,9 @@ int main(int argc, char *argv[])
   sin.sin_family = AF_INET;
   sin.sin_addr.s_addr = INADDR_ANY;
   sin.sin_port = htons(44599);
-  printf("listener\n");
   contListener = evconnlistener_new_bind(evBase,cont_accept_cb,NULL,LEV_OPT_CLOSE_ON_FREE|LEV_OPT_REUSEABLE,-1,(struct sockaddr*)&sin,sizeof(sin));; 
-  printf("dispatching\n");
+  //pthread_t mythread;
+  //int ret = pthread_create(&mythread,NULL,threadfunc,NULL);
   event_base_dispatch(evBase);
   printf("done dispatching\n");
 

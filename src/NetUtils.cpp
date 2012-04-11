@@ -4,11 +4,13 @@
 #include <cstring>
 
 #include "XL3.h"
+#include "Controller.h"
 #include "NetUtils.h"
 
 struct event_base *evBase;
 struct evconnlistener *contListener, *viewListener, *xl3Listener[MAX_XL3_CON];
 XL3 *xl3[MAX_XL3_CON];
+Controller *controller;
 
 int setupListeners()
 {
@@ -30,6 +32,7 @@ int setupListeners()
   }
   printf("done\n");
 
+  controller = new Controller();
   for (int i=0;i<MAX_XL3_CON;i++)
     xl3[i] = new XL3(i);
 
@@ -41,5 +44,6 @@ void signalCallback(evutil_socket_t sig, short events, void *user_data)
   printf("\nCaught an interrupt signal, exiting.\n");
   for (int i=0;i<MAX_XL3_CON;i++)
     delete xl3[i];
+  delete controller;
   exit(1);
 }
