@@ -18,9 +18,6 @@ class XL3Link : public GenericLink {
 
   private:
     int fCrateNum;
-    struct evconnlistener *fListener;
-    int fFD;
-    struct bufferevent *fBev;
 
 };
 
