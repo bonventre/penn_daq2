@@ -7,6 +7,7 @@
 XL3::XL3(int crateNum) : GenericCallback(XL3_PORT + crateNum)
 {
   fCrateNum = crateNum; 
+  fRecvCount = 0;
 }
 
 XL3::~XL3()
@@ -16,6 +17,7 @@ XL3::~XL3()
 void XL3::RecvCallback(struct bufferevent *bev)
 {
   printf("recv callback\n");
+  fRecvCount++;
 }
 
 
