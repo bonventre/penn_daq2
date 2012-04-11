@@ -1,13 +1,13 @@
-#ifndef _CONTROLLER_H
-#define _CONTROLLER_H
+#ifndef _CONTROLLER_LINK_H
+#define _CONTROLLER__LINKH
 
 #include "NetUtils.h"
-#include "GenericCallback.h"
+#include "GenericLink.h"
 
-class Controller : public GenericCallback {
+class ControllerLink : public GenericLink {
   public:
-    Controller();
-    ~Controller();
+    ControllerLink();
+    ~ControllerLink();
 
     void AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen);
     void RecvCallback(struct bufferevent *bev);

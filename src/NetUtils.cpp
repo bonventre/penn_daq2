@@ -3,14 +3,14 @@
 #include <csignal>
 #include <cstring>
 
-#include "XL3.h"
-#include "Controller.h"
+#include "XL3Link.h"
+#include "ControllerLink.h"
 #include "NetUtils.h"
 
 struct event_base *evBase;
 struct evconnlistener *contListener, *viewListener, *xl3Listener[MAX_XL3_CON];
-XL3 *xl3[MAX_XL3_CON];
-Controller *controller;
+XL3Link *xl3[MAX_XL3_CON];
+ControllerLink *controller;
 
 int setupListeners()
 {
@@ -32,9 +32,9 @@ int setupListeners()
   }
   printf("done\n");
 
-  controller = new Controller();
+  controller = new ControllerLink();
   for (int i=0;i<MAX_XL3_CON;i++)
-    xl3[i] = new XL3(i);
+    xl3[i] = new XL3Link(i);
 
   return 0;
 }
