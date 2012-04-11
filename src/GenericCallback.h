@@ -5,10 +5,10 @@
 
 class GenericCallback{
   public:
-    GenericCallback(){};
-    virtual ~GenericCallback(){};
+    GenericCallback(int port);
+    virtual ~GenericCallback();
 
-    virtual void AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen){};
+    virtual void AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen);
     static void AcceptCallbackHandler(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen, void *ctx){
       (static_cast<GenericCallback*>(ctx))->AcceptCallback(listener,fd,address,socklen);
     };
@@ -28,8 +28,10 @@ class GenericCallback{
       (static_cast<GenericCallback*>(arg))->EventCallback(bev,what);
     };
 
-
-
+  private:
+    struct evconnlistener *fListener;
+    int fFD;
+    struct bufferevent *fBev;
 };
 
 #endif

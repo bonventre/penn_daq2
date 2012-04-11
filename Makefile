@@ -13,10 +13,10 @@ CDIRS = $(patsubst %,$(CDIR)/%,$(_CDIRS))
 vpath %.h $(CDIRS)
 vpath %.cpp $(CDIRS)
 
-_OBJ = Main.o NetUtils.o XL3.o
+_OBJ = Main.o NetUtils.o XL3.o GenericCallback.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-_DEPS = $(_OBJ:.o=.h) GenericCallback.h
+_DEPS = $(_OBJ:.o=.h)
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 #$(ODIR)/%.o: %.c $(DEPS)
