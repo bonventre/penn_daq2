@@ -1,5 +1,5 @@
 #ifndef _CONTROLLER_LINK_H
-#define _CONTROLLER__LINKH
+#define _CONTROLLER_LINK_H
 
 #include "NetUtils.h"
 #include "GenericLink.h"

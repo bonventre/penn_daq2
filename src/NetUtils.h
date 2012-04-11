@@ -24,9 +24,6 @@
 #define SBC_IP          30
 
 
-extern struct event_base *evBase;
-extern struct evconnlistener *contListener, *viewListener, *xl3Listener[MAX_XL3_CON];
-
 int setupListeners();
 
 void signalCallback(evutil_socket_t sig, short events, void *user_data);
