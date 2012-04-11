@@ -16,7 +16,7 @@ vpath %.cpp $(CDIRS)
 _OBJ = Main.o NetUtils.o XL3Link.o GenericLink.o ControllerLink.o XL3Cmds.o Globals.o XL3Model.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
-_DEPS = $(_OBJ:.o=.h) XL3PacketTypes.h DBTypes.h
+_DEPS = $(_OBJ:.o=.h) DBTypes.h XL3PacketTypes.h 
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 #$(ODIR)/%.o: %.c $(DEPS)

@@ -7,7 +7,7 @@ class XL3Model{
 
   public:
     int RW(uint32_t address, uint32_t data);
-    int SendCmd();
+    int SendCommand();
 };
 
 #endif
