@@ -5,7 +5,7 @@
 
 #include "Globals.h"
 
-#include "XL3Link.h"
+#include "XL3Model.h"
 #include "ControllerLink.h"
 #include "NetUtils.h"
 
@@ -31,8 +31,7 @@ int setupListeners()
 
   contConnection = new ControllerLink();
   for (int i=0;i<MAX_XL3_CON;i++){
-    xl3s[i] = new XL3Model();
-    xl3Connections[i] = new XL3Link(i);
+    xl3s[i] = new XL3Model(i);
   }
 
   return 0;
@@ -43,7 +42,6 @@ void signalCallback(evutil_socket_t sig, short events, void *user_data)
   printf("\nCaught an interrupt signal, exiting.\n");
   for (int i=0;i<MAX_XL3_CON;i++){
     delete xl3s[i];
-    delete xl3Connections[i];
   }
   delete contConnection;
   exit(1);

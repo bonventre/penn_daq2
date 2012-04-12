@@ -66,5 +66,8 @@ void ControllerLink::ProcessCommand(char *input)
   }else if(strncmp(input,"xl3_rw",6) == 0){
     pthread_t mythread;
     int ret = pthread_create(&mythread,NULL,doXL3RW,input);
+  }else if(strncmp(input,"fec_test",8) == 0){
+    pthread_t mythread;
+    int ret = pthread_create(&mythread,NULL,fecTest,input);
   }
 }
