@@ -16,6 +16,7 @@
 #include <event2/buffer.h>
 
 #include "Globals.h"
+#include "Pouch.h"
 
 #include "NetUtils.h"
 #include "Main.h"
@@ -32,14 +33,39 @@ static void cont_accept_cb(struct evconnlistener *listener, evutil_socket_t fd, 
 int main(int argc, char *argv[])
 {
   readConfigurationFile();
-  setupListeners();
+
+  pouch_request *pr = pr_init();
+  pr = db_get(pr, DB_SERVER, DB_BASE_NAME);
+  pr_do(pr);
+  if(pr->httpresponse != 200){
+    printf("Unable to connect to database. error code %d\n",(int)pr->httpresponse);
+    printf("CURL error code: %d\n", pr->curlcode);
+    exit(0);
+  }
+  else{
+    printf("Connected to database: http response code %d\n",(int)pr->httpresponse);
+  }
+  pr_free(pr);
+  printf("current location is %d\n",CURRENT_LOCATION);
+
+  int err = setupListeners();
+  if (err){
+    printf("There was a problem opening the ports. Is another instance of penn_daq running?\n");
+    exit(0);
+  }
+
+  printf("\nNAME\t\tPORT#\n");
+  printf("XL3s\t\t%d-%d\n", XL3_PORT, XL3_PORT+MAX_XL3_CON-1);
+  printf("SBC/MTC\t\t%d\n", SBC_PORT);
+  printf("CONTROLLER\t%d\n", CONT_PORT);
+  printf("VIEWERs\t\t%d\n\n", VIEW_PORT);
+  printf("waiting for connections...\n");
+
+
 
   pthread_mutex_init(&startTestLock,NULL);
 
-  //pthread_t mythread;
-  //int ret = pthread_create(&mythread,NULL,threadfunc,NULL);
   event_base_dispatch(evBase);
-  printf("done dispatching\n");
 
   return 0;
 }

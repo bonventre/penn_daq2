@@ -29,9 +29,14 @@ int setupListeners()
   }
   printf("done\n");
 
-  contConnection = new ControllerLink();
-  for (int i=0;i<MAX_XL3_CON;i++){
-    xl3s[i] = new XL3Model(i);
+  try{
+    contConnection = new ControllerLink();
+    for (int i=0;i<MAX_XL3_CON;i++){
+      xl3s[i] = new XL3Model(i);
+    }
+  }
+  catch(int e){
+    return -1;
   }
 
   return 0;
