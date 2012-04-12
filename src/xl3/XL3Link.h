@@ -4,7 +4,7 @@
 #include <queue>
 #include <pthread.h>
 
-#include "XL3PacketTypes.h"
+#include "PacketTypes.h"
 
 #include "NetUtils.h"
 #include "GenericLink.h"
