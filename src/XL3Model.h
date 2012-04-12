@@ -12,7 +12,7 @@ class XL3Model{
     ~XL3Model();
 
     int RW(uint32_t address, uint32_t data, uint32_t *result);
-    int SendCommand(XL3Packet *packet);
+    int SendCommand(XL3Packet *packet, int withResponse = 1);
 
     int CheckLock();
     void Lock(){fLink->SetLock(1);};
