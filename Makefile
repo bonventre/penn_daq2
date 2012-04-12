@@ -7,7 +7,7 @@ CC = g++
 CFLAGS = $(patsubst %,-I%,$(CDIRS))
 LIBS = -levent -lcurl 
 
-_CDIRS = . db
+_CDIRS = db core cont net xl3
 CDIRS = $(patsubst %,$(CDIR)/%,$(_CDIRS))
 
 vpath %.h $(CDIRS)
