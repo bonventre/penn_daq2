@@ -14,7 +14,7 @@ class ControllerLink : public GenericLink {
     void SentCallback(struct bufferevent *bev){};
     void EventCallback(struct bufferevent *bev, short what);
 
-    void ProcessCommand(char *input);
+    static void *ProcessCommand(void *arg);
 
   private:
     static int fNumControllers;

@@ -57,6 +57,7 @@ pouch_request *pr_init(void){
        object.
      */
     pouch_request *pr = new pouch_request;
+    memset(pr,0,sizeof(pouch_request));
 
     // initializes the request buffer
     pr->req.offset = pr->req.data = NULL;

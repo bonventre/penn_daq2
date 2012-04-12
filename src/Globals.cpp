@@ -209,4 +209,58 @@ int readConfigurationFile()
   return 0; 
 }
 
+int GetInt(const char *input, char flag, int dflt)
+{
+  char buffer[10000];
+  memcpy(buffer,input,strlen(input));
+  char *words,*words2;
+  words = strtok(buffer, " ");
+  while (words != NULL){
+    if (words[0] == '-'){
+      if (words[1] == flag){
+        if ((words2 = strtok(NULL, " ")) != NULL)
+          return atoi(words2);
+      }
+    }
+    words = strtok(NULL, " ");
+  }
 
+  return dflt; 
+}
+
+uint32_t GetUInt(const char *input, char flag, uint32_t dflt)
+{
+  char buffer[10000];
+  memcpy(buffer,input,strlen(input));
+  char *words,*words2;
+  words = strtok(buffer, " ");
+  while (words != NULL){
+    if (words[0] == '-'){
+      if (words[1] == flag){
+        if ((words2 = strtok(NULL, " ")) != NULL)
+          return strtoul(words2,(char**)NULL,16);
+      }
+    }
+    words = strtok(NULL, " ");
+  }
+
+  return dflt; 
+}
+
+int GetFlag(const char *input, char flag)
+{
+  char buffer[10000];
+  memcpy(buffer,input,strlen(input));
+  char *words,*words2;
+  words = strtok(buffer, " ");
+  while (words != NULL){
+    if (words[0] == '-'){
+      if (words[1] == flag){
+        return 1;
+      }
+    }
+    words = strtok(NULL, " ");
+  }
+
+  return 0;
+}

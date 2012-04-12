@@ -9,163 +9,38 @@
 #include "XL3Model.h"
 #include "XL3Cmds.h"
 
-void *DoXL3RW(void *arg)
+int XL3RW(int crateNum, uint32_t address, uint32_t data)
 {
-  int crate = 2;
-  uint32_t address = 0x02000007;
-  uint32_t data = 0x0;
-
-  char *buffer = (char *) arg;
-
-  char *words,*words2;
-  words = strtok(buffer, " ");
-  while (words != NULL){
-    if (words[0] == '-'){
-      if (words[1] == 'c'){
-        if ((words2 = strtok(NULL, " ")) != NULL)
-          crate = atoi(words2);
-      }else if (words[1] == 'a'){
-        if ((words2 = strtok(NULL, " ")) != NULL)
-          address = strtoul(words2,(char**)NULL,16);
-      }else if (words[1] == 'd'){
-        if ((words2 = strtok(NULL, " ")) != NULL)
-          data = strtoul(words2,(char**)NULL,16);
-      }else if (words[1] == 'h'){
-        printf("Usage: xl3_rw -c [crate_num (int)] "
-            "-a [address (hex)] -d [data (hex)]\n");
-        printf("Please check xl3/xl3_registers.h for the address mapping\n");
-        //free(args);
-        return 0;
-      }
-    }
-    words = strtok(NULL, " ");
-  }
-
-
-
-  int sbc = 0;
-  uint32_t xl3Mask = 0x1<<crate;
-  int busy = LockConnections(sbc,xl3Mask);
-  if (busy){
-    printf("Those connections are currently in use.\n");
-    return NULL;
-  }
-
+  printf("*** Starting XL3 RW ********************\n");
   uint32_t result;
-  int errors = xl3s[crate]->RW(address,data,&result);
+  int errors = xl3s[crateNum]->RW(address,data,&result);
   if (errors)
     printf("There was a bus error.\n");
   else
     printf("Wrote to %08x, got %08x\n",address,result);
 
-  UnlockConnections(sbc,xl3Mask);
-  printf("exiting\n");
+  printf("****************************************\n");
+  return 0;
 }
 
-void *FECTest(void *arg)
+int FECTest(int crateNum, uint32_t slotMask)
 {
-  int crate = 2;
-  uint32_t slotMask = 0x2000;
-
-  char *buffer = (char *) arg;
-
-  char *words,*words2;
-  words = strtok(buffer, " ");
-  while (words != NULL){
-    if (words[0] == '-'){
-      if (words[1] == 'c'){
-        if ((words2 = strtok(NULL, " ")) != NULL)
-          crate = atoi(words2);
-      }else if (words[1] == 's'){
-        if ((words2 = strtok(NULL, " ")) != NULL)
-          slotMask = strtoul(words2,(char**)NULL,16);
-      }else if (words[1] == 'h'){
-        printf("Usage: xl3_rw -c [crate_num (int)] "
-            "-a [address (hex)] -d [data (hex)]\n");
-        printf("Please check xl3/xl3_registers.h for the address mapping\n");
-        //free(args);
-        return 0;
-      }
-    }
-    words = strtok(NULL, " ");
-  }
-
-
-
-  int sbc = 0;
-  uint32_t xl3Mask = 0x1<<crate;
-  int busy = LockConnections(sbc,xl3Mask);
-  if (busy){
-    printf("Those connections are currently in use.\n");
-    return NULL;
-  }
-
+  printf("*** Starting FEC Test ******************\n");
+  printf("****************************************\n");
   XL3Packet packet;
   packet.header.packetType = FEC_TEST_ID;
   *(uint32_t *) packet.payload = slotMask;
   SwapLongBlock(packet.payload,1);
-  xl3s[crate]->SendCommand(&packet);
+  xl3s[crateNum]->SendCommand(&packet);
 
-  UnlockConnections(sbc,xl3Mask);
-  printf("exiting\n");
-
+  printf("****************************************\n");
+  return 0;
 }
 
-void* CrateInit(void *arg)
+int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int shiftRegOnly,
+    int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useHw)
 {
-  char *buffer = (char *) arg;
-
-  int crateNum = 2;
-  int xilinxLoad = 0;
-  int hvReset = 0;
-  int shiftRegOnly = 0;
-  uint32_t slotMask = 0x80;
-  int useVBal = 0;
-  int useVThr = 0;
-  int useTDisc = 0;
-  int useTCmos = 0;
-  int useAll = 0;
-  int useHw = 0;
-
-  char *words,*words2;
-  words = strtok(buffer," ");
-  while (words != NULL){
-    if (words[0] == '-'){
-      if (words[1] == 'c'){
-        if ((words2 = strtok(NULL," ")) != NULL)
-          crateNum = atoi(words2);
-      }else if (words[1] == 's'){
-        if ((words2 = strtok(NULL," ")) != NULL)
-          slotMask = strtoul(words2,(char**)NULL,16);
-      }else if (words[1] == 'x'){xilinxLoad = 1;
-      }else if (words[1] == 'X'){xilinxLoad = 2;
-      }else if (words[1] == 'v'){hvReset = 1;
-      }else if (words[1] == 'B'){useVBal = 1;
-      }else if (words[1] == 'T'){useVThr = 1;
-      }else if (words[1] == 'D'){useTDisc = 1;
-      }else if (words[1] == 'C'){useTCmos = 1;
-      }else if (words[1] == 'A'){useAll = 1;
-      }else if (words[1] == 'H'){useHw = 1;
-      }else if (words[1] == 'h'){
-        printf("Usage: crate_init -c [crate num (int)]"
-            "-s [slot mask (hex)] -x (load xilinx) -X (load cald xilinx)"
-            "-v (reset HV dac) -B (load vbal from db) -T (load vthr from db)"
-            "-D (load tdisc from db) -C (load tcmos values from db) -A (load all from db)"
-            "-H (use crate/card specific values from db)\n");
-        return 0;
-      }
-    }
-    words = strtok(NULL, " ");
-  }
-
-  int sbc = 0;
-  uint32_t xl3Mask = 0x1<<crateNum;
-  int busy = LockConnections(sbc,xl3Mask);
-  if (busy){
-    printf("Those connections are currently in use.\n");
-    return NULL;
-  }
-
+  printf("*** Starting Crate Init ****************\n");
   char get_db_address[500];
   char ctc_address[500];
   XL3Packet packet;
@@ -187,15 +62,13 @@ void* CrateInit(void *arg)
     pr_do(hw_response);
     if (hw_response->httpresponse != 200){
       printf("Unable to connect to database. error code %d\n",(int)hw_response->httpresponse);
-      UnlockConnections(sbc,xl3Mask);
-      return NULL;
+      return -1;
     }
     JsonNode *hw_doc = json_decode(hw_response->resp.data);
     JsonNode* totalrows = json_find_member(hw_doc,"total_rows");
     if ((int)json_get_number(totalrows) != 16){
       printf("Database error: not enough FEC entries\n");
-      UnlockConnections(sbc,xl3Mask);
-      return NULL;
+      return -1;
     }
     hw_rows = json_find_member(hw_doc,"rows");
     //json_delete(hw_doc); // only delete the head node
@@ -207,8 +80,7 @@ void* CrateInit(void *arg)
     pr_do(debug_response);
     if (debug_response->httpresponse != 200){
       printf("Unable to connect to database. error code %d\n",(int)debug_response->httpresponse);
-      UnlockConnections(sbc,xl3Mask);
-      return NULL;
+      return -1;
     }
     debug_doc = json_decode(debug_response->resp.data);
     pr_free(debug_response);
@@ -438,8 +310,7 @@ void* CrateInit(void *arg)
   pr_do(ctc_response);
   if (ctc_response->httpresponse != 200){
     printf("Error getting ctc document, error code %d\n",(int)ctc_response->httpresponse);
-    UnlockConnections(sbc,xl3Mask);
-    return NULL;
+    return -1;
   }
   JsonNode *ctc_doc = json_decode(ctc_response->resp.data);
   JsonNode *ctc_delay_a = json_find_member(ctc_doc,"delay");
@@ -475,10 +346,9 @@ void* CrateInit(void *arg)
 
 
   printf("Crate configuration updated.\n");
-  printf("*******************************\n");
   json_delete(hw_rows);
   json_delete(debug_doc);
+  printf("****************************************\n");
 
-
-  UnlockConnections(sbc,xl3Mask);
+  return 0;
 }
