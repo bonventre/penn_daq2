@@ -3,7 +3,7 @@
 #include <errno.h>
 
 #include "Globals.h"
-#include "XL3PacketTypes.h"
+#include "PacketTypes.h"
 
 #include "NetUtils.h"
 #include "XL3Link.h"
