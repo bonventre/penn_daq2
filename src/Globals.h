@@ -22,6 +22,9 @@ void SwapLongBlock(void* p, int32_t n);
 void SwapShortBlock(void* p, int32_t n);
 
 int readConfigurationFile();
+uint32_t GetUInt(const char *input, char flag, uint32_t dflt);
+int GetInt(const char *input, char flag, int dflt);
+int GetFlag(const char *input, char flag);
 
 
 // configuration crap
