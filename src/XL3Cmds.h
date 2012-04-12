@@ -1,2 +1,3 @@
-void *doXL3RW(void *arg);
-void *fecTest(void *arg);
+void *DoXL3RW(void *arg);
+void *FECTest(void *arg);
+void *CrateInit(void *arg);

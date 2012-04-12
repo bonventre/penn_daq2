@@ -41,13 +41,15 @@ int XL3Model::CheckLock()
     return 1;
 }
 
-int XL3Model::SendCommand(XL3Packet *packet)
+int XL3Model::SendCommand(XL3Packet *packet,int withResponse)
 {
   uint16_t type = packet->header.packetType;
   fLink->SendPacket(packet);
-  fLink->GetNextPacket(packet);
-  if (packet->header.packetType != type){
-    printf("wrong type: expected %02x, got %02x\n",type,packet->header.packetType);
+  if (withResponse){
+    fLink->GetNextPacket(packet);
+    if (packet->header.packetType != type){
+      printf("wrong type: expected %02x, got %02x\n",type,packet->header.packetType);
+    }
   }
   return 0;
 }
