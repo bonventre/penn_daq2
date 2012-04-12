@@ -16,11 +16,6 @@
 #define MAX_VIEW_CON    3
 #define MAX_SBC_CON     1
 
-#define CONT_PORT       44600
-#define VIEW_PORT       44599
-#define XL3_PORT        44601
-#define SBC_PORT        44630
-
 #define SBC_IP          30
 
 

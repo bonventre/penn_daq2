@@ -5,15 +5,15 @@ BDIR = bin
 CC = g++
 #CFLAGS = -I$(IDIR)
 CFLAGS = $(patsubst %,-I%,$(CDIRS))
-LIBS = -levent 
+LIBS = -levent -lcurl 
 
-_CDIRS = .
+_CDIRS = . db
 CDIRS = $(patsubst %,$(CDIR)/%,$(_CDIRS))
 
 vpath %.h $(CDIRS)
 vpath %.cpp $(CDIRS)
 
-_OBJ = Main.o NetUtils.o XL3Link.o GenericLink.o ControllerLink.o XL3Cmds.o Globals.o XL3Model.o
+_OBJ = Main.o NetUtils.o XL3Link.o GenericLink.o ControllerLink.o XL3Cmds.o Globals.o XL3Model.o DB.o Json.o Pouch.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 _DEPS = $(_OBJ:.o=.h) DBTypes.h XL3PacketTypes.h 

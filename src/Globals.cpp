@@ -1,10 +1,41 @@
 #include "Globals.h"
 
-#define NEED_TO_SWAP 1
-
 XL3Model *xl3s[MAX_XL3_CON];
 ControllerLink *contConnection;
 pthread_mutex_t startTestLock;
+
+int NEED_TO_SWAP;
+char MTC_XILINX_LOCATION[100];
+char DEFAULT_SSHKEY[100];
+char DB_ADDRESS[100];
+char DB_PORT[100];
+char DB_USERNAME[100];
+char DB_PASSWORD[100];
+char DB_BASE_NAME[100];
+char DB_VIEWDOC[100];
+char FECDB_ADDRESS[100];
+char FECDB_PORT[100];
+char FECDB_USERNAME[100];
+char FECDB_PASSWORD[100];
+char FECDB_BASE_NAME[100];
+char FECDB_VIEWDOC[100];
+int MAX_PENDING_CONS;
+int XL3_PORT;
+int SBC_PORT;
+char SBC_USER[100];
+char SBC_SERVER[100];
+int CONT_PORT;
+char CONT_CMD_ACK[100];
+char CONT_CMD_BSY[100];
+int VIEW_PORT;
+int BUNDLE_PRINT;
+int CURRENT_LOCATION;
+char ORCA_READOUT_PATH[100];
+
+char DB_SERVER[100];
+char FECDB_SERVER[100];
+
+
 
 struct event_base *evBase;
 
@@ -77,6 +108,105 @@ void SwapShortBlock(void* p, int32_t n)
       sp++;
     }
   }
+}
+
+int readConfigurationFile()
+{
+  FILE *config_file;
+  char filename[1000];
+  sprintf(filename,"%s/%s",PENN_DAQ_ROOT,CONFIG_FILE_LOC);
+  config_file = fopen(filename,"r");
+  if (config_file == NULL){
+    printf("WARNING! Could not open configuration file! Using default.\n");
+    sprintf(filename,"%s/%s",PENN_DAQ_ROOT,DEFAULT_CONFIG_FILE_LOC);
+    config_file = fopen(filename,"r");
+    if (config_file == NULL){
+      printf("Problem opening default configuration document! Looking for %s. Exiting\n",filename);
+      return -1;
+    }
+  }
+  int i,n = 0;
+  char line_in[100][100];
+  memset(DB_USERNAME,0,100);
+  memset(DB_PASSWORD,0,100);
+  memset(DEFAULT_SSHKEY,0,100);
+  while (fscanf(config_file,"%s",line_in[n]) == 1){
+    n++;
+  }
+  for (i=0;i<n;i++){
+    char *var_name,*var_value;
+    var_name = strtok(line_in[i],"=");
+    if (var_name != NULL){
+      var_value = strtok(NULL,"=");
+      if (var_name[0] != '#' && var_value != NULL){
+        if (strcmp(var_name,"NEED_TO_SWAP")==0){
+          NEED_TO_SWAP = atoi(var_value);
+        }else if (strcmp(var_name,"MTC_XILINX_LOCATION")==0){
+          strcpy(MTC_XILINX_LOCATION,var_value);
+        }else if (strcmp(var_name,"DEFAULT_SSHKEY")==0){
+          strcpy(DEFAULT_SSHKEY,var_value);
+        }else if (strcmp(var_name,"DB_ADDRESS")==0){
+          strcpy(DB_ADDRESS,var_value);
+        }else if (strcmp(var_name,"DB_PORT")==0){
+          strcpy(DB_PORT,var_value);
+        }else if (strcmp(var_name,"DB_USERNAME")==0){
+          strcpy(DB_USERNAME,var_value);
+        }else if (strcmp(var_name,"DB_PASSWORD")==0){
+          strcpy(DB_PASSWORD,var_value);
+        }else if (strcmp(var_name,"DB_BASE_NAME")==0){
+          strcpy(DB_BASE_NAME,var_value);
+        }else if (strcmp(var_name,"DB_VIEWDOC")==0){
+          strcpy(DB_VIEWDOC,var_value);
+        }else if (strcmp(var_name,"FECDB_ADDRESS")==0){
+          strcpy(FECDB_ADDRESS,var_value);
+        }else if (strcmp(var_name,"FECDB_PORT")==0){
+          strcpy(FECDB_PORT,var_value);
+        }else if (strcmp(var_name,"FECDB_USERNAME")==0){
+          strcpy(FECDB_USERNAME,var_value);
+        }else if (strcmp(var_name,"FECDB_PASSWORD")==0){
+          strcpy(FECDB_PASSWORD,var_value);
+        }else if (strcmp(var_name,"FECDB_BASE_NAME")==0){
+          strcpy(FECDB_BASE_NAME,var_value);
+        }else if (strcmp(var_name,"FECDB_VIEWDOC")==0){
+          strcpy(FECDB_VIEWDOC,var_value);
+        }else if (strcmp(var_name,"MAX_PENDING_CONS")==0){
+          MAX_PENDING_CONS = atoi(var_value);
+        }else if (strcmp(var_name,"XL3_PORT")==0){
+          XL3_PORT = atoi(var_value);
+        }else if (strcmp(var_name,"SBC_PORT")==0){
+          SBC_PORT = atoi(var_value);
+        }else if (strcmp(var_name,"SBC_USER")==0){
+          strcpy(SBC_USER,var_value);
+        }else if (strcmp(var_name,"SBC_SERVER")==0){
+          strcpy(SBC_SERVER,var_value);
+        }else if (strcmp(var_name,"ORCA_READOUT_PATH")==0){
+          strcpy(ORCA_READOUT_PATH,var_value);
+        }else if (strcmp(var_name,"CONT_PORT")==0){
+          CONT_PORT = atoi(var_value);
+        }else if (strcmp(var_name,"CONT_CMD_ACK")==0){
+          strcpy(CONT_CMD_ACK,var_value);
+        }else if (strcmp(var_name,"CONT_CMD_BSY")==0){
+          strcpy(CONT_CMD_BSY,var_value);
+        }else if (strcmp(var_name,"VIEW_PORT")==0){
+          VIEW_PORT = atoi(var_value);
+        }else if (strcmp(var_name,"BUNDLE_PRINT")==0){
+          BUNDLE_PRINT = atoi(var_value);
+        }else if (strcmp(var_name,"CURRENT_LOCATION")==0){
+	  if (strncmp(var_value,"penn",3) == 0)
+	    CURRENT_LOCATION = PENN_TESTSTAND;
+	  else if (strncmp(var_value,"ag",2) == 0)
+	    CURRENT_LOCATION = ABOVE_GROUND_TESTSTAND;
+	  else
+	    CURRENT_LOCATION = UNDERGROUND;
+        }
+      }
+    }
+  }
+  sprintf(DB_SERVER,"http://%s:%s@%s:%s",DB_USERNAME,DB_PASSWORD,DB_ADDRESS,DB_PORT);
+  sprintf(FECDB_SERVER,"http://%s:%s@%s:%s",FECDB_USERNAME,FECDB_PASSWORD,FECDB_ADDRESS,FECDB_PORT);
+  fclose(config_file);
+  printf("done reading config\n");
+  return 0; 
 }
 
 

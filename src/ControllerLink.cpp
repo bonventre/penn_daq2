@@ -2,6 +2,8 @@
 #include <csignal>
 #include <pthread.h>
 
+#include "Globals.h"
+
 #include "XL3Cmds.h"
 #include "NetUtils.h"
 #include "ControllerLink.h"

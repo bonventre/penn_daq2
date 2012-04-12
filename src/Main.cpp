@@ -31,6 +31,7 @@ static void cont_accept_cb(struct evconnlistener *listener, evutil_socket_t fd, 
 
 int main(int argc, char *argv[])
 {
+  readConfigurationFile();
   setupListeners();
 
   pthread_mutex_init(&startTestLock,NULL);
