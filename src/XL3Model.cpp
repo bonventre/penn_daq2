@@ -24,10 +24,11 @@ int XL3Model::RW(uint32_t address, uint32_t data, uint32_t *result)
   args->command.data = data;
   SwapLongBlock(&args->command.address,1);
   SwapLongBlock(&args->command.data,1);
-  fLink->SendPacket(&packet);
-  fLink->GetNextPacket(&packet);
-  SwapLongBlock(&args->command.data,1);
 
+  fLink->SendPacket(&packet);
+  fLink->GetNextPacket(&packet,1);
+
+  SwapLongBlock(&args->command.data,1);
   *result = args->command.data;
 
   return 0;
