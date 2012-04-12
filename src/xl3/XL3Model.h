@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+#include "PacketTypes.h"
+#include "DBTypes.h"
+
 #include "XL3Link.h"
 
 class XL3Model{
@@ -16,10 +19,14 @@ class XL3Model{
     int ChangeMode(int mode, uint16_t dataAvailMask);
     int UpdateCrateConfig(uint16_t slotMask);
     int DeselectFECs();
+    int GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, int timeout = 2);
 
     int CheckLock();
     void Lock(){fLink->SetLock(1);};
     void UnLock(){fLink->SetLock(0);};
+    uint16_t GetMBID(int slot){return fFECs[slot].mbID;};
+    uint16_t GetDBID(int slot, int card){return fFECs[slot].dbID[card];};
+    int ConfigureCrate(FECConfiguration *fecs);
 
   private:
     int fCrateNum;

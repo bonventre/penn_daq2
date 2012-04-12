@@ -3,6 +3,7 @@
 #include <pthread.h>
 
 #include "Globals.h"
+#include "XL3Registers.h"
 
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -109,6 +110,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-v (reset HV dac) -B (load vbal from db) -T (load vthr from db)"
           "-D (load tdisc from db) -C (load tcmos values from db) -A (load all from db)"
           "-H (use crate/card specific values from db)\n");
+      return NULL;
     }
     int crateNum = GetInt(input,'c',2);
     int xilinxLoadNormal = GetFlag(input,'x');
@@ -136,5 +138,51 @@ void *ControllerLink::ProcessCommand(void *arg)
         useVBal,useVThr,useTDisc,useTCmos,useAll,useHw);
     UnlockConnections(0,0x1<<crateNum);
 
+  }else if(strncmp(input,"xr",2) == 0){
+  if (GetFlag(input,'h')){
+      printf("Usage: xr -c [crate num (int)] -r [register number (int)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int reg = GetInt(input,'c',2);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    uint32_t address = xl3RegAddresses[reg] + READ_REG;
+    XL3RW(crateNum,address,0x0);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if(strncmp(input,"xw",2) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: xw -c [crate num (int)] -r [register number (int)] -d [data (hex)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int reg = GetInt(input,'r',0);
+    uint32_t data = GetUInt(input,'d',0x0);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    uint32_t address = xl3RegAddresses[reg] + WRITE_REG;
+    XL3RW(crateNum,address,data);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if(strncmp(input,"sm_reset",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: sm_reset -c [crate num (int)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    SMReset(crateNum);
+    UnlockConnections(0,0x1<<crateNum);
   }
 }

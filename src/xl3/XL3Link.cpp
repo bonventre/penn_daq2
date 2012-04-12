@@ -47,6 +47,20 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
       printf("%s",packet->payload);
       break;
       }
+    case CMD_ACK_ID:
+      {
+        pthread_mutex_lock(&fRecvQueueLock);
+        MultiCommand *commands = (MultiCommand *) packet->payload;
+        for (int i=0;commands->howMany;i++){
+          SwapLongBlock(&(commands->cmd[i].cmdNum),1);
+          SwapShortBlock(&(commands->cmd[i].packetNum),1);
+          SwapLongBlock(&(commands->cmd[i].data),1);
+          fRecvCmdQueue.push(commands->cmd[i]); 
+        }
+        if (commands->howMany > 0)
+          pthread_cond_signal(&fRecvQueueCond);
+        pthread_mutex_unlock(&fRecvQueueLock);
+      }
     default:
       pthread_mutex_lock(&fRecvQueueLock);
       fRecvQueue.push(*packet);
@@ -86,7 +100,7 @@ int XL3Link::GetNextPacket(XL3Packet *packet,int waitSeconds)
       if (rc == ETIMEDOUT) {
         printf("Wait timed out!\n");
         rc = pthread_mutex_unlock(&fRecvQueueLock);
-        throw 1;
+        return 1;
       }
     }
   }else{
@@ -97,6 +111,35 @@ int XL3Link::GetNextPacket(XL3Packet *packet,int waitSeconds)
   *packet = fRecvQueue.front();
   SwapShortBlock(&packet->header.packetNum,1);
   fRecvQueue.pop();
+  pthread_mutex_unlock(&fRecvQueueLock);
+  return 0;
+}
+
+int XL3Link::GetNextCmdAck(Command *command,int waitSeconds)
+{
+  pthread_mutex_lock(&fRecvQueueLock);
+  if (waitSeconds){
+    struct timeval tp;
+    struct timespec ts;
+    gettimeofday(&tp, NULL);
+    ts.tv_sec  = tp.tv_sec;
+    ts.tv_nsec = tp.tv_usec * 1000;
+    ts.tv_sec += waitSeconds;
+    while (fRecvCmdQueue.empty()){
+      int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
+      if (rc == ETIMEDOUT) {
+        printf("Wait timed out!\n");
+        rc = pthread_mutex_unlock(&fRecvQueueLock);
+        return 1;
+      }
+    }
+  }else{
+    while (fRecvCmdQueue.empty())
+      pthread_cond_wait(&fRecvQueueCond,&fRecvQueueLock);
+  }
+
+  *command = fRecvCmdQueue.front();
+  fRecvCmdQueue.pop();
   pthread_mutex_unlock(&fRecvQueueLock);
   return 0;
 }

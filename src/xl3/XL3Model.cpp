@@ -1,5 +1,6 @@
 #include "Globals.h"
 #include "PacketTypes.h"
+#include "DBTypes.h"
 
 #include "XL3Link.h"
 #include "XL3Model.h"
@@ -31,7 +32,18 @@ int XL3Model::RW(uint32_t address, uint32_t data, uint32_t *result)
   SwapLongBlock(&args->command.data,1);
 
   fLink->SendPacket(&packet);
-  fLink->GetNextPacket(&packet,1);
+
+  int numPackets = 0;
+  int maxTries = 10;
+  int err;
+  // look for the response. If you get the wrong packet type, try again, but
+  // eventually raise an exception
+  do{
+    err = fLink->GetNextPacket(&packet,1);
+    numPackets++;
+    if (numPackets > maxTries)
+      throw 2;
+  }while(packet.header.packetType != FAST_CMD_ID || err);
 
   SwapLongBlock(&args->command.data,1);
   *result = args->command.data;
@@ -52,10 +64,17 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
   uint16_t type = packet->header.packetType;
   fLink->SendPacket(packet);
   if (withResponse){
-    fLink->GetNextPacket(packet,timeout);
-    if (packet->header.packetType != type){
-      printf("wrong type: expected %02x, got %02x\n",type,packet->header.packetType);
-    }
+    int numPackets = 0;
+    int maxTries = 10;
+    int err;
+    // look for the response. If you get the wrong packet type, try again, but
+    // eventually raise an exception
+    do{
+      err = fLink->GetNextPacket(packet,timeout);
+      numPackets++;
+      if (numPackets > maxTries)
+        throw 2;
+    }while(packet->header.packetType != type || err);
   }
   return 0;
 }
@@ -65,6 +84,32 @@ int XL3Model::DeselectFECs()
   XL3Packet packet;
   packet.header.packetType = DESELECT_FECS_ID;
   SendCommand(&packet);
+  return 0;
+}
+
+int XL3Model::GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, int timeout)
+{
+  packetNum %= 65536;
+  Command command;
+  int cmdNum = 0;
+  int started = 0;
+  int busErrors = 0;
+  while (numCmds > cmdNum){
+    int err = fLink->GetNextCmdAck(&command,timeout);
+    if (err)
+      throw 1;
+    if (command.packetNum != packetNum){
+      if (started)
+        throw 3;
+      else
+        continue;
+    }
+    if (command.cmdNum != cmdNum)
+      throw 4;
+    busErrors += command.flags;
+    *(result + cmdNum) = command.data;
+    cmdNum++;
+  }
   return 0;
 }
 
@@ -79,8 +124,7 @@ int XL3Model::UpdateCrateConfig(uint16_t slotMask)
   try{
     SendCommand(&packet);
     int errors = results->errorFlags;
-    int i;
-    for (i=0;i<16;i++){
+    for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
         fFECs[i] = results->hwareVals[i];
         SwapShortBlock(&(fFECs[i].mbID),1);
@@ -107,3 +151,12 @@ int XL3Model::ChangeMode(int mode, uint16_t dataAvailMask)
   SendCommand(&packet);
   return 0;
 }
+
+int XL3Model::ConfigureCrate(FECConfiguration *fecs)
+{
+  for (int i=0;i<16;i++){
+    fFECs[i] = fecs[i];
+  }
+  return 0;
+}
+
