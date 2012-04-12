@@ -1,4 +1,6 @@
 #include <cstring>
+#include <time.h>
+#include <errno.h>
 
 #include "Globals.h"
 #include "XL3PacketTypes.h"
@@ -69,11 +71,28 @@ int XL3Link::SendPacket(XL3Packet *packet)
   return 0;
 }
 
-int XL3Link::GetNextPacket(XL3Packet *packet)
+int XL3Link::GetNextPacket(XL3Packet *packet,int waitSeconds)
 {
   pthread_mutex_lock(&fRecvQueueLock);
-  while (fRecvQueue.empty())
-    pthread_cond_wait(&fRecvQueueCond,&fRecvQueueLock);
+  if (waitSeconds){
+    struct timeval tp;
+    struct timespec ts;
+    gettimeofday(&tp, NULL);
+    ts.tv_sec  = tp.tv_sec;
+    ts.tv_nsec = tp.tv_usec * 1000;
+    ts.tv_sec += waitSeconds;
+    while (fRecvQueue.empty()){
+      int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
+      if (rc == ETIMEDOUT) {
+        printf("Wait timed out!\n");
+        rc = pthread_mutex_unlock(&fRecvQueueLock);
+        throw 1;
+      }
+    }
+  }else{
+    while (fRecvQueue.empty())
+      pthread_cond_wait(&fRecvQueueCond,&fRecvQueueLock);
+  }
 
   *packet = fRecvQueue.front();
   SwapShortBlock(&packet->header.packetNum,1);

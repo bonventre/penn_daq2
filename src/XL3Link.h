@@ -19,7 +19,7 @@ class XL3Link : public GenericLink {
     void SentCallback(struct bufferevent *bev){};
     void EventCallback(struct bufferevent *bev, short what){};
     
-    int GetNextPacket(XL3Packet *packet);
+    int GetNextPacket(XL3Packet *packet,int waitSeconds=0);
     int SendPacket(XL3Packet *packet);
 
   private:
