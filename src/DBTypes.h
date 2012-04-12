@@ -62,6 +62,4 @@ typedef struct
 	uint32_t ctcDelay; //!< ctc based trigger delay
 } Crate; //!< all database values for the crate
 
-Crate crate; //!< Current configuration
-
 #endif
