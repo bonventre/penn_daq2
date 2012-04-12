@@ -1,5 +1,5 @@
-#ifndef __DB
-#define __DB
+#ifndef _DB_TYPES_H
+#define _DB_TYPES_H
 
 #include <stdint.h>
 
@@ -61,5 +61,43 @@ typedef struct
 	MB mb[16]; //!< all 16 fec database values
 	uint32_t ctcDelay; //!< ctc based trigger delay
 } Crate; //!< all database values for the crate
+
+typedef struct {
+    uint16_t lockoutWidth;
+    uint16_t pedestalWidth;
+    uint16_t nhit100LoPrescale;
+    uint32_t pulserPeriod;
+    uint32_t low10MhzClock;
+    uint32_t high10MhzClock;
+    float fineSlope;
+    float minDelayOffset;
+    uint16_t coarseDelay;
+    uint16_t fineDelay;
+    uint32_t gtMask;
+    uint32_t gtCrateMask;
+    uint32_t pedCrateMask;
+    uint32_t controlMask;
+}MTCD;
+
+typedef struct{
+    char id[20];
+    uint16_t threshold;
+    uint16_t mvPerAdc;
+    uint16_t mvPerHit;
+    uint16_t dcOffset;
+}Trigger;
+
+typedef struct {
+    Trigger triggers[14];
+    uint16_t crateStatus[6];
+    uint16_t retriggers[6];
+}MTCA;
+
+typedef struct {
+    MTCD mtcd;
+    MTCA mtca;
+    uint32_t tubBits;
+}MTC;
+
 
 #endif
