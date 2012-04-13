@@ -229,5 +229,70 @@ void *ControllerLink::ProcessCommand(void *arg)
     DebuggingMode(crateNum,0);
     UnlockConnections(0,0x1<<crateNum);
 
-  }
+   }else if (strncmp(input,"change_mode",11) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: change_mode -c [crate num (int)] -n (normal mode)"
+          "-s [slot mask (hex)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int mode = GetFlag(input,'n');
+    uint32_t dataAvailMask = GetUInt(input,'s',0xFFFF);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    ChangeMode(crateNum,mode,dataAvailMask);
+    UnlockConnections(0,0x1<<crateNum);
+
+   }else if (strncmp(input,"read_local_voltage",18) == 0){
+     if (GetFlag(input,'h')){
+       printf("Usage: read_local_voltage -c [crate num (int)] -v [voltage select]\n"
+           "0 - VCC\n1 - VEE\n2 - VP8\n3 - V24P\n4 - V24M\n5,6,7 - temperature monitors\n");
+       return NULL;
+     }
+     int crateNum = GetInt(input,'c',2);
+     int voltage = GetInt(input,'v',0);
+     int busy = LockConnections(0,0x1<<crateNum);
+     if (busy){
+       printf("Those connections are currently in use.\n");
+       return NULL;
+     }
+     ReadLocalVoltage(crateNum,voltage);
+     UnlockConnections(0,0x1<<crateNum);
+
+   }else if (strncmp(input,"hv_readback",11) == 0){
+     if (GetFlag(input,'h')){
+       printf("Usage: hv_readback -c [crate num (int)]\n");
+       return NULL;
+     }
+     int crateNum = GetInt(input,'c',2);
+     int busy = LockConnections(0,0x1<<crateNum);
+     if (busy){
+       printf("Those connections are currently in use.\n");
+       return NULL;
+     }
+     HVReadback(crateNum);
+     UnlockConnections(0,0x1<<crateNum);
+
+   }else if (strncmp(input,"set_alarm_dac",13) == 0){
+     if (GetFlag(input,'h')){
+       printf("Usage: set_alarm_dac -c [crate num (int)] -0 [dac 0 setting (hex)] -1 [dac 1] -2 [dac 2]\n");
+       return NULL;
+     }
+     int crateNum = GetInt(input,'c',2);
+     uint32_t dacs[3];
+     dacs[0] = GetUInt(input,'0',0xFFFFFFFF);
+     dacs[1] = GetUInt(input,'1',0xFFFFFFFF);
+     dacs[2] = GetUInt(input,'2',0xFFFFFFFF);
+     int busy = LockConnections(0,0x1<<crateNum);
+     if (busy){
+       printf("Those connections are currently in use.\n");
+       return NULL;
+     }
+     SetAlarmDac(crateNum,dacs);
+     UnlockConnections(0,0x1<<crateNum);
+
+   }
 }

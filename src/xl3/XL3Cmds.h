@@ -7,4 +7,8 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
     int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useHw);
 int SMReset(int crateNum);
 int DebuggingMode(int crateNum, int on);
+int ChangeMode(int crateNum, int mode, uint32_t dataAvailMask);
+int ReadLocalVoltage(int crateNum, int voltage);
+int HVReadback(int crateNum);
+int SetAlarmDac(int crateNum, uint32_t *dacs);
 
