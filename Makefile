@@ -27,7 +27,7 @@ $(ODIR)/%.o: %.cpp $(_DEPS)
 #	cp $^ $(IDIR)/.
 
 #all: penn_daq tut $(DEPS)
-all: directories penn_daq
+all: directories penn_daq tut
 
 directories:
 	test -d $(ODIR) || mkdir $(ODIR) 
@@ -40,7 +40,7 @@ penn_daq: $(OBJ)
 
 tut:
 	python $(CDIR)/tut/tut_gen.py
-	$(CC) -lreadline -lncurses -o $(BDIR)/tut $(CDIR)/tut/tut.c $(CFLAGS)
+	gcc -lreadline -lncurses -o $(BDIR)/tut $(CDIR)/tut/tut.c $(CFLAGS)
     
 clean: 
 	rm -f $(ODIR)/* $(BDIR)/*
