@@ -27,6 +27,8 @@ class XL3Model{
     int LoadsDac(uint32_t dacNum, uint32_t dacValue, int slotNum);
     int MultiLoadsDac(int numDacs, uint32_t *dacNums, uint32_t *dacValues, uint32_t *slotNums);
     int32_t ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, int checkLimit=0);
+    int SetCratePedestals(uint16_t slotMask, uint32_t pattern);
+    int LoadCrateAddr(uint16_t slotMask);
 
     int CheckLock();
     void Lock(){fLink->SetLock(1);};

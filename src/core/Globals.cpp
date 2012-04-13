@@ -212,6 +212,7 @@ int readConfigurationFile()
 int GetInt(const char *input, char flag, int dflt)
 {
   char buffer[10000];
+  memset(buffer,'\0',10000);
   memcpy(buffer,input,strlen(input));
   char *words,*words2;
   words = strtok(buffer, " ");
@@ -231,14 +232,16 @@ int GetInt(const char *input, char flag, int dflt)
 uint32_t GetUInt(const char *input, char flag, uint32_t dflt)
 {
   char buffer[10000];
+  memset(buffer,'\0',10000);
   memcpy(buffer,input,strlen(input));
   char *words,*words2;
   words = strtok(buffer, " ");
   while (words != NULL){
     if (words[0] == '-'){
       if (words[1] == flag){
-        if ((words2 = strtok(NULL, " ")) != NULL)
+        if ((words2 = strtok(NULL, " ")) != NULL){
           return strtoul(words2,(char**)NULL,16);
+        }
       }
     }
     words = strtok(NULL, " ");
@@ -250,6 +253,7 @@ uint32_t GetUInt(const char *input, char flag, uint32_t dflt)
 int GetFlag(const char *input, char flag)
 {
   char buffer[10000];
+  memset(buffer,'\0',10000);
   memcpy(buffer,input,strlen(input));
   char *words,*words2;
   words = strtok(buffer, " ");
@@ -262,5 +266,42 @@ int GetFlag(const char *input, char flag)
     words = strtok(NULL, " ");
   }
 
+  return 0;
+}
+
+int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint32_t dflt)
+{
+  for (int i=0;i<num;i++)
+    results[i] = dflt; 
+  int ascii = 48;
+  char buffer[10000];
+  memset(buffer,'\0',10000);
+  memcpy(buffer,input,strlen(input));
+  char *words,*words2;
+  words = strtok(buffer, " ");
+  while (words != NULL){
+    if (words[0] == '-'){
+      int done = 0;
+      for (int i=0;i<=(num/10);i++){
+        if (done) break;
+        if (words[1] == flag){
+          if ((words2 = strtok(NULL, " ")) != NULL)
+            for (int j=0;j<num;j++)
+              results[j] = strtoul(words2,(char**) NULL,16); 
+        }
+        if (words[1] == (i+ascii)){
+          for (int j=0;j<=((num-i*10)%10);j++){
+            if (words[2] == (j+ascii)){
+              if ((words2 = strtok(NULL, " ")) != NULL)
+                results[i*10+j] = strtoul(words2,(char**) NULL,16); 
+              done = 1;
+              break;
+            }
+          }
+        }
+      }
+    }
+    words = strtok(NULL, " ");
+  }
   return 0;
 }

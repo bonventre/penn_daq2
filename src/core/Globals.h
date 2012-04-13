@@ -25,6 +25,7 @@ int readConfigurationFile();
 uint32_t GetUInt(const char *input, char flag, uint32_t dflt);
 int GetInt(const char *input, char flag, int dflt);
 int GetFlag(const char *input, char flag);
+int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint32_t dflt);
 
 
 // configuration crap

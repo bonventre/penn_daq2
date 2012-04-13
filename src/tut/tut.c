@@ -68,6 +68,9 @@ COMMAND commands[] = {
     { "['read_local_voltage']", (Function *)NULL, (char *)NULL },
     { "['hv_readback']", (Function *)NULL, (char *)NULL },
     { "['set_alarm_dac']", (Function *)NULL, (char *)NULL },
+    { "['fr']", (Function *)NULL, (char *)NULL },
+    { "['fw']", (Function *)NULL, (char *)NULL },
+    { "['load_relays']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };

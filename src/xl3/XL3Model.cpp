@@ -64,9 +64,9 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
     do{
       err = fLink->GetNextPacket(packet,timeout);
       numPackets++;
-      if (numPackets > maxTries)
+      if (numPackets > maxTries || err)
         throw 2;
-    }while(packet->header.packetType != type || err);
+    }while(packet->header.packetType != type);
   }
   return 0;
 }
@@ -281,4 +281,26 @@ int32_t XL3Model::ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, in
   return count;
 }
 
+int XL3Model::LoadCrateAddr(uint16_t slotMask)
+{
+  uint32_t result;
+  for (int i=0;i<16;i++){
+    if ((0x1<<i) & slotMask){
+      RW(GENERAL_CSR_R + FEC_SEL*i + WRITE_REG, 0x0 | (fCrateNum << FEC_CSR_CRATE_OFFSET),&result);
+    }
+  }
+  DeselectFECs();
+  return 0;
+}
 
+int XL3Model::SetCratePedestals(uint16_t slotMask, uint32_t pattern)
+{
+  XL3Packet packet;
+  packet.header.packetType = SET_CRATE_PEDESTALS_ID;
+  SetCratePedestalsArgs *args = (SetCratePedestalsArgs *) packet.payload;
+  args->slotMask = slotMask;
+  args->pattern = pattern;
+  SwapLongBlock(args,sizeof(SetCratePedestalsArgs)/sizeof(uint32_t));
+  SendCommand(&packet);
+  return 0;
+}

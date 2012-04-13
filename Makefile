@@ -5,7 +5,7 @@ BDIR = bin
 CC = g++
 #CFLAGS = -I$(IDIR)
 CFLAGS = $(patsubst %,-I%,$(CDIRS))
-LIBS = -levent -lcurl 
+LIBS = -levent -lcurl -levent_pthreads
 
 _CDIRS = db core cont net xl3
 CDIRS = $(patsubst %,$(CDIR)/%,$(_CDIRS))
