@@ -294,5 +294,56 @@ void *ControllerLink::ProcessCommand(void *arg)
      SetAlarmDac(crateNum,dacs);
      UnlockConnections(0,0x1<<crateNum);
 
-   }
+ }else if (strncmp(input,"fr",2) == 0){
+  if (GetFlag(input,'h')){
+      printf("Usage: fr -c [crate num (int)] -s [slot num (int)] -r [register num (int)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int slotNum = GetInt(input,'s',13);
+    int reg = GetInt(input,'c',2);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    uint32_t address = fecRegAddresses[reg] + READ_REG + FEC_SEL*slotNum;
+    XL3RW(crateNum,address,0x0);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"fw",2) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: fw -c [crate num (int)] -s [slot num (int)] -r [register num (int)] -d [data (hex)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int slotNum = GetInt(input,'s',13);
+    int reg = GetInt(input,'r',0);
+    uint32_t data = GetUInt(input,'d',0x0);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    uint32_t address = fecRegAddresses[reg] + WRITE_REG + FEC_SEL*slotNum;
+    XL3RW(crateNum,address,data);
+    UnlockConnections(0,0x1<<crateNum);
+
+   }else if (strncmp(input,"load_relays",11) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: load_relays -c [crate num (int)] -p [set pattern for all slots (hex)] -(00-15) [set pattern for slot (hex)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t patterns[16];
+    GetMultiUInt(input,16,'p',patterns,0xF);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    LoadRelays(crateNum,patterns);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }
 }

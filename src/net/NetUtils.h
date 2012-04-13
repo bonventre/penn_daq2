@@ -10,6 +10,7 @@
 #include <event2/event_struct.h>
 #include <event2/bufferevent.h>
 #include <event2/buffer.h>
+#include <event2/thread.h>
 
 #define MAX_XL3_CON     19
 #define MAX_CONT_CON    1

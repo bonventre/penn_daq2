@@ -27,7 +27,9 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
   char input[10000];
   memset(input,'\0',10000);
   while (1){
+    bufferevent_lock(bev);
     n = bufferevent_read(bev, input+strlen(input), sizeof(input));
+    bufferevent_unlock(bev);
     totalLength += n;
     if (n <= 0)
       break;
@@ -39,13 +41,15 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
     case PING_ID:
       {
       packet->header.packetType = PONG_ID;
+      bufferevent_lock(bev);
       bufferevent_write(fBev,packet,sizeof(XL3Packet));
+      bufferevent_unlock(bev);
       break;
       }
     case MESSAGE_ID:
       {
-      printf("%s",packet->payload);
-      break;
+        printf("%s",packet->payload);
+        break;
       }
     case CMD_ACK_ID:
       {
@@ -82,7 +86,9 @@ void XL3Link::AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd
 int XL3Link::SendPacket(XL3Packet *packet)
 {
   SwapShortBlock(&packet->header.packetNum,1);
+  bufferevent_lock(fBev);
   bufferevent_write(fBev,packet,sizeof(XL3Packet));
+  bufferevent_unlock(fBev);
   return 0;
 }
 

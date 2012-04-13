@@ -33,7 +33,8 @@ void GenericLink::AcceptCallback(struct evconnlistener *listener, evutil_socket_
 {
   fConnected = 1;
   fFD = fd;
-  fBev = bufferevent_socket_new(evBase,fFD,BEV_OPT_CLOSE_ON_FREE);
+  fBev = bufferevent_socket_new(evBase,fFD,BEV_OPT_CLOSE_ON_FREE | BEV_OPT_THREADSAFE);
+  bufferevent_setwatermark(fBev, EV_READ, 0, 0); 
   bufferevent_setcb(fBev,&GenericLink::RecvCallbackHandler,&GenericLink::SentCallbackHandler,&GenericLink::EventCallbackHandler,this);
   bufferevent_enable(fBev,EV_READ | EV_WRITE);
 }

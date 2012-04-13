@@ -11,4 +11,5 @@ int ChangeMode(int crateNum, int mode, uint32_t dataAvailMask);
 int ReadLocalVoltage(int crateNum, int voltage);
 int HVReadback(int crateNum);
 int SetAlarmDac(int crateNum, uint32_t *dacs);
+int LoadRelays(int crateNum, uint32_t *patterns);
 

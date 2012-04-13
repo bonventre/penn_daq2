@@ -2,7 +2,9 @@
 #include <cstdio>
 #include <csignal>
 #include <cstring>
+#include <pthread.h>
 
+#include "event2/thread.h"
 #include "Globals.h"
 
 #include "XL3Model.h"
@@ -11,6 +13,7 @@
 
 int setupListeners()
 {
+  evthread_use_pthreads();
   evBase = event_base_new();
   const char **methods = event_get_supported_methods();
   printf("Starting Libevent %s. Supported methods are:\n",

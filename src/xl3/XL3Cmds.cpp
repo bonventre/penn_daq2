@@ -3,6 +3,7 @@
 #include "Globals.h"
 #include "DB.h"
 #include "Pouch.h"
+#include "XL3Registers.h"
 
 #include "NetUtils.h"
 #include "XL3Link.h"
@@ -11,7 +12,6 @@
 
 int XL3RW(int crateNum, uint32_t address, uint32_t data)
 {
-  printf("*** Starting XL3 RW ********************\n");
   uint32_t result;
   try{
     int errors = xl3s[crateNum]->RW(address,data,&result);
@@ -24,7 +24,6 @@ int XL3RW(int crateNum, uint32_t address, uint32_t data)
     printf("There was a network error!\n");
   }
 
-  printf("****************************************\n");
   return 0;
 }
 
@@ -414,3 +413,29 @@ int SetAlarmDac(int crateNum, uint32_t *dacs)
   return 0;
 }
 
+int LoadRelays(int crateNum, uint32_t *patterns)
+{
+  try{
+    uint32_t result;
+    for (int i=0;i<16;i++){
+      for (int j=0;j<4;j++){
+        if ((0x1<<j) & patterns[i]){
+          xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x2,&result);
+          xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0xA,&result);
+          xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x2,&result);
+        }else{
+          xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x0,&result);
+          xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x8,&result);
+          xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x0,&result);
+        }
+      }
+    }
+    usleep(1000);
+    xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x4,&result);
+    printf("Relays loaded\n");
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+  return 0;
+}
