@@ -49,7 +49,7 @@ int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
     xl3s[crateNum]->SendCommand(&packet);
     printf("Command queued\n");
     uint32_t result;
-    xl3s[crateNum]->GetMultiFCResults(1, 0, &result);
+    xl3s[crateNum]->GetMultiFCResults(1, xl3s[crateNum]->GetLastCommandNum(), &result);
     printf("got %08x\n",result);
   }
   catch(int e){
@@ -240,7 +240,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
       *(uint32_t *) packet.payload = i;
 
-      SwapLongBlock(&(packet.payload),1);	
+      SwapLongBlock(packet.payload,1);	
       SwapFECDB(mb_consts);
 
       xl3s[crateNum]->SendCommand(&packet,0);
@@ -275,7 +275,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
     packetArgs->ctcDelay = ctc_delay;
     packetArgs->shiftRegOnly = shiftRegOnly;
 
-    SwapLongBlock(&(packet.payload),sizeof(CrateInitArgs)/sizeof(uint32_t));
+    SwapLongBlock(packet.payload,sizeof(CrateInitArgs)/sizeof(uint32_t));
 
     xl3s[crateNum]->SendCommand(&packet);
 
@@ -319,13 +319,93 @@ int DebuggingMode(int crateNum, int on)
   XL3Packet packet;
   packet.header.packetType = DEBUGGING_MODE_ID;
   *(uint32_t *) packet.payload = on; 
-  SwapLongBlock(&packet.payload,1);
+  SwapLongBlock(packet.payload,1);
   try{
     xl3s[crateNum]->SendCommand(&packet);
     if (on)
       printf("Turned on debugging mode\n");
     else
       printf("Turned off debugging mode\n");
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+
+  return 0;
+}
+
+int ChangeMode(int crateNum, int mode, uint32_t dataAvailMask)
+{
+  XL3Packet packet;
+  packet.header.packetType = CHANGE_MODE_ID;
+  ChangeModeArgs *args = (ChangeModeArgs *) packet.payload;
+  args->mode = mode;
+  args->dataAvailMask = dataAvailMask;
+  SwapLongBlock(packet.payload,sizeof(ChangeModeArgs)/sizeof(uint32_t));
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    if (mode)
+      printf("Changed to init mode\n");
+    else
+      printf("Changed to normal mode\n");
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+
+  return 0;
+}
+
+int ReadLocalVoltage(int crateNum, int voltage)
+{
+  XL3Packet packet;
+  packet.header.packetType = READ_LOCAL_VOLTAGE_ID;
+  ReadLocalVoltageArgs *args = (ReadLocalVoltageArgs *) packet.payload;
+  ReadLocalVoltageResults *results = (ReadLocalVoltageResults *) packet.payload;
+  args->voltageSelect = voltage;
+  SwapLongBlock(packet.payload,sizeof(ReadLocalVoltageArgs)/sizeof(uint32_t));
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    SwapLongBlock(packet.payload,sizeof(ReadLocalVoltageResults)/sizeof(uint32_t));
+    printf("Voltage #%d: %f\n",voltage,results->voltage);
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+
+  return 0;
+}
+
+int HVReadback(int crateNum)
+{
+  XL3Packet packet;
+  packet.header.packetType = HV_READBACK_ID;
+  HVReadbackResults *results = (HVReadbackResults *) packet.payload;
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    SwapLongBlock(packet.payload,sizeof(HVReadbackResults)/sizeof(uint32_t));
+    printf("Supply A - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageA*300.0,results->currentA*10.0);
+    printf("Supply B - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageB*300.0,results->currentB*10.0);
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+
+  return 0;
+}
+
+int SetAlarmDac(int crateNum, uint32_t *dacs)
+{
+  XL3Packet packet;
+  packet.header.packetType = SET_ALARM_DAC_ID;
+  SetAlarmDacArgs *args = (SetAlarmDacArgs *) packet.payload;
+  for (int i=0;i<3;i++)
+    args->dacs[i] = dacs[i];
+  SwapLongBlock(packet.payload,sizeof(SetAlarmDacArgs)/sizeof(uint32_t));
+
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    printf("Dacs set\n");
   }
   catch(int e){
     printf("There was a network error!\n");
