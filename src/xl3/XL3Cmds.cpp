@@ -28,6 +28,38 @@ int XL3RW(int crateNum, uint32_t address, uint32_t data)
   return 0;
 }
 
+int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
+{
+  printf("*** Starting XL3 Queue RW ********************\n");
+
+  XL3Packet packet;
+  packet.header.packetNum = 0;
+  packet.header.packetType = QUEUE_CMDS_ID;
+  MultiCommand *commands = (MultiCommand *) packet.payload;
+  commands->howMany = 1;
+  SwapLongBlock(&(commands->howMany),1);
+  for (int i=0;i<1;i++){
+    commands->cmd[i].flags = 0;
+    commands->cmd[i].data = data;
+    commands->cmd[i].address = address;
+    SwapLongBlock(&(commands->cmd[i].data),1);
+    SwapLongBlock(&(commands->cmd[i].address),1);
+  }
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    printf("Command queued\n");
+    uint32_t result;
+    xl3s[crateNum]->GetMultiFCResults(1, 0, &result);
+    printf("got %08x\n",result);
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+
+  printf("****************************************\n");
+  return 0;
+}
+
 int FECTest(int crateNum, uint32_t slotMask)
 {
   printf("*** Starting FEC Test ******************\n");
@@ -273,7 +305,7 @@ int SMReset(int crateNum)
   packet.header.packetType = STATE_MACHINE_RESET_ID;
   try{
     xl3s[crateNum]->SendCommand(&packet);
-  printf("Reset state machine.\n");
+    printf("Reset state machine.\n");
   }
   catch(int e){
     printf("There was a network error!\n");
@@ -281,3 +313,24 @@ int SMReset(int crateNum)
 
   return 0;
 }
+
+int DebuggingMode(int crateNum, int on)
+{
+  XL3Packet packet;
+  packet.header.packetType = DEBUGGING_MODE_ID;
+  *(uint32_t *) packet.payload = on; 
+  SwapLongBlock(&packet.payload,1);
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    if (on)
+      printf("Turned on debugging mode\n");
+    else
+      printf("Turned off debugging mode\n");
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+
+  return 0;
+}
+

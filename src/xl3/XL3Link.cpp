@@ -51,7 +51,8 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
       {
         pthread_mutex_lock(&fRecvQueueLock);
         MultiCommand *commands = (MultiCommand *) packet->payload;
-        for (int i=0;commands->howMany;i++){
+        SwapLongBlock(&(commands->howMany),1);
+        for (int i=0;i<commands->howMany;i++){
           SwapLongBlock(&(commands->cmd[i].cmdNum),1);
           SwapShortBlock(&(commands->cmd[i].packetNum),1);
           SwapLongBlock(&(commands->cmd[i].data),1);

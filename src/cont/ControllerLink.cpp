@@ -69,7 +69,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     printf("penn_daq: exiting\n");
     raise(SIGINT);
 
-  }else if(strncmp(input,"xl3_rw",6) == 0){
+  }else if (strncmp(input,"xl3_rw",6) == 0){
     if (GetFlag(input,'h')){
         printf("Usage: xl3_rw -c [crate_num (int)] "
             "-a [address (hex)] -d [data (hex)]\n"
@@ -87,7 +87,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     XL3RW(crateNum,address,data);
     UnlockConnections(0,0x1<<crateNum);
 
-  }else if(strncmp(input,"fec_test",8) == 0){
+  }else if (strncmp(input,"fec_test",8) == 0){
     if (GetFlag(input,'h')){
         printf("Usage: fec_test -c [crate_num (int)] "
             "-s [slot mask (hex)]\n");
@@ -103,7 +103,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     FECTest(crateNum,slotMask);
     UnlockConnections(0,0x1<<crateNum);
 
-  }else if(strncmp(input,"crate_init",10) == 0){
+  }else if (strncmp(input,"crate_init",10) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: crate_init -c [crate num (int)]"
           "-s [slot mask (hex)] -x (load xilinx) -X (load cald xilinx)"
@@ -138,7 +138,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         useVBal,useVThr,useTDisc,useTCmos,useAll,useHw);
     UnlockConnections(0,0x1<<crateNum);
 
-  }else if(strncmp(input,"xr",2) == 0){
+  }else if (strncmp(input,"xr",2) == 0){
   if (GetFlag(input,'h')){
       printf("Usage: xr -c [crate num (int)] -r [register number (int)]\n");
       return NULL;
@@ -154,7 +154,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     XL3RW(crateNum,address,0x0);
     UnlockConnections(0,0x1<<crateNum);
 
-  }else if(strncmp(input,"xw",2) == 0){
+  }else if (strncmp(input,"xw",2) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: xw -c [crate num (int)] -r [register number (int)] -d [data (hex)]\n");
       return NULL;
@@ -171,7 +171,23 @@ void *ControllerLink::ProcessCommand(void *arg)
     XL3RW(crateNum,address,data);
     UnlockConnections(0,0x1<<crateNum);
 
-  }else if(strncmp(input,"sm_reset",8) == 0){
+  }else if (strncmp(input,"xl3_queue_rw",12) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: xl3_queue_rw -c [crate num (int)] -a [address (hex)] -d [data (hex)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t address = GetUInt(input,'a',0x0);
+    uint32_t data = GetUInt(input,'d',0x0);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    XL3QueueRW(crateNum, address, data);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"sm_reset",8) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: sm_reset -c [crate num (int)]\n");
       return NULL;
@@ -184,5 +200,34 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     SMReset(crateNum);
     UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"debugging_on",12) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: debugging_on -c [crate num (int)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    DebuggingMode(crateNum,1);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"debugging_off",13) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: debugging_off -c [crate num (int)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    DebuggingMode(crateNum,0);
+    UnlockConnections(0,0x1<<crateNum);
+
   }
 }
