@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "PacketTypes.h"
+#include "XL3PacketTypes.h"
 #include "DBTypes.h"
 
 #include "XL3Link.h"
@@ -29,6 +29,7 @@ class XL3Model{
     int32_t ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, int checkLimit=0);
     int SetCratePedestals(uint16_t slotMask, uint32_t pattern);
     int LoadCrateAddr(uint16_t slotMask);
+    int SetupChargeInjection(uint32_t slotMask, uint32_t chanMask, uint32_t dacValue);
 
     int CheckLock();
     void Lock(){fLink->SetLock(1);};

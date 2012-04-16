@@ -4,6 +4,7 @@
 #include "DB.h"
 #include "Pouch.h"
 #include "XL3Registers.h"
+#include "UnpackBundles.h"
 
 #include "NetUtils.h"
 #include "XL3Link.h"
@@ -439,3 +440,47 @@ int LoadRelays(int crateNum, uint32_t *patterns)
   }
   return 0;
 }
+
+int ReadBundle(int crateNum, int slotNum, int quiet)
+{
+  try{
+    int errors = 0;
+    uint32_t crate,slot,chan,gt8,gt16,cmos_es16,cgt_es16,cgt_es8,nc_cc;
+    int cell;
+    double qlx,qhs,qhl,tac;
+    uint32_t pmtword[3];
+    errors += xl3s[crateNum]->RW(READ_MEM+slotNum*FEC_SEL,0x0,pmtword);
+    errors += xl3s[crateNum]->RW(READ_MEM+slotNum*FEC_SEL,0x0,pmtword+1);
+    errors += xl3s[crateNum]->RW(READ_MEM+slotNum*FEC_SEL,0x0,pmtword+2);
+    if (errors != 0){
+      printf("There were %d errors reading out the bundles.\n",errors);
+      return -1;
+    }
+    printf("%08x %08x %08x\n",pmtword[0],pmtword[1],pmtword[2]);
+    if (!quiet){
+      crate = (uint32_t) UNPK_CRATE_ID(pmtword);
+      slot = (uint32_t)  UNPK_BOARD_ID(pmtword);
+      chan = (uint32_t)  UNPK_CHANNEL_ID(pmtword);
+      cell = (int) UNPK_CELL_ID(pmtword);
+      gt8 = (uint32_t)   UNPK_FEC_GT8_ID(pmtword);
+      gt16 = (uint32_t)  UNPK_FEC_GT16_ID(pmtword);
+      cmos_es16 = (uint32_t) UNPK_CMOS_ES_16(pmtword);
+      cgt_es16 = (uint32_t)  UNPK_CGT_ES_16(pmtword);
+      cgt_es8 = (uint32_t)   UNPK_CGT_ES_24(pmtword);
+      nc_cc = (uint32_t) UNPK_NC_CC(pmtword);
+      qlx = (double) MY_UNPK_QLX(pmtword);
+      qhs = (double) UNPK_QHS(pmtword);
+      qhl = (double) UNPK_QHL(pmtword);
+      tac = (double) UNPK_TAC(pmtword);
+      printf("crate %d, slot %d, chan %d, cell %d, gt8 %08x, gt16 %08x, cmos_es16 %08x,"
+          " cgt_es16 %08x, cgt_es8 %08x, nc_cc %08x, qlx %6.1f, qhs %6.1f, qhl %6.1f, tac %6.1f\n",
+          (int)crate,(int)slot,(int)chan,cell,gt8,
+          gt16,cmos_es16,cgt_es16,cgt_es8,nc_cc,qlx,qhs,qhl,tac);
+    }
+  }
+  catch(int e){
+    printf("There was a network error!\n");
+  }
+  return 0;
+}
+

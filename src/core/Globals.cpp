@@ -1,5 +1,6 @@
 #include "Globals.h"
 
+MTCModel *mtc;
 XL3Model *xl3s[MAX_XL3_CON];
 ControllerLink *contConnection;
 pthread_mutex_t startTestLock;
@@ -43,7 +44,13 @@ int LockConnections(int sbc, uint32_t xl3List)
 {
   int failFlag = 0;
   pthread_mutex_lock(&startTestLock);
-  if (sbc){
+  if (sbc == 1){
+    if (mtc->CheckLock())
+      failFlag = 1;
+  }
+  if (sbc == 2){
+    if (mtc->CheckLock() == 2)
+      failFlag = 1;
   }
   for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & xl3List){
@@ -70,6 +77,7 @@ int UnlockConnections(int sbc, uint32_t xl3List)
 {
   pthread_mutex_lock(&startTestLock);
   if (sbc){
+    mtc->UnLock();
   }
   for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & xl3List){
@@ -299,6 +307,26 @@ int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint3
             }
           }
         }
+      }
+    }
+    words = strtok(NULL, " ");
+  }
+  return 0;
+}
+
+int GetString(const char *input, char *result, char flag, const char *dflt)
+{
+  strcpy(result,dflt);
+  char buffer[10000];
+  memset(buffer,'\0',10000);
+  memcpy(buffer,input,strlen(input));
+  char *words,*words2;
+  words = strtok(buffer, " ");
+  while (words != NULL){
+    if (words[0] == '-'){
+      if (words[1] == flag){
+        if ((words2 = strtok(NULL, " ")) != NULL)
+          strcpy(result,words2);
       }
     }
     words = strtok(NULL, " ");

@@ -6,6 +6,7 @@
 class GenericLink{
   public:
     GenericLink(int port);
+    GenericLink();
     virtual ~GenericLink();
 
 

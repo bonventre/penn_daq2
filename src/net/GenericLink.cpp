@@ -24,6 +24,12 @@ GenericLink::GenericLink(int port)
   }
 }
 
+GenericLink::GenericLink()
+{
+  fConnected = 0;
+  fLock = 0;
+}
+
 GenericLink::~GenericLink()
 {
   evconnlistener_free(fListener);

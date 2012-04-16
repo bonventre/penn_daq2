@@ -12,4 +12,5 @@ int ReadLocalVoltage(int crateNum, int voltage);
 int HVReadback(int crateNum);
 int SetAlarmDac(int crateNum, uint32_t *dacs);
 int LoadRelays(int crateNum, uint32_t *patterns);
+int ReadBundle(int crateNum, int slotNum, int quiet);
 

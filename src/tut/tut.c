@@ -71,6 +71,13 @@ COMMAND commands[] = {
     { "['fr']", (Function *)NULL, (char *)NULL },
     { "['fw']", (Function *)NULL, (char *)NULL },
     { "['load_relays']", (Function *)NULL, (char *)NULL },
+    { "['read_bundle']", (Function *)NULL, (char *)NULL },
+    { "['setup_chinj']", (Function *)NULL, (char *)NULL },
+    { "['load_dac']", (Function *)NULL, (char *)NULL },
+    { "['sbc_control']", (Function *)NULL, (char *)NULL },
+    { "['mtc_init']", (Function *)NULL, (char *)NULL },
+    { "['mr']", (Function *)NULL, (char *)NULL },
+    { "['mw']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };
