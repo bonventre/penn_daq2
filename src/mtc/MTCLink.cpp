@@ -10,6 +10,9 @@
 
 MTCLink::MTCLink() : GenericLink(SBC_PORT)
 {
+  fBytesLeft = 0;
+  fTempBytes = 0;
+  memset(fTempPacket,0,sizeof(fTempPacket));
   pthread_mutex_init(&fRecvQueueLock,NULL);
   pthread_cond_init(&fRecvQueueCond,NULL);
 }
@@ -74,14 +77,47 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
       break;
   }
 
-
-  SBCPacket *packet = (SBCPacket *) input;
-  printf("numBytes = %d, recvd = %d\n",packet->numBytes,n);
-  pthread_mutex_lock(&fRecvQueueLock);
-  fRecvQueue.push(*packet);
-  pthread_cond_signal(&fRecvQueueCond);
-  pthread_mutex_unlock(&fRecvQueueLock);
-
+  char *inputP = input;
+  while (totalLength > 0){
+    if (fTempBytes == 0){
+      int numThisPacket = ((SBCPacket *) inputP)->numBytes;
+      if (numThisPacket > totalLength){
+        memcpy(fTempPacket,inputP,totalLength);
+        fBytesLeft = numThisPacket-totalLength; 
+        fTempBytes = totalLength;
+        break;
+      }else{
+        memcpy(fTempPacket,inputP,numThisPacket);
+        SBCPacket *packet = (SBCPacket *) fTempPacket;
+        pthread_mutex_lock(&fRecvQueueLock);
+        fRecvQueue.push(*packet);
+        pthread_cond_signal(&fRecvQueueCond);
+        pthread_mutex_unlock(&fRecvQueueLock);
+        memset(fTempPacket,0,sizeof(fTempPacket));
+        totalLength -= numThisPacket;
+        inputP += numThisPacket;
+      }
+    }else{
+      if (fBytesLeft > totalLength){
+        memcpy(fTempPacket+fTempBytes,inputP,totalLength);
+        fBytesLeft -= totalLength; 
+        fTempBytes += totalLength;
+        break;
+      }else{
+        memcpy(fTempPacket+fTempBytes,inputP,fBytesLeft);
+        SBCPacket *packet = (SBCPacket *) fTempPacket;
+        pthread_mutex_lock(&fRecvQueueLock);
+        fRecvQueue.push(*packet);
+        pthread_cond_signal(&fRecvQueueCond);
+        pthread_mutex_unlock(&fRecvQueueLock);
+        memset(fTempPacket,0,sizeof(fTempPacket));
+        inputP += fBytesLeft;
+        totalLength -= fBytesLeft;
+        fBytesLeft = 0;
+        fTempBytes = 0;
+      }
+    }
+  }
 }
 
 
@@ -123,6 +159,45 @@ int MTCLink::GetNextPacket(SBCPacket *packet,int waitSeconds)
   *packet = fRecvQueue.front();
   fRecvQueue.pop();
   pthread_mutex_unlock(&fRecvQueueLock);
+  return 0;
+}
+
+int MTCLink::SendXilinxPacket(SBCPacket *packet, int waitSeconds)
+{
+  int numBytesToSend = packet->numBytes;
+  bufferevent_lock(fBev);
+  bufferevent_write(fBev,packet,numBytesToSend);
+  bufferevent_unlock(fBev);
+  int bytesRecved = 0;
+  while (true){
+    pthread_mutex_lock(&fRecvQueueLock);
+    if (waitSeconds){
+      struct timeval tp;
+      struct timespec ts;
+      gettimeofday(&tp, NULL);
+      ts.tv_sec  = tp.tv_sec;
+      ts.tv_nsec = tp.tv_usec * 1000;
+      ts.tv_sec += waitSeconds;
+      while (fRecvQueue.empty()){
+        int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
+        if (rc == ETIMEDOUT) {
+          printf("Wait timed out!\n");
+          rc = pthread_mutex_unlock(&fRecvQueueLock);
+          return 1;
+        }
+      }
+    }else{
+      while (fRecvQueue.empty())
+        pthread_cond_wait(&fRecvQueueCond,&fRecvQueueLock);
+    }
+
+    *packet = fRecvQueue.front();
+    fRecvQueue.pop();
+    bytesRecved += packet->numBytes;
+    pthread_mutex_unlock(&fRecvQueueLock);
+    if (bytesRecved >= numBytesToSend)
+      break;
+  }
   return 0;
 }
 
