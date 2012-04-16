@@ -66,7 +66,9 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
       numPackets++;
       if (numPackets > maxTries || err)
         throw 2;
-    }while(packet->header.packetType != type);
+      if (packet->header.packetNum > (fCommandNum-1))
+        throw 3;
+    }while(packet->header.packetType != type || packet->header.packetNum < (fCommandNum-1));
   }
   return 0;
 }

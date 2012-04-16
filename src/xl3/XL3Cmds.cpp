@@ -60,24 +60,6 @@ int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
   return 0;
 }
 
-int FECTest(int crateNum, uint32_t slotMask)
-{
-  printf("*** Starting FEC Test ******************\n");
-  XL3Packet packet;
-  packet.header.packetType = FEC_TEST_ID;
-  *(uint32_t *) packet.payload = slotMask;
-  SwapLongBlock(packet.payload,1);
-  try{
-    xl3s[crateNum]->SendCommand(&packet);
-  }
-  catch(int e){
-    printf("There was a network error!\n");
-  }
-
-  printf("****************************************\n");
-  return 0;
-}
-
 int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int shiftRegOnly,
     int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useHw)
 {

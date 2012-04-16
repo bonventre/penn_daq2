@@ -16,6 +16,8 @@ extern XL3Model *xl3s[MAX_XL3_CON];
 extern ControllerLink *contConnection;
 extern pthread_mutex_t startTestLock;
 extern struct event_base *evBase;
+extern char finalTestIDs[19][16][500];
+extern char ecalID[500];
 
 int LockConnections(int sbc, uint32_t xl3List);
 int UnlockConnections(int sbc, uint32_t xl3List);

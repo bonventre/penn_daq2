@@ -6,6 +6,8 @@
 #include "XL3Registers.h"
 #include "MTCRegisters.h"
 
+#include "FECTest.h"
+#include "MemTest.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -89,23 +91,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     XL3RW(crateNum,address,data);
     UnlockConnections(0,0x1<<crateNum);
 
-  }else if (strncmp(input,"fec_test",8) == 0){
-    if (GetFlag(input,'h')){
-      printf("Usage: fec_test -c [crate_num (int)] "
-          "-s [slot mask (hex)]\n");
-      return NULL;
-    }
-    int crateNum = GetInt(input,'c',2);
-    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
-    int busy = LockConnections(0,0x1<<crateNum);
-    if (busy){
-      printf("Those connections are currently in use.\n");
-      return NULL;
-    }
-    FECTest(crateNum,slotMask);
-    UnlockConnections(0,0x1<<crateNum);
-
-  }else if (strncmp(input,"crate_init",10) == 0){
+    }else if (strncmp(input,"crate_init",10) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: crate_init -c [crate num (int)]"
           "-s [slot mask (hex)] -x (load xilinx) -X (load cald xilinx)"
@@ -686,5 +672,40 @@ void *ControllerLink::ProcessCommand(void *arg)
     printf("Multi Soft gt sent\n");
     UnlockConnections(1,0x0);
 
-  }
+ }else if (strncmp(input,"fec_test",8) == 0){
+   if (GetFlag(input,'h')){
+     printf("Usage: fec_test -c [crate_num (int)] "
+         "-s [slot mask (hex)] -d (update database)\n");
+     return NULL;
+   }
+   int crateNum = GetInt(input,'c',2);
+   int update = GetFlag(input,'d');
+   uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+   int busy = LockConnections(0,0x1<<crateNum);
+   if (busy){
+     printf("Those connections are currently in use.\n");
+     return NULL;
+   }
+   FECTest(crateNum,slotMask,update);
+   UnlockConnections(0,0x1<<crateNum);
+
+ }else if (strncmp(input,"mem_test",8) == 0){
+   if (GetFlag(input,'h')){
+     printf("Usage: mem_test -c [crate_num (int)] "
+         "-s [slot num (int)]\n");
+     return NULL;
+   }
+   int crateNum = GetInt(input,'c',2);
+   int slotNum = GetInt(input,'s',13);
+   int busy = LockConnections(0,0x1<<crateNum);
+   if (busy){
+     printf("Those connections are currently in use.\n");
+     return NULL;
+   }
+   MemTest(crateNum,slotNum);
+   UnlockConnections(0,0x1<<crateNum);
+
+
+
+ }
 }

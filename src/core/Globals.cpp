@@ -4,6 +4,8 @@ MTCModel *mtc;
 XL3Model *xl3s[MAX_XL3_CON];
 ControllerLink *contConnection;
 pthread_mutex_t startTestLock;
+char finalTestIDs[19][16][500];
+char ecalID[500];
 
 int NEED_TO_SWAP;
 char MTC_XILINX_LOCATION[100];

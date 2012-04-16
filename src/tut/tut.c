@@ -56,7 +56,6 @@ COMMAND commands[] = {
     //_!_begin_commands_!_
     { "['exit']", (Function *)NULL, (char *)NULL },
     { "['xl3_rw']", (Function *)NULL, (char *)NULL },
-    { "['fec_test']", (Function *)NULL, (char *)NULL },
     { "['crate_init']", (Function *)NULL, (char *)NULL },
     { "['xr']", (Function *)NULL, (char *)NULL },
     { "['xw']", (Function *)NULL, (char *)NULL },
@@ -91,6 +90,8 @@ COMMAND commands[] = {
     { "['set_pulser_freq']", (Function *)NULL, (char *)NULL },
     { "['send_softgt']", (Function *)NULL, (char *)NULL },
     { "['multi_softgt']", (Function *)NULL, (char *)NULL },
+    { "['fec_test']", (Function *)NULL, (char *)NULL },
+    { "['mem_test']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };
