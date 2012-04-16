@@ -62,6 +62,7 @@ int LockConnections(int sbc, uint32_t xl3List)
 
   if (!failFlag){
     if (sbc){
+      mtc->Lock();
     }
     for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & xl3List){
@@ -313,6 +314,66 @@ int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint3
   }
   return 0;
 }
+
+float GetFloat(const char *input, char flag, float dflt)
+{
+  char buffer[10000];
+  memset(buffer,'\0',10000);
+  memcpy(buffer,input,strlen(input));
+  char *words,*words2;
+  words = strtok(buffer, " ");
+  while (words != NULL){
+    if (words[0] == '-'){
+      if (words[1] == flag){
+        if ((words2 = strtok(NULL, " ")) != NULL){
+            return (float) strtod(words2,(char**)NULL);
+        }
+      }
+    }
+    words = strtok(NULL, " ");
+  }
+
+  return dflt; 
+}
+
+int GetMultiFloat(const char *input, int num, char flag, float *results, float dflt)
+{
+  for (int i=0;i<num;i++)
+    results[i] = dflt; 
+  int ascii = 48;
+  char buffer[10000];
+  memset(buffer,'\0',10000);
+  memcpy(buffer,input,strlen(input));
+  char *words,*words2;
+  words = strtok(buffer, " ");
+  while (words != NULL){
+    if (words[0] == '-'){
+      int done = 0;
+      for (int i=0;i<=(num/10);i++){
+        if (done) break;
+        if (words[1] == flag){
+          if ((words2 = strtok(NULL, " ")) != NULL)
+            for (int j=0;j<num;j++)
+              results[j] = (float) strtod(words2,(char**)NULL); 
+        }
+        if (words[1] == (i+ascii)){
+          for (int j=0;j<=((num-i*10)%10);j++){
+            if (words[2] == (j+ascii)){
+              if ((words2 = strtok(NULL, " ")) != NULL)
+                results[i*10+j] = (float) strtod(words2,(char**)NULL); 
+              done = 1;
+              break;
+            }
+          }
+        }
+      }
+    }
+    words = strtok(NULL, " ");
+  }
+  return 0;
+}
+
+
 
 int GetString(const char *input, char *result, char flag, const char *dflt)
 {

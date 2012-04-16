@@ -408,6 +408,8 @@ void *ControllerLink::ProcessCommand(void *arg)
     int connect = GetFlag(input,'c');
     int kill = GetFlag(input,'k');
     int reconnect = GetFlag(input,'r');
+    if (!connect && !kill && !reconnect)
+      reconnect = 1;
     if (reconnect){
       connect = 1;
       kill = 1;
@@ -454,7 +456,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     MTCRead(address);
     UnlockConnections(1,0x0);
 
-}else if (strncmp(input,"mw",2) == 0){
+  }else if (strncmp(input,"mw",2) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: mw -r [register number (int)] -d [data (hex)]\n");
       printf("type \"help mtc_registers\" to get "
@@ -472,6 +474,217 @@ void *ControllerLink::ProcessCommand(void *arg)
     MTCWrite(address,data);
     UnlockConnections(1,0x0);
 
+  }else if (strncmp(input,"mtc_read",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: mtc_read -a [address (hex)]\n");
+      return NULL;
+    }
+    int address = GetUInt(input,'a',0x0);
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    MTCRead(address);
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"mtc_write",9) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: mtc_write -a [address (hex)] -d [data (hex)]\n");
+      return NULL;
+    }
+    uint32_t address = GetUInt(input,'a',0x0);
+    uint32_t data = GetUInt(input,'d',0x0);
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    MTCWrite(address,data);
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"set_mtca_thresholds",19) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: set_mtca_thresholds -(00-13) [voltage in volts (float)] -v [set all voltages (float)]\n");
+      return NULL;
+    }
+
+    float voltages[14];
+    GetMultiFloat(input,14,'v',voltages,-4.9);
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->LoadMTCADacs(voltages);
+    printf("Finished loading MTCA dacs\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"set_gt_mask",11) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: set_gt_mask -m [mask (hex)] -o ('or' with current mask)\n");
+      return NULL;
+    }
+
+    uint32_t mask = GetUInt(input,'m',0x0);
+    int ored = GetFlag(input,'o');
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    if (ored){
+      mtc->SetGTMask(mask);
+    }else{
+      mtc->UnsetGTMask(0xFFFFFFFF);
+      mtc->SetGTMask(mask);
+    }
+    printf("Set GT mask\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"set_gt_crate_mask",17) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: set_gt_crate_mask -m [mask (hex)] -o ('or' with current mask)\n");
+      return NULL;
+    }
+
+    uint32_t mask = GetUInt(input,'m',0x0);
+    int ored = GetFlag(input,'o');
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    if (ored){
+      mtc->SetGTCrateMask(mask);
+    }else{
+      mtc->UnsetGTCrateMask(0xFFFFFFFF);
+      mtc->SetGTCrateMask(mask);
+    }
+    printf("Set GT crate Mask\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"set_ped_crate_mask",18) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: set_ped_crate_mask -m [mask (hex)] -o ('or' with current mask)\n");
+      return NULL;
+    }
+
+    uint32_t mask = GetUInt(input,'m',0x0);
+    int ored = GetFlag(input,'o');
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    if (ored){
+      mtc->SetPedCrateMask(mask);
+    }else{
+      mtc->UnsetPedCrateMask(0xFFFFFFFF);
+      mtc->SetPedCrateMask(mask);
+    }
+    printf("Set Ped crate mask\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"enable_pulser",13) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: enable_pulser\n");
+      return NULL;
+    }
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->EnablePulser();
+    printf("Pulser enabled\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"disable_pulser",14) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: disable_pulser\n");
+      return NULL;
+    }
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->DisablePulser();
+    printf("Pulser disabled\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"enable_pedestal",15) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: enable_pedestal\n");
+      return NULL;
+    }
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->EnablePedestal();
+    printf("Pedestals enabled\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"disable_pedestal",16) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: disable_pedestal\n");
+      return NULL;
+    }
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->DisablePedestal();
+    printf("Pedestals disabled\n");
+    UnlockConnections(1,0x0);
+
+  }else if (strncmp(input,"set_pulser_freq",15) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: set_pulser_freq -f [frequency (float)]\n");
+      return NULL;
+    }
+    float freq = GetFloat(input,'f',1);
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->SetPulserFrequency(freq);
+    printf("Pulser frequency set\n");
+    UnlockConnections(1,0x0);
+
+ }else if (strncmp(input,"send_softgt",11) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: send_softgt\n");
+      return NULL;
+    }
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->SoftGT();
+    printf("Soft gt sent\n");
+    UnlockConnections(1,0x0);
+
+ }else if (strncmp(input,"multi_softgt",12) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: multi_softgt -n [number of pulses (int)]\n");
+      return NULL;
+    }
+    int num = GetInt(input,'n',10);
+    int busy = LockConnections(1,0x0);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    mtc->MultiSoftGT(num);
+    printf("Multi Soft gt sent\n");
+    UnlockConnections(1,0x0);
 
   }
 }
