@@ -16,24 +16,29 @@ int SBCControl(int connect, int kill, int manual, const char *idFile)
   else
     sprintf(base_cmd,"ssh %s@%s",SBC_USER,SBC_SERVER);
 
-  if (kill){
-    mtc->CloseConnection(); 
-    char kill_cmd[500];
-    sprintf(kill_cmd,"%s %s stop",base_cmd,ORCA_READOUT_PATH);
-    printf("sbc_control: Stopping remote OrcaReadout process\n");
-    system(kill_cmd);
-  }
-
-  usleep(50000);
-
-  if (connect){
-    if (!manual){
-      char start_cmd[500];
-      sprintf(start_cmd,"%s %s start",base_cmd,ORCA_READOUT_PATH);
-      printf("sbc_control: Starting remote OrcaReadout process\n");
-      system(start_cmd);
+  try{
+    if (kill){
+      mtc->CloseConnection(); 
+      char kill_cmd[500];
+      sprintf(kill_cmd,"%s %s stop",base_cmd,ORCA_READOUT_PATH);
+      printf("sbc_control: Stopping remote OrcaReadout process\n");
+      system(kill_cmd);
     }
-    mtc->Connect();
+
+    usleep(50000);
+
+    if (connect){
+      if (!manual){
+        char start_cmd[500];
+        sprintf(start_cmd,"%s %s start",base_cmd,ORCA_READOUT_PATH);
+        printf("sbc_control: Starting remote OrcaReadout process\n");
+        system(start_cmd);
+      }
+      mtc->Connect();
+    }
+  }
+  catch(int e){
+    printf("There was a network problem!\n");
   }
   return 0;
 }
@@ -76,7 +81,7 @@ int MTCInit(int xilinx)
 
   // hold errors here
   int result = 0;
- 
+
   //unset all masks
   mtc->UnsetGTMask(MASKALL);
   mtc->UnsetPedCrateMask(MASKALL);
@@ -175,4 +180,5 @@ int MTCWrite(uint32_t address, uint32_t data)
 
   return 0;
 }
+
 

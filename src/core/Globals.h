@@ -29,6 +29,8 @@ int GetInt(const char *input, char flag, int dflt);
 int GetFlag(const char *input, char flag);
 int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint32_t dflt);
 int GetString(const char *input, char *result, char flat, const char *dflt);
+float GetFloat(const char *input, char flag, float dflt);
+int GetMultiFloat(const char *input, int num, char flag, float *results, float dflt);
 
 
 // configuration crap

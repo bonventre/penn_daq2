@@ -78,6 +78,19 @@ COMMAND commands[] = {
     { "['mtc_init']", (Function *)NULL, (char *)NULL },
     { "['mr']", (Function *)NULL, (char *)NULL },
     { "['mw']", (Function *)NULL, (char *)NULL },
+    { "['mtc_read']", (Function *)NULL, (char *)NULL },
+    { "['mtc_write']", (Function *)NULL, (char *)NULL },
+    { "['set_mtca_thresholds']", (Function *)NULL, (char *)NULL },
+    { "['set_gt_mask']", (Function *)NULL, (char *)NULL },
+    { "['set_gt_crate_mask']", (Function *)NULL, (char *)NULL },
+    { "['set_ped_crate_mask']", (Function *)NULL, (char *)NULL },
+    { "['enable_pulser']", (Function *)NULL, (char *)NULL },
+    { "['disable_pulser']", (Function *)NULL, (char *)NULL },
+    { "['enable_pedestal']", (Function *)NULL, (char *)NULL },
+    { "['disable_pedestal']", (Function *)NULL, (char *)NULL },
+    { "['set_pulser_freq']", (Function *)NULL, (char *)NULL },
+    { "['send_softgt']", (Function *)NULL, (char *)NULL },
+    { "['multi_softgt']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };
