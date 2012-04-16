@@ -7,9 +7,11 @@
 #include "NetUtils.h"
 #include "XL3Link.h"
 #include "XL3Model.h"
+#include "MTCModel.h"
 #include "ControllerLink.h"
 
 
+extern MTCModel *mtc;
 extern XL3Model *xl3s[MAX_XL3_CON];
 extern ControllerLink *contConnection;
 extern pthread_mutex_t startTestLock;
@@ -26,6 +28,7 @@ uint32_t GetUInt(const char *input, char flag, uint32_t dflt);
 int GetInt(const char *input, char flag, int dflt);
 int GetFlag(const char *input, char flag);
 int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint32_t dflt);
+int GetString(const char *input, char *result, char flat, const char *dflt);
 
 
 // configuration crap

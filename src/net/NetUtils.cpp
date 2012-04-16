@@ -7,6 +7,7 @@
 #include "event2/thread.h"
 #include "Globals.h"
 
+#include "MTCModel.h"
 #include "XL3Model.h"
 #include "ControllerLink.h"
 #include "NetUtils.h"
@@ -34,6 +35,7 @@ int setupListeners()
 
   try{
     contConnection = new ControllerLink();
+    mtc = new MTCModel();
     for (int i=0;i<MAX_XL3_CON;i++){
       xl3s[i] = new XL3Model(i);
     }
@@ -52,5 +54,6 @@ void signalCallback(evutil_socket_t sig, short events, void *user_data)
     delete xl3s[i];
   }
   delete contConnection;
+  delete mtc;
   exit(1);
 }

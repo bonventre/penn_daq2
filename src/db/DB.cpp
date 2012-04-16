@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "PacketTypes.h"
+#include "XL3PacketTypes.h"
 #include "DBTypes.h"
 #include "Globals.h"
 
