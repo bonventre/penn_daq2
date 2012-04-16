@@ -22,11 +22,15 @@ class MTCLink : public GenericLink {
     
     int GetNextPacket(SBCPacket *packet,int waitSeconds=5);
     int SendPacket(SBCPacket *packet);
+    int SendXilinxPacket(SBCPacket *packet, int waitSeconds=5);
 
   private:
     std::queue<SBCPacket> fRecvQueue;
     pthread_mutex_t fRecvQueueLock;
     pthread_cond_t fRecvQueueCond;
+    int fBytesLeft;
+    int fTempBytes;
+    char fTempPacket[SBCPACKET_SIZE];
 
 };
 

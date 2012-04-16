@@ -3,6 +3,7 @@
 
 #define kSBC_MaxPayloadSizeBytes 1024*400
 #define kSBC_MaxMessageSizeBytes    256
+#define SBCPACKET_SIZE  kSBC_MaxPayloadSizeBytes + kSBC_MaxMessageSizeBytes + 12
 
 /*! \name sbc_send_packet_type
  *  Types of packets that will be sent to the sbc from the xl3
