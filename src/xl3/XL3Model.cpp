@@ -107,6 +107,53 @@ int XL3Model::GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, in
   return 0;
 }
 
+int XL3Model::GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf)
+{
+
+  int point_count = 0;
+  int current_slot = 0;
+  int current_point = 0;
+  XL3Packet packet;
+  printf("Command number is now %d\n",fCommandNum-1);
+
+  while (1){
+    int err = fLink->GetNextPacket(&packet,5);
+    printf("Got type %02x, num %d\n",packet.header.packetType,packet.header.packetNum);
+    if (err)
+      throw 2;
+    if (packet.header.packetNum > (fCommandNum-1))
+      throw 3;
+    if (packet.header.packetType == CALD_RESPONSE_ID){
+      printf("response\n");
+      CaldResponsePacket *response = (CaldResponsePacket *) packet.payload;
+      SwapShortBlock(response,sizeof(CaldResponsePacket)/sizeof(uint16_t));
+      if (response->slot != current_slot){
+        current_slot = response->slot;
+        current_point = 0;
+      }
+      for (int j=0;j<100;j++){
+        if (response->point[j] != 0){
+          point_buf[current_slot*10000+current_point] = response->point[j];
+          point_buf[0] = response->point[j];
+          adc_buf[current_slot*4*10000+current_point*4+0] = response->adc0[j];
+          adc_buf[current_slot*4*10000+current_point*4+1] = response->adc1[j];
+          adc_buf[current_slot*4*10000+current_point*4+2] = response->adc2[j];
+          adc_buf[current_slot*4*10000+current_point*4+3] = response->adc3[j];
+          current_point++;
+          point_count++;
+        }
+      }
+    }else if (packet.header.packetType == CALD_TEST_ID){
+      printf("finished\n");
+      // we must be finished
+      return point_count;
+    }
+  }
+  return 0;
+}
+
+
+
 int XL3Model::UpdateCrateConfig(uint16_t slotMask)
 {
   XL3Packet packet;

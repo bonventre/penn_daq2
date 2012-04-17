@@ -547,11 +547,12 @@ int UpdateFECDBDdoc(JsonNode *doc)
   return 0;
 }
 
-int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc)
+int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
 {
   char mb_id[8],db_id[4][8];
   char put_db_address[500];
-  xl3s[crateNum]->UpdateCrateConfig(0x1<<slotNum);
+  if (updateConfig)
+    xl3s[crateNum]->UpdateCrateConfig(0x1<<slotNum);
   time_t the_time;
   the_time = time(0); //
   char datetime[100];

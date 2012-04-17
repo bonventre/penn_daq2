@@ -8,6 +8,9 @@
 
 #include "FECTest.h"
 #include "MemTest.h"
+#include "BoardID.h"
+#include "CaldTest.h"
+#include "CGTTest.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -91,7 +94,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     XL3RW(crateNum,address,data);
     UnlockConnections(0,0x1<<crateNum);
 
-    }else if (strncmp(input,"crate_init",10) == 0){
+  }else if (strncmp(input,"crate_init",10) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: crate_init -c [crate num (int)]"
           "-s [slot mask (hex)] -x (load xilinx) -X (load cald xilinx)"
@@ -410,7 +413,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     SBCControl(connect,kill,manualStart,idFile);
     UnlockConnections(1,0x0);
- 
+
   }else if (strncmp(input,"mtc_init",8) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: mtc_init -x (load xilinx)\n");
@@ -643,7 +646,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     printf("Pulser frequency set\n");
     UnlockConnections(1,0x0);
 
- }else if (strncmp(input,"send_softgt",11) == 0){
+  }else if (strncmp(input,"send_softgt",11) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: send_softgt\n");
       return NULL;
@@ -657,7 +660,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     printf("Soft gt sent\n");
     UnlockConnections(1,0x0);
 
- }else if (strncmp(input,"multi_softgt",12) == 0){
+  }else if (strncmp(input,"multi_softgt",12) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: multi_softgt -n [number of pulses (int)]\n");
       return NULL;
@@ -672,40 +675,94 @@ void *ControllerLink::ProcessCommand(void *arg)
     printf("Multi Soft gt sent\n");
     UnlockConnections(1,0x0);
 
- }else if (strncmp(input,"fec_test",8) == 0){
-   if (GetFlag(input,'h')){
-     printf("Usage: fec_test -c [crate_num (int)] "
-         "-s [slot mask (hex)] -d (update database)\n");
-     return NULL;
-   }
-   int crateNum = GetInt(input,'c',2);
-   int update = GetFlag(input,'d');
-   uint32_t slotMask = GetUInt(input,'s',0xFFFF);
-   int busy = LockConnections(0,0x1<<crateNum);
-   if (busy){
-     printf("Those connections are currently in use.\n");
-     return NULL;
-   }
-   FECTest(crateNum,slotMask,update);
-   UnlockConnections(0,0x1<<crateNum);
+  }else if (strncmp(input,"fec_test",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: fec_test -c [crate_num (int)] "
+          "-s [slot mask (hex)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int update = GetFlag(input,'d');
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    FECTest(crateNum,slotMask,update);
+    UnlockConnections(0,0x1<<crateNum);
 
- }else if (strncmp(input,"mem_test",8) == 0){
-   if (GetFlag(input,'h')){
-     printf("Usage: mem_test -c [crate_num (int)] "
-         "-s [slot num (int)]\n");
-     return NULL;
-   }
-   int crateNum = GetInt(input,'c',2);
-   int slotNum = GetInt(input,'s',13);
-   int busy = LockConnections(0,0x1<<crateNum);
-   if (busy){
-     printf("Those connections are currently in use.\n");
-     return NULL;
-   }
-   MemTest(crateNum,slotNum);
-   UnlockConnections(0,0x1<<crateNum);
+  }else if (strncmp(input,"mem_test",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: mem_test -c [crate_num (int)] "
+          "-s [slot num (int)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int slotNum = GetInt(input,'s',13);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    MemTest(crateNum,slotNum,update);
+    UnlockConnections(0,0x1<<crateNum);
 
+  }else if (strncmp(input,"board_id",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: board_id -c [crate_num (int)] "
+          "-s [slot mask (hex)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int slotMask = GetUInt(input,'s',0xFFFF);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    BoardID(crateNum,slotMask);
+    UnlockConnections(0,0x1<<crateNum);
 
+  }else if (strncmp(input,"cald_test",9) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: cald_test -c [crate_num (int)] "
+          "-s [slot mask (hex)] -u [upper limit] -l [lower limit] -n [num points to sample] -p [samples per point] -d (update database) \n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int upper = GetInt(input,'u',3550);
+    int lower = GetInt(input,'l',3000);
+    int num = GetInt(input,'n',550);
+    int samples = GetInt(input,'p',1);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    CaldTest(crateNum,slotMask,upper,lower,num,samples,update);
+    UnlockConnections(0,0x1<<crateNum);
 
- }
+  }else if (strncmp(input,"cgt_test",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: cgt_test -c [crate_num (int)] "
+          "-s [slot mask (hex)] -p [channel mask (hex)] -d (update database) \n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    CGTTest(crateNum,slotMask,channelMask,update);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }
 }
