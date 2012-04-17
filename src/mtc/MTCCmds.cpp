@@ -45,105 +45,113 @@ int SBCControl(int connect, int kill, int manual, const char *idFile)
 
 int MTCInit(int xilinx)
 {
-  printf("Initializing MTCD/A+\n");
+  printf("*** Initializing MTCD/A+ ************** \n");
   int errors = 0;
 
-  if (xilinx)
-    errors = mtc->XilinxLoad();
-  if (errors){
-    printf("Problem loading xilinx\n");
-    return -1;
-  }
-  MTC *mtcdb = ( MTC * ) malloc( sizeof(MTC));
-  if ( mtcdb == ( MTC *) NULL )
-  {
-    printf("Error: malloc in mtc_init\n");
+  try{
+
+    if (xilinx)
+      errors = mtc->XilinxLoad();
+    if (errors){
+      printf("Problem loading xilinx\n");
+      return -1;
+    }
+    MTC *mtcdb = ( MTC * ) malloc( sizeof(MTC));
+    if ( mtcdb == ( MTC *) NULL )
+    {
+      printf("Error: malloc in mtc_init\n");
+      free(mtcdb);
+      return -1;
+    }
+
+    pouch_request *response = pr_init();
+    char get_db_address[500];
+    sprintf(get_db_address,"%s/%s/MTC_doc",DB_SERVER,DB_BASE_NAME);
+    pr_set_method(response, GET);
+    pr_set_url(response, get_db_address);
+    pr_do(response);
+    if (response->httpresponse != 200){
+      printf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
+      free(response);
+      free(mtcdb);
+      return -1;
+    }
+    JsonNode *doc = json_decode(response->resp.data);
+    ParseMTC(doc,mtcdb);
+    json_delete(doc);
+    pr_free(response);
+
+    // hold errors here
+    int result = 0;
+
+    //unset all masks
+    mtc->UnsetGTMask(MASKALL);
+    mtc->UnsetPedCrateMask(MASKALL);
+    mtc->UnsetGTCrateMask(MASKALL);
+
+    // load the dacs
+    float mtca_dac_values[14];
+
+    int i;
+    for (i=0; i<=13; i++)
+    { 
+      uint16_t raw_dacs = (uint16_t) mtcdb->mtca.triggers[i].threshold;
+      mtca_dac_values[i] = (((float) raw_dacs/2048) * 5000.0) - 5000.0;
+    }
+
+    mtc->LoadMTCADacs(mtca_dac_values);
+
+    // clear out the control register
+    mtc->RegWrite(MTCControlReg,0x0);
+
+    // set lockout width
+    uint16_t lkwidth = (uint16_t)((~((u_short) mtcdb->mtcd.lockoutWidth) & 0xff)*20);
+    result += mtc->SetLockoutWidth(lkwidth);
+
+    // zero out gt counter
+    mtc->SetGTCounter(0);
+
+    // load prescaler
+    uint16_t pscale = ~((uint16_t)(mtcdb->mtcd.nhit100LoPrescale)) + 1;
+    result += mtc->SetPrescale(pscale);
+
+    // load pulser
+    float freq = 781250.0/(float)((u_long)(mtcdb->mtcd.pulserPeriod) + 1);
+    result += mtc->SetPulserFrequency(freq);
+
+    // setup pedestal width
+    uint16_t pwid = (uint16_t)(((~(u_short)(mtcdb->mtcd.pedestalWidth)) & 0xff) * 5);
+    result += mtc->SetPedestalWidth(pwid);
+
+
+    // setup PULSE_GT delays
+    printf("Setting up PULSE_GT delays...\n");
+    uint16_t coarse_delay = (uint16_t)(((~(uint16_t)(mtcdb->mtcd.coarseDelay)) & 0xff) * 10);
+    result += mtc->SetCoarseDelay(coarse_delay);
+    float fine_delay = (float)(mtcdb->mtcd.fineDelay)*(float)(mtcdb->mtcd.fineSlope);
+    float fdelay_set = mtc->SetFineDelay(fine_delay);
+    printf( "PULSE_GET total delay has been set to %f\n",
+        (float) coarse_delay+fine_delay+
+        (float)(mtcdb->mtcd.minDelayOffset));
+
+    // load 10 MHz counter???? guess not
+
+    // reset memory
+    mtc->ResetMemory();
+
     free(mtcdb);
-    return -1;
+
+    if (result < 0) {
+      printf("errors in the MTC initialization!\n");
+    }else{
+      printf("MTC finished initializing\n");
+    }
+
   }
-
-  pouch_request *response = pr_init();
-  char get_db_address[500];
-  sprintf(get_db_address,"%s/%s/MTC_doc",DB_SERVER,DB_BASE_NAME);
-  pr_set_method(response, GET);
-  pr_set_url(response, get_db_address);
-  pr_do(response);
-  if (response->httpresponse != 200){
-    printf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
-    free(response);
-    free(mtcdb);
-    return -1;
+  catch(int e){
+    printf("There was a network error!\n");
   }
-  JsonNode *doc = json_decode(response->resp.data);
-  ParseMTC(doc,mtcdb);
-  json_delete(doc);
-  pr_free(response);
-
-  // hold errors here
-  int result = 0;
-
-  //unset all masks
-  mtc->UnsetGTMask(MASKALL);
-  mtc->UnsetPedCrateMask(MASKALL);
-  mtc->UnsetGTCrateMask(MASKALL);
-
-  // load the dacs
-  float mtca_dac_values[14];
-
-  int i;
-  for (i=0; i<=13; i++)
-  { 
-    uint16_t raw_dacs = (uint16_t) mtcdb->mtca.triggers[i].threshold;
-    mtca_dac_values[i] = (((float) raw_dacs/2048) * 5000.0) - 5000.0;
-  }
-
-  mtc->LoadMTCADacs(mtca_dac_values);
-
-  // clear out the control register
-  mtc->RegWrite(MTCControlReg,0x0);
-
-  // set lockout width
-  uint16_t lkwidth = (uint16_t)((~((u_short) mtcdb->mtcd.lockoutWidth) & 0xff)*20);
-  result += mtc->SetLockoutWidth(lkwidth);
-
-  // zero out gt counter
-  mtc->SetGTCounter(0);
-
-  // load prescaler
-  uint16_t pscale = ~((uint16_t)(mtcdb->mtcd.nhit100LoPrescale)) + 1;
-  result += mtc->SetPrescale(pscale);
-
-  // load pulser
-  float freq = 781250.0/(float)((u_long)(mtcdb->mtcd.pulserPeriod) + 1);
-  result += mtc->SetPulserFrequency(freq);
-
-  // setup pedestal width
-  uint16_t pwid = (uint16_t)(((~(u_short)(mtcdb->mtcd.pedestalWidth)) & 0xff) * 5);
-  result += mtc->SetPedestalWidth(pwid);
-
-
-  // setup PULSE_GT delays
-  printf("Setting up PULSE_GT delays...\n");
-  uint16_t coarse_delay = (uint16_t)(((~(uint16_t)(mtcdb->mtcd.coarseDelay)) & 0xff) * 10);
-  result += mtc->SetCoarseDelay(coarse_delay);
-  float fine_delay = (float)(mtcdb->mtcd.fineDelay)*(float)(mtcdb->mtcd.fineSlope);
-  float fdelay_set = mtc->SetFineDelay(fine_delay);
-  printf( "PULSE_GET total delay has been set to %f\n",
-      (float) coarse_delay+fine_delay+
-      (float)(mtcdb->mtcd.minDelayOffset));
-
-  // load 10 MHz counter???? guess not
-
-  // reset memory
-  mtc->ResetMemory();
-
-  free(mtcdb);
-
-  if (result < 0) {
-    printf("errors in the MTC initialization!\n");
-  }else{
-    printf("MTC finished initializing\n");
-  }
+  printf("****************************************\n");
   return 0;
 }
 
