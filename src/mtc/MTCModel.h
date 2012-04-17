@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "MTCPacketTypes.h"
+#include "MTCRegisters.h"
 
 #include "MTCLink.h"
 

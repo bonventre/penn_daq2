@@ -18,14 +18,15 @@ MTCModel::~MTCModel()
 
 int MTCModel::RegWrite(uint32_t address, uint32_t data)
 {
-  SBCPacket packet;
-  packet.header.destination = 0x1;
-  packet.header.cmdID = MTC_WRITE_ID;
-  packet.header.numberBytesinPayload  = sizeof(SBCVmeWriteBlockStruct)+sizeof(uint32_t);
+  SBCPacket *packet;
+  packet = (SBCPacket *) malloc(sizeof(SBCPacket));
+  packet->header.destination = 0x1;
+  packet->header.cmdID = MTC_WRITE_ID;
+  packet->header.numberBytesinPayload  = sizeof(SBCVmeWriteBlockStruct)+sizeof(uint32_t);
   //packet->cmdHeader.numberBytesinPayload  = 256+28;
   //packet->numBytes = 256+28+16;
   SBCVmeWriteBlockStruct *writestruct;
-  writestruct = (SBCVmeWriteBlockStruct *) packet.payload;
+  writestruct = (SBCVmeWriteBlockStruct *) packet->payload;
   writestruct->address = address + MTCRegAddressBase;
   //writestruct->address = address;
   writestruct->addressModifier = MTCRegAddressMod;
@@ -36,27 +37,38 @@ int MTCModel::RegWrite(uint32_t address, uint32_t data)
   uint32_t *data_ptr = (uint32_t *) writestruct;
   *data_ptr = data;
 
-  SendCommand(&packet);
+  try{
+    SendCommand(packet);
+  }catch(int e){
+    free(packet);
+    throw e;
+  }
   return 0;
 }
 
 int MTCModel::RegRead(uint32_t address, uint32_t *data)
 {
-  SBCPacket packet;
+  SBCPacket *packet;
+  packet = (SBCPacket *) malloc(sizeof(SBCPacket));
   uint32_t *result;
-  packet.header.destination = 0x1;
-  packet.header.cmdID = MTC_READ_ID;
-  packet.header.numberBytesinPayload = sizeof(SBCVmeReadBlockStruct)+sizeof(uint32_t);
+  packet->header.destination = 0x1;
+  packet->header.cmdID = MTC_READ_ID;
+  packet->header.numberBytesinPayload = sizeof(SBCVmeReadBlockStruct)+sizeof(uint32_t);
   //packet->numBytes = 256+27+16;
   SBCVmeReadBlockStruct *readstruct;
-  readstruct = (SBCVmeReadBlockStruct *) packet.payload;
+  readstruct = (SBCVmeReadBlockStruct *) packet->payload;
   readstruct->address = address + MTCRegAddressBase;
   readstruct->addressModifier = MTCRegAddressMod;
   readstruct->addressSpace = MTCRegAddressSpace;
   readstruct->unitSize = 4;
   readstruct->numItems = 1;
 
-  SendCommand(&packet);
+  try{
+    SendCommand(packet);
+  }catch(int e){
+    free(packet);
+    throw e;
+  }
   result = (uint32_t *) (readstruct+1);
   *data = *result;
   return 0;
@@ -104,8 +116,8 @@ float MTCModel::SetGTDelay(float gtdel)
   result = SetCoarseDelay(coarse_delay);
   fdelay_set = SetFineDelay(fine_delay);
   total_delay = ((float) coarse_delay + fdelay_set + (float)(18.35));
- if (((total_delay - gtdel) > 2) || ((total_delay - gtdel) < -2))
-   printf("wanted %f, cdticks is %u, finedelay is %f, set to coarse_delay %u + fdelay_set %f + 18.35 = %f\n",gtdel,cdticks,fine_delay,coarse_delay,fdelay_set,total_delay);
+  if (((total_delay - gtdel) > 2) || ((total_delay - gtdel) < -2))
+    printf("wanted %f, cdticks is %u, finedelay is %f, set to coarse_delay %u + fdelay_set %f + 18.35 = %f\n",gtdel,cdticks,fine_delay,coarse_delay,fdelay_set,total_delay);
   return total_delay;
 }
 
@@ -117,13 +129,14 @@ int MTCModel::SoftGT()
 
 int MTCModel::MultiSoftGT(int number)
 {
-  SBCPacket packet;
-  packet.header.destination = 0x3;
-  packet.header.cmdID = 0x5;
-  packet.header.numberBytesinPayload  = sizeof(SBCVmeWriteBlockStruct) + sizeof(uint32_t);
+  SBCPacket *packet;
+  packet = (SBCPacket *) malloc(sizeof(SBCPacket));
+  packet->header.destination = 0x3;
+  packet->header.cmdID = 0x5;
+  packet->header.numberBytesinPayload  = sizeof(SBCVmeWriteBlockStruct) + sizeof(uint32_t);
   //packet->numBytes = 256+28+16;
   SBCVmeWriteBlockStruct *writestruct;
-  writestruct = (SBCVmeWriteBlockStruct *) packet.payload;
+  writestruct = (SBCVmeWriteBlockStruct *) packet->payload;
   writestruct->address = MTCSoftGTReg + MTCRegAddressBase;
   writestruct->addressModifier = MTCRegAddressMod;
   writestruct->addressSpace = MTCRegAddressSpace;
@@ -132,7 +145,12 @@ int MTCModel::MultiSoftGT(int number)
   writestruct++;
   uint32_t *data_ptr = (uint32_t *) writestruct;
   *data_ptr = 0x0;
-  SendCommand(&packet);
+  try{
+    SendCommand(packet);
+  }catch(int e){
+    free(packet);
+    throw e;
+  }
   return 0;
 }
 
@@ -167,34 +185,34 @@ int MTCModel::SetupPedestals(float pulser_freq, uint32_t ped_width, uint32_t coa
 
 void MTCModel::EnablePulser()
 {
-    uint32_t temp;
-    RegRead(MTCControlReg,&temp);
-    RegWrite(MTCControlReg,temp | PULSE_EN);
-    //printf("Pulser enabled\n");
+  uint32_t temp;
+  RegRead(MTCControlReg,&temp);
+  RegWrite(MTCControlReg,temp | PULSE_EN);
+  //printf("Pulser enabled\n");
 }
 
 void MTCModel::DisablePulser()
 {
-    uint32_t temp;
-    RegRead(MTCControlReg,&temp);
-    RegWrite(MTCControlReg,temp & ~PULSE_EN);
-    //printf("Pulser disabled\n");
+  uint32_t temp;
+  RegRead(MTCControlReg,&temp);
+  RegWrite(MTCControlReg,temp & ~PULSE_EN);
+  //printf("Pulser disabled\n");
 }
 
 void MTCModel::EnablePedestal()
 {
-    uint32_t temp;
-    RegRead(MTCControlReg,&temp);
-    RegWrite(MTCControlReg,temp | PED_EN);
-    //printf("Pedestals enabled\n");
+  uint32_t temp;
+  RegRead(MTCControlReg,&temp);
+  RegWrite(MTCControlReg,temp | PED_EN);
+  //printf("Pedestals enabled\n");
 }
 
 void MTCModel::DisablePedestal()
 {
-    uint32_t temp;
-    RegRead(MTCControlReg,&temp);
-    RegWrite(MTCControlReg,temp & ~PED_EN);
-    //printf("Pedestals disabled\n");
+  uint32_t temp;
+  RegRead(MTCControlReg,&temp);
+  RegWrite(MTCControlReg,temp & ~PED_EN);
+  //printf("Pedestals disabled\n");
 }
 
 int MTCModel::LoadMTCADacsByCounts(uint16_t *raw_dacs)
@@ -212,7 +230,7 @@ int MTCModel::LoadMTCADacsByCounts(uint16_t *raw_dacs)
         mV_dacs,raw_dacs[i]);
   }
 
-   /* set DACSEL */
+  /* set DACSEL */
   RegWrite(MTCDacCntReg,DACSEL);
 
   /* shift in raw DAC values */
@@ -243,7 +261,7 @@ int MTCModel::LoadMTCADacs(float *voltages)
 {
   uint16_t raw_dacs[14];
   int i;
-    printf("Loading MTC/A threshold DACs...\n");
+  printf("Loading MTC/A threshold DACs...\n");
 
 
   /* convert each threshold from mVolts to raw value and load into
@@ -254,7 +272,7 @@ int MTCModel::LoadMTCADacs(float *voltages)
   }
 
   LoadMTCADacsByCounts(raw_dacs);
- 
+
   printf("DAC loading complete\n");
   return 0;
 }
@@ -510,12 +528,13 @@ int MTCModel::XilinxLoad()
     return -1;
   }
 
-  SBCPacket packet; 
-  packet.header.destination = 0x3;
-  packet.header.cmdID = MTC_XILINX_ID;
-  packet.header.numberBytesinPayload = sizeof(SNOMtcXilinxLoadStruct) + howManybits;
-  packet.numBytes = packet.header.numberBytesinPayload+256+16;
-  SNOMtcXilinxLoadStruct *payloadPtr = (SNOMtcXilinxLoadStruct *)packet.payload;
+  SBCPacket *packet; 
+  packet = (SBCPacket *) malloc(sizeof(SBCPacket));
+  packet->header.destination = 0x3;
+  packet->header.cmdID = MTC_XILINX_ID;
+  packet->header.numberBytesinPayload = sizeof(SNOMtcXilinxLoadStruct) + howManybits;
+  packet->numBytes = packet->header.numberBytesinPayload+256+16;
+  SNOMtcXilinxLoadStruct *payloadPtr = (SNOMtcXilinxLoadStruct *)packet->payload;
   payloadPtr->baseAddress = 0x7000;
   payloadPtr->addressModifier = 0x29;
   payloadPtr->errorCode = 0;
@@ -526,19 +545,28 @@ int MTCModel::XilinxLoad()
   free(data);
   data = (char *) NULL;
 
-  int errors = fLink->SendXilinxPacket(&packet);
+  int errors;
+  try{
+    errors = fLink->SendXilinxPacket(packet);
+  }catch(int e){
+    free(packet);
+    throw e;
+  }
 
   long errorCode = payloadPtr->errorCode;
   if (errorCode){
     printf("Error code: %d \n",(int)errorCode);
     printf("Failed to load xilinx!\n");  
+    free(packet);
     return -5;
   }else if (errors){
     printf("Failed to load xilinx!\n");  
+    free(packet);
     return errors;
   }
 
   printf("Xilinx loading complete\n");
+  free(packet);
   return 0;
 }
 

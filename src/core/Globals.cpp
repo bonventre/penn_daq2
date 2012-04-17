@@ -396,3 +396,10 @@ int GetString(const char *input, char *result, char flag, const char *dflt)
   }
   return 0;
 }
+
+uint32_t GetBits(uint32_t value, uint32_t bit_start, uint32_t num_bits)
+{
+  uint32_t bits;
+  bits = (value >> (bit_start + 1 - num_bits)) & ~(~0 << num_bits);
+  return bits;
+}
