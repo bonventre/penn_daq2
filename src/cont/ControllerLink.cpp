@@ -11,6 +11,7 @@
 #include "BoardID.h"
 #include "CaldTest.h"
 #include "CGTTest.h"
+#include "ChinjScan.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -762,6 +763,36 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     CGTTest(crateNum,slotMask,channelMask,update);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"chinj_scan",10) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: chinj_scan -c [crate num (int)] "
+          "-s [slot mask (hex)] -p [channel mask (hex)] "
+          "-f [frequency] -t [gtdelay] -w [ped with] -n [num pedestals] "
+          "-l [charge lower limit] -u [charge upper limit] "
+          "-a [charge select (0=qhl,1=qhs,2=qlx,3=tac)] "
+          "-e (enable pedestal) -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    float freq = GetFloat(input,'f',0);
+    int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
+    int pedWidth = GetInt(input,'w',DEFAULT_PED_WIDTH);
+    int numPeds = GetInt(input,'n',1);
+    float lower = GetFloat(input,'l',0);
+    float upper = GetFloat(input,'u',5000);
+    int qSelect = GetInt(input,'a',0);
+    int pedOn = GetFlag(input,'e');
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,qSelect,pedOn,update);
     UnlockConnections(0,0x1<<crateNum);
 
   }

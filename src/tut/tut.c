@@ -95,6 +95,7 @@ COMMAND commands[] = {
     { "['board_id']", (Function *)NULL, (char *)NULL },
     { "['cald_test']", (Function *)NULL, (char *)NULL },
     { "['cgt_test']", (Function *)NULL, (char *)NULL },
+    { "['chinj_scan']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };
