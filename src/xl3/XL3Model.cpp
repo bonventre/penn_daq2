@@ -114,17 +114,14 @@ int XL3Model::GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf)
   int current_slot = 0;
   int current_point = 0;
   XL3Packet packet;
-  printf("Command number is now %d\n",fCommandNum-1);
 
   while (1){
     int err = fLink->GetNextPacket(&packet,5);
-    printf("Got type %02x, num %d\n",packet.header.packetType,packet.header.packetNum);
     if (err)
       throw 2;
     if (packet.header.packetNum > (fCommandNum-1))
       throw 3;
     if (packet.header.packetType == CALD_RESPONSE_ID){
-      printf("response\n");
       CaldResponsePacket *response = (CaldResponsePacket *) packet.payload;
       SwapShortBlock(response,sizeof(CaldResponsePacket)/sizeof(uint16_t));
       if (response->slot != current_slot){
@@ -144,7 +141,6 @@ int XL3Model::GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf)
         }
       }
     }else if (packet.header.packetType == CALD_TEST_ID){
-      printf("finished\n");
       // we must be finished
       return point_count;
     }
@@ -276,6 +272,7 @@ int32_t XL3Model::ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, in
     diff &= 0xFFFFF;
     diff = diff - (diff%3);
 
+    printf("diff is %d\n",diff);
     // check if there are more bundles than expected
     if (checkLimit){
       if ((3*limit) < diff){

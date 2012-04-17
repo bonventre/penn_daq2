@@ -68,6 +68,7 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
         if (commands->howMany > 0)
           pthread_cond_signal(&fRecvQueueCond);
         pthread_mutex_unlock(&fRecvQueueLock);
+        break;
       }
     default:
       pthread_mutex_lock(&fRecvQueueLock);

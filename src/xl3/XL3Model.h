@@ -48,4 +48,29 @@ class XL3Model{
     int fCommandNum;
 };
 
+struct channel_params{
+  int hi_balanced;
+  int low_balanced;
+  short int test_status;
+  short int low_gain_balance;
+  short int high_gain_balance;
+};
+
+struct cell {
+  int16_t per_cell;
+  int cellno;
+  double qlxbar, qlxrms;
+  double qhlbar, qhlrms;
+  double qhsbar, qhsrms;
+  double tacbar, tacrms;
+};
+
+struct pedestal {
+  int16_t channelnumber;
+  int16_t per_channel;
+  struct cell thiscell[16];
+};
+
+
+
 #endif
