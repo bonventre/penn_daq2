@@ -33,6 +33,7 @@ int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint3
 int GetString(const char *input, char *result, char flat, const char *dflt);
 float GetFloat(const char *input, char flag, float dflt);
 int GetMultiFloat(const char *input, int num, char flag, float *results, float dflt);
+uint32_t GetBits(uint32_t value, uint32_t bit_start, uint32_t num_bits);
 
 
 // configuration crap

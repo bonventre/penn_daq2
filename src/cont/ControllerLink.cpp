@@ -12,6 +12,7 @@
 #include "CaldTest.h"
 #include "CGTTest.h"
 #include "ChinjScan.h"
+#include "CrateCBal.h"
 #include "GTValidTest.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
@@ -794,6 +795,24 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,qSelect,pedOn,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"crate_cbal",10) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: crate_cbal -c [crate num (int)] "
+          "-s [slot mask (hex)] -p [channel mask (hex)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    CrateCBal(crateNum,slotMask,channelMask,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"gtvalid_test",12) == 0){
