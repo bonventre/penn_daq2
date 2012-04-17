@@ -12,6 +12,7 @@
 #include "CaldTest.h"
 #include "CGTTest.h"
 #include "ChinjScan.h"
+#include "GTValidTest.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -757,13 +758,13 @@ void *ControllerLink::ProcessCommand(void *arg)
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
     int update = GetFlag(input,'d');
-    int busy = LockConnections(0,0x1<<crateNum);
+    int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
       printf("Those connections are currently in use.\n");
       return NULL;
     }
     CGTTest(crateNum,slotMask,channelMask,update);
-    UnlockConnections(0,0x1<<crateNum);
+    UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"chinj_scan",10) == 0){
     if (GetFlag(input,'h')){
@@ -787,13 +788,34 @@ void *ControllerLink::ProcessCommand(void *arg)
     int qSelect = GetInt(input,'a',0);
     int pedOn = GetFlag(input,'e');
     int update = GetFlag(input,'d');
-    int busy = LockConnections(0,0x1<<crateNum);
+    int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
       printf("Those connections are currently in use.\n");
       return NULL;
     }
     ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,qSelect,pedOn,update);
-    UnlockConnections(0,0x1<<crateNum);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"gtvalid_test",12) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: gtvalid_test -c [crate num (int)] "
+          "-s [slot mask (hex)] -p [channel mask (hex)] "
+          "-g [gt cutoff] -t (use twiddle bits) -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    float gtCutoff = GetFloat(input,'g',0);
+    int twiddleOn = GetFlag(input,'t');
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    GTValidTest(crateNum,slotMask,channelMask,gtCutoff,twiddleOn,update);
+    UnlockConnections(1,0x1<<crateNum);
 
   }
 }
