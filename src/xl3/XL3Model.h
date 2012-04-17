@@ -17,12 +17,14 @@ class XL3Model{
     XL3Model(int crateNum);
     ~XL3Model();
 
-    int RW(uint32_t address, uint32_t data, uint32_t *result);
     int SendCommand(XL3Packet *packet, int withResponse = 1, int timeout = 2);
+    int GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, int timeout = 2);
+    int GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf);
+
+    int RW(uint32_t address, uint32_t data, uint32_t *result);
     int ChangeMode(int mode, uint16_t dataAvailMask);
     int UpdateCrateConfig(uint16_t slotMask);
     int DeselectFECs();
-    int GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, int timeout = 2);
     int GetCmosTotalCount(uint16_t slotMask, uint32_t totalCount[][32]);
     int LoadsDac(uint32_t dacNum, uint32_t dacValue, int slotNum);
     int MultiLoadsDac(int numDacs, uint32_t *dacNums, uint32_t *dacValues, uint32_t *slotNums);

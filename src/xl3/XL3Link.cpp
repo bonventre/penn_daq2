@@ -36,6 +36,10 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
 
 
   XL3Packet *packet = (XL3Packet *) input;
+//  printf("Got type: %02x\n",packet->header.packetType);
+//  uint32_t *p = (uint32_t *) packet;
+//  for (int j=0;j<10;j++)
+//    printf("%d: %08x\n",j,*(p+j));
   switch (packet->header.packetType){
     case PING_ID:
       {
