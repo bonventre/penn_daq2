@@ -465,8 +465,8 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
     } // end loop over slot
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("GTValidTest: %s\n",s);
   }
 
   printf("****************************************\n");

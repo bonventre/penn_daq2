@@ -60,8 +60,8 @@ int FECTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest, int ec
 
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("FECTest: %s\n",s);
   }
 
   printf("****************************************\n");

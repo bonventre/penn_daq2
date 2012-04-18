@@ -428,8 +428,8 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
     free(scan_errors);
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("ChinjScan: %s\n",s);
     if (pmt_buffer != NULL)
       free(pmt_buffer);
     if (ped != NULL)

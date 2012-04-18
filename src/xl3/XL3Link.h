@@ -19,6 +19,7 @@ class XL3Link : public GenericLink {
     void SentCallback(struct bufferevent *bev){};
     void EventCallback(struct bufferevent *bev, short what){};
     
+    void ProcessPacket(XL3Packet *packet);
     int GetNextPacket(XL3Packet *packet,int waitSeconds=5);
     int GetNextCmdAck(Command *command,int waitSeconds=5);
     int SendPacket(XL3Packet *packet);
@@ -29,6 +30,9 @@ class XL3Link : public GenericLink {
     std::queue<Command> fRecvCmdQueue;
     pthread_mutex_t fRecvQueueLock;
     pthread_cond_t fRecvQueueCond;
+    int fBytesLeft;
+    int fTempBytes;
+    char fTempPacket[XL3_PACKET_SIZE];
 
 };
 

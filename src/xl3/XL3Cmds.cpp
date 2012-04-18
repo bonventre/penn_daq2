@@ -21,8 +21,8 @@ int XL3RW(int crateNum, uint32_t address, uint32_t data)
     else
       printf("Wrote to %08x, got %08x\n",address,result);
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("XL3RW: %s\n",s);
   }
 
   return 0;
@@ -52,8 +52,8 @@ int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
     xl3s[crateNum]->GetMultiFCResults(1, xl3s[crateNum]->GetLastCommandNum(), &result);
     printf("got %08x\n",result);
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("XL3QueueRW: %s\n",s);
   }
 
   printf("****************************************\n");
@@ -273,8 +273,8 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
     json_delete(hw_rows);
     json_delete(debug_doc);
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("CrateInit: %s\n",s);
   }
   printf("****************************************\n");
 
@@ -289,8 +289,8 @@ int SMReset(int crateNum)
     xl3s[crateNum]->SendCommand(&packet);
     printf("Reset state machine.\n");
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("SMReset: %s\n",s);
   }
 
   return 0;
@@ -309,8 +309,8 @@ int DebuggingMode(int crateNum, int on)
     else
       printf("Turned off debugging mode\n");
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("DebuggingMode: %s\n",s);
   }
 
   return 0;
@@ -331,8 +331,8 @@ int ChangeMode(int crateNum, int mode, uint32_t dataAvailMask)
     else
       printf("Changed to normal mode\n");
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("ChangeMode: %s\n",s);
   }
 
   return 0;
@@ -351,8 +351,8 @@ int ReadLocalVoltage(int crateNum, int voltage)
     SwapLongBlock(packet.payload,sizeof(ReadLocalVoltageResults)/sizeof(uint32_t));
     printf("Voltage #%d: %f\n",voltage,results->voltage);
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("ReadLocalVoltage: %s\n",s);
   }
 
   return 0;
@@ -369,8 +369,8 @@ int HVReadback(int crateNum)
     printf("Supply A - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageA*300.0,results->currentA*10.0);
     printf("Supply B - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageB*300.0,results->currentB*10.0);
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("HVReadback: %s\n",s);
   }
 
   return 0;
@@ -389,8 +389,8 @@ int SetAlarmDac(int crateNum, uint32_t *dacs)
     xl3s[crateNum]->SendCommand(&packet);
     printf("Dacs set\n");
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("SetAlarmDac: %s\n",s);
   }
 
   return 0;
@@ -417,8 +417,8 @@ int LoadRelays(int crateNum, uint32_t *patterns)
     xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x4,&result);
     printf("Relays loaded\n");
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("LoadRelays: %s\n",s);
   }
   return 0;
 }
@@ -460,8 +460,8 @@ int ReadBundle(int crateNum, int slotNum, int quiet)
           gt16,cmos_es16,cgt_es16,cgt_es8,nc_cc,qlx,qhs,qhl,tac);
     }
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("ReadBundle: %s\n",s);
   }
   return 0;
 }

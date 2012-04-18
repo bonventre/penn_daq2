@@ -538,8 +538,8 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
     } // end loop over slots
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("CrateCBal: %s\n",s);
   }
 
   printf("End of crate_cbal\n");

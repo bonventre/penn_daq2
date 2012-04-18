@@ -26,7 +26,7 @@ int MTCLink::Connect()
   fFD = socket(AF_INET, SOCK_STREAM, 0);
   if (fFD <= 0){
     printf("Error opening a new socket for sbc connection!\n");
-    throw 1;
+    throw "Error opening a new socket\n";
   }
 
   struct sockaddr_in sbc_addr;
@@ -38,7 +38,7 @@ int MTCLink::Connect()
   if (connect(fFD,(struct sockaddr*) &sbc_addr,sizeof(sbc_addr))<0){
     close(fFD);
     printf("Problem connecting to sbc socket!\n");
-    throw 2;
+    throw "Problem connecting to socket\n";
   }
 
   int32_t test_word = 0x000DCBA;
@@ -123,7 +123,6 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
 
 int MTCLink::SendPacket(SBCPacket *packet)
 {
-
   packet->numBytes = packet->header.numberBytesinPayload + sizeof(uint32_t) +
     sizeof(SBCHeader) + kSBC_MaxMessageSizeBytes;
   int numBytesToSend = packet->numBytes;
@@ -146,7 +145,7 @@ int MTCLink::GetNextPacket(SBCPacket *packet,int waitSeconds)
     while (fRecvQueue.empty()){
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
-        printf("Wait timed out!\n");
+        printf("MTCLink::GetNextPacket: Wait timed out!\n");
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }
@@ -181,7 +180,7 @@ int MTCLink::SendXilinxPacket(SBCPacket *packet, int waitSeconds)
       while (fRecvQueue.empty()){
         int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
         if (rc == ETIMEDOUT) {
-          printf("Wait timed out!\n");
+          printf("MTCLink::SendXilinxPacket: Wait timed out!\n");
           rc = pthread_mutex_unlock(&fRecvQueueLock);
           return 1;
         }

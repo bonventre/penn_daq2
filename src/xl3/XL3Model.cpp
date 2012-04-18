@@ -64,10 +64,12 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
     do{
       err = fLink->GetNextPacket(packet,timeout);
       numPackets++;
-      if (numPackets > maxTries || err)
-        throw 2;
+      if (err)
+        throw "SendCommand: GetNextPacket timed out";
+      if (numPackets > maxTries)
+        throw "SendCommand: Got too many wrong packet types";
       if (packet->header.packetNum > (fCommandNum-1))
-        throw 3;
+        throw "SendCommand: Packet Num too high";
     }while(packet->header.packetType != type || packet->header.packetNum < (fCommandNum-1));
   }
   return 0;
@@ -91,15 +93,17 @@ int XL3Model::GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, in
   while (numCmds > cmdNum){
     int err = fLink->GetNextCmdAck(&command,timeout);
     if (err)
-      throw 1;
+      throw "GetMultiFCResults: GetNextCmdAck timed out";
     if (command.packetNum != packetNum){
       if (started)
-        throw 3;
+        throw "GetMultiFCResults: Got wrong packet number";
       else
         continue;
     }
-    if (command.cmdNum != cmdNum)
-      throw 4;
+    if (command.cmdNum != cmdNum){
+      printf("Expected %d, got %d\n",cmdNum,command.cmdNum);
+      throw "GetMultiFCResults: Got wrong command number";
+    }
     busErrors += command.flags;
     *(result + cmdNum) = command.data;
     cmdNum++;
@@ -118,9 +122,9 @@ int XL3Model::GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf)
   while (1){
     int err = fLink->GetNextPacket(&packet,5);
     if (err)
-      throw 2;
+      throw "GetCaldTestResults: GetNextPacket timed out";
     if (packet.header.packetNum > (fCommandNum-1))
-      throw 3;
+      throw "GetCaldTestResults: Packet num too high";
     if (packet.header.packetType == CALD_RESPONSE_ID){
       CaldResponsePacket *response = (CaldResponsePacket *) packet.payload;
       SwapShortBlock(response,sizeof(CaldResponsePacket)/sizeof(uint16_t));
@@ -145,6 +149,7 @@ int XL3Model::GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf)
       return point_count;
     }
   }
+  // never get here
   return 0;
 }
 
@@ -170,9 +175,9 @@ int XL3Model::UpdateCrateConfig(uint16_t slotMask)
     }
     DeselectFECs();
   }
-  catch(int e){
+  catch(const char* s){
     printf("Error: Unable to update crate configuration\n");
-    throw e;
+    throw s;
   }
   return 0;
 }
@@ -272,7 +277,6 @@ int32_t XL3Model::ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, in
     diff &= 0xFFFFF;
     diff = diff - (diff%3);
 
-    printf("diff is %d\n",diff);
     // check if there are more bundles than expected
     if (checkLimit){
       if ((3*limit) < diff){
@@ -320,9 +324,9 @@ int32_t XL3Model::ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, in
     count = diff / 3;
     DeselectFECs();
   }
-  catch(int e){
+  catch(const char* s){
     printf("There was a network error trying to read out bundles!\n");
-    throw 5;
+    throw s;
   }
   return count;
 }
