@@ -14,7 +14,9 @@
 #include "ChinjScan.h"
 #include "CrateCBal.h"
 #include "DiscCheck.h"
+#include "FifoTest.h"
 #include "GTValidTest.h"
+#include "MbStabilityTest.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -834,6 +836,23 @@ void *ControllerLink::ProcessCommand(void *arg)
     DiscCheck(crateNum,slotMask,numPeds,update);
     UnlockConnections(1,0x1<<crateNum);
 
+  }else if (strncmp(input,"fifo_test",9) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: fifo_test -c [crate num (int)] "
+          "-s [slot mask (hex)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    FifoTest(crateNum,slotMask,update);
+    UnlockConnections(1,0x1<<crateNum);
+
   }else if (strncmp(input,"gtvalid_test",12) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: gtvalid_test -c [crate num (int)] "
@@ -853,6 +872,24 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     GTValidTest(crateNum,slotMask,channelMask,gtCutoff,twiddleOn,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"mb_stability_test",17) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: mb_stability_test -c [crate num (int)] "
+          "-s [slot mask (hex)] -n [num pedestals (int)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int numPeds = GetInt(input,'n',50);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    MbStabilityTest(crateNum,slotMask,numPeds,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }
