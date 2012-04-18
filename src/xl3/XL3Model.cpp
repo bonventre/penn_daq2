@@ -37,8 +37,8 @@ int XL3Model::RW(uint32_t address, uint32_t data, uint32_t *result)
 
   SwapLongBlock(&args->command.data,1);
   *result = args->command.data;
-
-  return 0;
+  SwapShortBlock(&args->command.flags,1);
+  return (int) args->command.flags;
 }
 
 int XL3Model::CheckLock()
