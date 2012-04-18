@@ -18,6 +18,7 @@
 #include "MbStabilityTest.h"
 #include "MemTest.h"
 #include "PedRun.h"
+#include "SeeReflection.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -26,6 +27,9 @@
 
 ControllerLink::ControllerLink() : GenericLink(CONT_PORT)
 {
+  memset(fInput,'\0',sizeof(fInput));
+  pthread_mutex_init(&fInputLock,NULL);
+  pthread_cond_init(&fInputCond,NULL);
 }
 
 ControllerLink::~ControllerLink()
@@ -60,6 +64,18 @@ void ControllerLink::RecvCallback(struct bufferevent *bev)
       break;
   }
 
+ 
+  pthread_mutex_lock(&fInputLock);
+  if (fLock){
+    memset(fInput,'\0',sizeof(fInput));
+    memcpy(fInput,input,totalLength); 
+    fLock = 0;
+    pthread_cond_signal(&fInputCond);
+    pthread_mutex_unlock(&fInputLock);
+    return;
+  }
+  pthread_mutex_unlock(&fInputLock);
+
   pthread_t commandThread;
   int ret = pthread_create(&commandThread,NULL,ProcessCommand,input);
 }
@@ -73,6 +89,19 @@ void ControllerLink::EventCallback(struct bufferevent *bev, short what)
     bufferevent_free(fBev);
     fNumControllers--;
   }
+}
+
+void ControllerLink::GetInput(char *results,int maxLength)
+{
+  pthread_mutex_lock(&fInputLock);
+  fLock = 1;
+  while (fLock == 1)
+    pthread_cond_wait(&fInputCond,&fInputLock);
+  if (maxLength)
+    memcpy(results,fInput,maxLength);
+  else
+    memcpy(results,fInput,strlen(fInput));
+  pthread_mutex_unlock(&fInputLock);
 }
 
 void *ControllerLink::ProcessCommand(void *arg)
@@ -918,6 +947,28 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     PedRun(crateNum,slotMask,channelMask,frequency,gtDelay,pedWidth,numPeds,upper,lower,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"see_refl",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: see_refl -c [crate num (int)] "
+          "-v [dac value (int)] -s [slot mask (hex)] "
+          "-f [frequency (float)] -p [channel mask (hex)] "
+          "-d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    int dacValue = GetInt(input,'v',255);
+    float frequency = GetFloat(input,'f',0);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    SeeReflection(crateNum,slotMask,channelMask,dacValue,frequency,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }
