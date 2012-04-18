@@ -90,17 +90,18 @@ COMMAND commands[] = {
     { "['set_pulser_freq']", (Function *)NULL, (char *)NULL },
     { "['send_softgt']", (Function *)NULL, (char *)NULL },
     { "['multi_softgt']", (Function *)NULL, (char *)NULL },
-    { "['fec_test']", (Function *)NULL, (char *)NULL },
-    { "['mem_test']", (Function *)NULL, (char *)NULL },
     { "['board_id']", (Function *)NULL, (char *)NULL },
     { "['cald_test']", (Function *)NULL, (char *)NULL },
     { "['cgt_test']", (Function *)NULL, (char *)NULL },
     { "['chinj_scan']", (Function *)NULL, (char *)NULL },
     { "['crate_cbal']", (Function *)NULL, (char *)NULL },
     { "['disc_check']", (Function *)NULL, (char *)NULL },
+    { "['fec_test']", (Function *)NULL, (char *)NULL },
     { "['fifo_test']", (Function *)NULL, (char *)NULL },
     { "['gtvalid_test']", (Function *)NULL, (char *)NULL },
     { "['mb_stability_test']", (Function *)NULL, (char *)NULL },
+    { "['mem_test']", (Function *)NULL, (char *)NULL },
+    { "['ped_run']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };
