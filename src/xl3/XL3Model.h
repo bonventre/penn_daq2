@@ -11,7 +11,8 @@
 #define FEC_CSR_CRATE_OFFSET 11
 #define MAX_FEC_COMMANDS 60000
 
-#define INIT_MODE 0
+#define INIT_MODE 0x1
+#define NORMAL_MODE 0x2
 
 class XL3Model{
 

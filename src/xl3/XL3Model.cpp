@@ -57,7 +57,7 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
   fLink->SendPacket(packet);
   if (withResponse){
     int numPackets = 0;
-    int maxTries = 10;
+    int maxTries = 100;
     int err;
     // look for the response. If you get the wrong packet type, try again, but
     // eventually raise an exception
@@ -70,6 +70,8 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
         throw "SendCommand: Got too many wrong packet types";
       if (packet->header.packetNum > (fCommandNum-1))
         throw "SendCommand: Packet Num too high";
+      if (packet->header.packetType != type)
+        printf("Got %02x instead of %02x\n",packet->header.packetType,type);
     }while(packet->header.packetType != type || packet->header.packetNum < (fCommandNum-1));
   }
   return 0;
