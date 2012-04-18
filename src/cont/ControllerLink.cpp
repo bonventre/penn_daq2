@@ -19,6 +19,10 @@
 #include "MemTest.h"
 #include "PedRun.h"
 #include "SeeReflection.h"
+#include "TriggerScan.h"
+#include "TTot.h"
+#include "VMon.h"
+#include "ZDisc.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -971,5 +975,107 @@ void *ControllerLink::ProcessCommand(void *arg)
     SeeReflection(crateNum,slotMask,channelMask,dacValue,frequency,update);
     UnlockConnections(1,0x1<<crateNum);
 
+  }else if (strncmp(input,"trigger_scan",12) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: trigger_scan -c [crate mask (hex)] "
+          "-t [trigger to enable (0-13)] -s [slot mask for all crates (hex)] "
+          "-00..-18 [slot mask for crate 0-18 (hex)] -f [output file name] "
+          "-n [max nhit to scan to (int)] -m [min adc count thresh to scan down to (int)] "
+          "-d [threshold dac to program (by default the one you are triggering on)] "
+          "-q (quick mode - samples every 10th dac count)\n");
+      return NULL;
+    }
+    uint32_t crateMask = GetUInt(input,'c',0x4);
+    uint32_t slotMasks[19];
+    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    int nhitMax = GetInt(input,'n',0);
+    int threshMin = GetInt(input,'m',0);
+    int triggerSelect = GetInt(input,'t',0);
+    int dacSelect = GetInt(input,'d',-1);
+    int quick = GetFlag(input,'q');
+    char fileName[1000];
+    GetString(input,fileName,'f',"data/triggerscan.dat");
+    int busy = LockConnections(1,crateMask);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    TriggerScan(crateMask,slotMasks,triggerSelect,dacSelect,nhitMax,threshMin,fileName,quick);
+    UnlockConnections(1,crateMask);
+
+  }else if (strncmp(input,"get_ttot",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: get_ttot -c [crate num (int)] "
+          "-s [slot mask (hex)] -t [target time] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int targetTime = GetInt(input,'t',400);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    GetTTot(crateNum,slotMask,targetTime,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"set_ttot",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: set_ttot -c [crate num (int)] "
+          "-s [slot mask (hex)] -t [target time] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int targetTime = GetInt(input,'t',400);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    SetTTot(crateNum,slotMask,targetTime,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"vmon",4) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: vmon -c [crate num (int)]"
+          "-s [slot mask (hex)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    VMon(crateNum,slotMask,update);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"zdisc",5) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: zdisc -c [crate num (int)] "
+          "-s [slot mask (hex)] -o [offset] -r [rate] "
+          "-d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int offset = GetInt(input,'o',0);
+    float rate = GetFloat(input,'r',10000);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    ZDisc(crateNum,slotMask,rate,offset,update);
+    UnlockConnections(0,0x1<<crateNum);
+
   }
 }
+

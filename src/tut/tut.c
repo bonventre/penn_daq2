@@ -103,6 +103,11 @@ COMMAND commands[] = {
     { "['mem_test']", (Function *)NULL, (char *)NULL },
     { "['ped_run']", (Function *)NULL, (char *)NULL },
     { "['see_refl']", (Function *)NULL, (char *)NULL },
+    { "['trigger_scan']", (Function *)NULL, (char *)NULL },
+    { "['get_ttot']", (Function *)NULL, (char *)NULL },
+    { "['set_ttot']", (Function *)NULL, (char *)NULL },
+    { "['vmon']", (Function *)NULL, (char *)NULL },
+    { "['zdisc']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };
