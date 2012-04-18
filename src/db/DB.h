@@ -25,9 +25,10 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc);
 int PostFECDBDoc(int crate, int slot, JsonNode *doc);
 int UpdateFECDBDoc(JsonNode *doc);
 
+void SetupDebugDoc(int crateNum, int slotNum, JsonNode* doc);
 int PostDebugDoc(int crate, int card, JsonNode* doc, int updateConfig=1);
 //int post_debug_doc(int crate, int card, JsonNode* doc, fd_set *thread_fdset);
-//int post_debug_doc_with_id(int crate, int card, char *id, JsonNode* doc, fd_set *thread_fdset);
+int PostDebugDocWithID(int crate, int card, char *id, JsonNode* doc);
 //int post_debug_doc_mem_test(int crate, int card, JsonNode* doc, fd_set *thread_fdset);
 //int post_ecal_doc(uint32_t crate_mask, uint16_t *slot_mask, char *logfile, char *id, fd_set *thread_fdset);
 
