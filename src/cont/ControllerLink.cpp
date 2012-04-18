@@ -6,17 +6,18 @@
 #include "XL3Registers.h"
 #include "MTCRegisters.h"
 
-#include "FECTest.h"
-#include "MemTest.h"
 #include "BoardID.h"
 #include "CaldTest.h"
 #include "CGTTest.h"
 #include "ChinjScan.h"
 #include "CrateCBal.h"
 #include "DiscCheck.h"
+#include "FECTest.h"
 #include "FifoTest.h"
 #include "GTValidTest.h"
 #include "MbStabilityTest.h"
+#include "MemTest.h"
+#include "PedRun.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -681,40 +682,6 @@ void *ControllerLink::ProcessCommand(void *arg)
     printf("Multi Soft gt sent\n");
     UnlockConnections(1,0x0);
 
-  }else if (strncmp(input,"fec_test",8) == 0){
-    if (GetFlag(input,'h')){
-      printf("Usage: fec_test -c [crate_num (int)] "
-          "-s [slot mask (hex)] -d (update database)\n");
-      return NULL;
-    }
-    int crateNum = GetInt(input,'c',2);
-    int update = GetFlag(input,'d');
-    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
-    int busy = LockConnections(0,0x1<<crateNum);
-    if (busy){
-      printf("Those connections are currently in use.\n");
-      return NULL;
-    }
-    FECTest(crateNum,slotMask,update);
-    UnlockConnections(0,0x1<<crateNum);
-
-  }else if (strncmp(input,"mem_test",8) == 0){
-    if (GetFlag(input,'h')){
-      printf("Usage: mem_test -c [crate_num (int)] "
-          "-s [slot num (int)] -d (update database)\n");
-      return NULL;
-    }
-    int crateNum = GetInt(input,'c',2);
-    int slotNum = GetInt(input,'s',13);
-    int update = GetFlag(input,'d');
-    int busy = LockConnections(0,0x1<<crateNum);
-    if (busy){
-      printf("Those connections are currently in use.\n");
-      return NULL;
-    }
-    MemTest(crateNum,slotNum,update);
-    UnlockConnections(0,0x1<<crateNum);
-
   }else if (strncmp(input,"board_id",8) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: board_id -c [crate_num (int)] "
@@ -836,6 +803,23 @@ void *ControllerLink::ProcessCommand(void *arg)
     DiscCheck(crateNum,slotMask,numPeds,update);
     UnlockConnections(1,0x1<<crateNum);
 
+  }else if (strncmp(input,"fec_test",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: fec_test -c [crate_num (int)] "
+          "-s [slot mask (hex)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int update = GetFlag(input,'d');
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    FECTest(crateNum,slotMask,update);
+    UnlockConnections(0,0x1<<crateNum);
+
   }else if (strncmp(input,"fifo_test",9) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: fifo_test -c [crate num (int)] "
@@ -890,6 +874,50 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     MbStabilityTest(crateNum,slotMask,numPeds,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"mem_test",8) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: mem_test -c [crate_num (int)] "
+          "-s [slot num (int)] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int slotNum = GetInt(input,'s',13);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    MemTest(crateNum,slotNum,update);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"ped_run",7) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: ped_run -c [crate num (int)] "
+          "-s [slot mask (hex)] -p [channel mask (hex)] "
+          "-l [lower Q ped check value] -u [upper Q ped check value] "
+          "-f [pulser frequency (0 for softgts)] -n [number of pedestals per cell] "
+          "-t [gt delay] -w [pedestal width] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    int lower = GetInt(input,'l',400);
+    int upper = GetInt(input,'u',700);
+    float frequency = GetFloat(input,'f',0);
+    int numPeds = GetInt(input,'n',50);
+    int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
+    int pedWidth = GetInt(input,'w',DEFAULT_PED_WIDTH);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    PedRun(crateNum,slotMask,channelMask,frequency,gtDelay,pedWidth,numPeds,upper,lower,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }

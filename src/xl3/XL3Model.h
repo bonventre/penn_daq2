@@ -11,6 +11,8 @@
 #define FEC_CSR_CRATE_OFFSET 11
 #define MAX_FEC_COMMANDS 60000
 
+#define INIT_MODE 0
+
 class XL3Model{
 
   public:
