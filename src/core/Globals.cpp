@@ -292,21 +292,23 @@ int GetMultiUInt(const char *input, int num, char flag, uint32_t *results, uint3
   words = strtok(buffer, " ");
   while (words != NULL){
     if (words[0] == '-'){
-      int done = 0;
-      for (int i=0;i<=(num/10);i++){
-        if (done) break;
-        if (words[1] == flag){
-          if ((words2 = strtok(NULL, " ")) != NULL)
-            for (int j=0;j<num;j++)
-              results[j] = strtoul(words2,(char**) NULL,16); 
-        }
-        if (words[1] == (i+ascii)){
-          for (int j=0;j<=((num-i*10)%10);j++){
-            if (words[2] == (j+ascii)){
-              if ((words2 = strtok(NULL, " ")) != NULL)
-                results[i*10+j] = strtoul(words2,(char**) NULL,16); 
-              done = 1;
-              break;
+      if (words[1] == flag){
+        if ((words2 = strtok(NULL, " ")) != NULL)
+          for (int j=0;j<num;j++)
+            results[j] = strtoul(words2,(char**) NULL,16); 
+      }else{
+
+        int done = 0;
+        for (int i=0;i<=(num/10);i++){
+          if (done) break;
+          if (words[1] == (i+ascii)){
+            for (int j=0;j<=((num-i*10)%10);j++){
+              if (words[2] == (j+ascii)){
+                if ((words2 = strtok(NULL, " ")) != NULL)
+                  results[i*10+j] = strtoul(words2,(char**) NULL,16); 
+                done = 1;
+                break;
+              }
             }
           }
         }
@@ -328,7 +330,7 @@ float GetFloat(const char *input, char flag, float dflt)
     if (words[0] == '-'){
       if (words[1] == flag){
         if ((words2 = strtok(NULL, " ")) != NULL){
-            return (float) strtod(words2,(char**)NULL);
+          return (float) strtod(words2,(char**)NULL);
         }
       }
     }
@@ -350,21 +352,23 @@ int GetMultiFloat(const char *input, int num, char flag, float *results, float d
   words = strtok(buffer, " ");
   while (words != NULL){
     if (words[0] == '-'){
-      int done = 0;
-      for (int i=0;i<=(num/10);i++){
-        if (done) break;
-        if (words[1] == flag){
-          if ((words2 = strtok(NULL, " ")) != NULL)
-            for (int j=0;j<num;j++)
-              results[j] = (float) strtod(words2,(char**)NULL); 
-        }
-        if (words[1] == (i+ascii)){
-          for (int j=0;j<=((num-i*10)%10);j++){
-            if (words[2] == (j+ascii)){
-              if ((words2 = strtok(NULL, " ")) != NULL)
-                results[i*10+j] = (float) strtod(words2,(char**)NULL); 
-              done = 1;
-              break;
+      if (words[1] == flag){
+        if ((words2 = strtok(NULL, " ")) != NULL)
+          for (int j=0;j<num;j++)
+            results[j] = (float) strtod(words2,(char**)NULL);
+      }else{
+
+        int done = 0;
+        for (int i=0;i<=(num/10);i++){
+          if (done) break;
+          if (words[1] == (i+ascii)){
+            for (int j=0;j<=((num-i*10)%10);j++){
+              if (words[2] == (j+ascii)){
+                if ((words2 = strtok(NULL, " ")) != NULL)
+                  results[i*10+j] = (float) strtod(words2,(char**)NULL);
+                done = 1;
+                break;
+              }
             }
           }
         }
@@ -374,8 +378,6 @@ int GetMultiFloat(const char *input, int num, char flag, float *results, float d
   }
   return 0;
 }
-
-
 
 int GetString(const char *input, char *result, char flag, const char *dflt)
 {

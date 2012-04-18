@@ -23,6 +23,7 @@
 #include "TTot.h"
 #include "VMon.h"
 #include "ZDisc.h"
+#include "RunPedestals.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -1076,6 +1077,68 @@ void *ControllerLink::ProcessCommand(void *arg)
     ZDisc(crateNum,slotMask,rate,offset,update);
     UnlockConnections(0,0x1<<crateNum);
 
-  }
+  }else if (strncmp(input,"run_pedestals_end",17) == 0){
+    int crate = 1;
+    int mtc = 1;
+    if (strncmp(input,"run_pedestals_end_mtc",21)==0)
+      crate = 0;
+    if (strncmp(input,"run_pedestals_end_crate",23)==0)
+      mtc = 0;
+    if (GetFlag(input,'h')){
+      if (crate && !mtc)
+        printf("Usage: run_pedestals_end_crate -c [crate mask (hex)]\n");
+      if (mtc && !crate)
+        printf("Usage: run_pedestals_end_mtc\n");
+      if (crate && mtc)
+        printf("Usage: run_pedestals_end -c [crate mask (hex)]\n");
+      return NULL;
+    }
+    uint32_t crateMask = GetUInt(input,'c',0x4);
+    int busy = LockConnections(mtc,crateMask*crate);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    RunPedestalsEnd(crateMask,crate,mtc);
+    UnlockConnections(mtc,crateMask*crate);
+
+   }else if (strncmp(input,"run_pedestals",13) == 0){
+    int crate = 1;
+    int mtc = 1;
+    if (strncmp(input,"run_pedestals_mtc",17)==0)
+      crate = 0;
+    if (strncmp(input,"run_pedestals_crate",19)==0)
+      mtc = 0;
+    if (GetFlag(input,'h')){
+      if (crate && !mtc)
+        printf("Usage: run_pedestals_crate ");
+      if (mtc && !crate)
+        printf("Usage: run_pedestals_mtc ");
+      if (crate && mtc)
+        printf("Usage: run_pedestals ");
+      if (crate)
+        printf("-c [crate mask (hex)] -s [all slot masks (hex)] -(00-18) [one slot mask (hex)] -p [channel mask (hex)] ");
+      if (mtc)
+        printf("-f [frequency (float)] -t [gt delay] -w [ped width]");
+      printf("\n");
+      return NULL;
+    }
+    uint32_t crateMask = GetUInt(input,'c',0x4);
+    uint32_t slotMasks[19];
+    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    float frequency = GetFloat(input,'f',1000.0);
+    int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
+    int pedWidth = GetInt(input,'w',DEFAULT_PED_WIDTH);
+
+    int busy = LockConnections(mtc,crateMask*crate);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    RunPedestals(crateMask,slotMasks,channelMask,frequency,gtDelay,pedWidth,crate,mtc);
+    UnlockConnections(mtc,crateMask*crate);
+
+   }
 }
 

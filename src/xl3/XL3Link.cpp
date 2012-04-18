@@ -104,6 +104,35 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
         pthread_mutex_unlock(&fRecvQueueLock);
         break;
       }
+    case MEGA_BUNDLE_ID:
+      {
+        //FIXME
+        break;
+      }
+    case ERROR_ID:
+      {
+        ErrorPacket *errors = (ErrorPacket *) packet->payload;
+        printf("Error: cmdRejected:%d, transferError:%d, xl3DAUnknown:%d\n",errors->cmdRejected,errors->transferError,errors->xl3DataAvailUnknown);
+        printf("bundleread: ");
+        for (int i=0;i<16;i++)
+          printf("%d ",errors->fecBundleReadError[i]);
+        printf("\n");
+        printf("bundleresync: ");
+        for (int i=0;i<16;i++)
+          printf("%d ",errors->fecBundleResyncError[i]);
+        printf("\n");
+        printf("memlevelunknown: ");
+        for (int i=0;i<16;i++)
+          printf("%d ",errors->fecMemLevelUnknown[i]);
+        printf("\n");
+        break;
+      }
+    case SCREWED_ID:
+      {
+        //FIXME
+        printf("Screwed\n");
+        break;
+      }
     default:
       pthread_mutex_lock(&fRecvQueueLock);
       fRecvQueue.push(*packet);

@@ -321,15 +321,18 @@ int ChangeMode(int crateNum, int mode, uint32_t dataAvailMask)
   XL3Packet packet;
   packet.header.packetType = CHANGE_MODE_ID;
   ChangeModeArgs *args = (ChangeModeArgs *) packet.payload;
-  args->mode = mode;
+  if (mode)
+    args->mode = NORMAL_MODE;
+  else
+    args->mode = INIT_MODE;
   args->dataAvailMask = dataAvailMask;
   SwapLongBlock(packet.payload,sizeof(ChangeModeArgs)/sizeof(uint32_t));
   try{
     xl3s[crateNum]->SendCommand(&packet);
     if (mode)
-      printf("Changed to init mode\n");
-    else
       printf("Changed to normal mode\n");
+    else
+      printf("Changed to init mode\n");
   }
   catch(const char* s){
     printf("ChangeMode: %s\n",s);
