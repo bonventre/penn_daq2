@@ -24,6 +24,7 @@
 #include "VMon.h"
 #include "ZDisc.h"
 #include "RunPedestals.h"
+#include "FinalTest.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -69,7 +70,7 @@ void ControllerLink::RecvCallback(struct bufferevent *bev)
       break;
   }
 
- 
+
   pthread_mutex_lock(&fInputLock);
   if (fLock){
     memset(fInput,'\0',sizeof(fInput));
@@ -1102,7 +1103,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     RunPedestalsEnd(crateMask,crate,mtc);
     UnlockConnections(mtc,crateMask*crate);
 
-   }else if (strncmp(input,"run_pedestals",13) == 0){
+  }else if (strncmp(input,"run_pedestals",13) == 0){
     int crate = 1;
     int mtc = 1;
     if (strncmp(input,"run_pedestals_mtc",17)==0)
@@ -1139,6 +1140,28 @@ void *ControllerLink::ProcessCommand(void *arg)
     RunPedestals(crateMask,slotMasks,channelMask,frequency,gtDelay,pedWidth,crate,mtc);
     UnlockConnections(mtc,crateMask*crate);
 
-   }
+  }else if (strncmp(input,"final_test",10) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: final_test -c [crate num (int)] -s [slot mask (hex)] -q (skip text input) -t [test mask if you want only a subset (hex)]\n");
+      printf("For test mask, the bit map is: \n");
+      printf("0: fec_test, 1: vmon, 2: cgt_test, 3: ped_run\n");
+      printf("4: crate_cbal, 5: chinj_scan, 6: set_ttot, 7: get_ttot\n");
+      printf("8: disc_check, 9: gtvalid_test, 10: zdisc, 11: mb_stability_test\n");
+      printf("12: fifo_test, 13: cald_test, 14: mem_test\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t testMask = GetUInt(input,'t',0xFFFFFFFF);
+    int skip = GetFlag(input,'q');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    FinalTest(crateNum,slotMask,testMask,skip);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }
 }
 

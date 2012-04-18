@@ -547,12 +547,9 @@ int UpdateFECDBDdoc(JsonNode *doc)
   return 0;
 }
 
-int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
+void SetupDebugDoc(int crateNum, int slotNum, JsonNode* doc)
 {
   char mb_id[8],db_id[4][8];
-  char put_db_address[500];
-  if (updateConfig)
-    xl3s[crateNum]->UpdateCrateConfig(0x1<<slotNum);
   time_t the_time;
   the_time = time(0); //
   char datetime[100];
@@ -587,8 +584,17 @@ int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
 
   json_append_member(doc,"timestamp",json_mknumber((double)(long int) the_time));
   json_append_member(doc,"created",json_mkstring(datetime));
+}
+
+int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
+{
+  if (updateConfig)
+    xl3s[crateNum]->UpdateCrateConfig(0x1<<slotNum);
+
+  SetupDebugDoc(crateNum,slotNum,doc);
 
   // TODO: this might be leaking a lot...
+  char put_db_address[500];
   sprintf(put_db_address,"%s/%s",DB_SERVER,DB_BASE_NAME);
   pouch_request *post_response = pr_init();
   pr_set_method(post_response, POST);
@@ -608,48 +614,12 @@ int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
   return ret;
 }
 
-/*
-int post_debug_doc_with_id(int crate, int card, char *id, JsonNode* doc, fd_set *thread_fdset)
+int PostDebugDocWithID(int crate, int card, char *id, JsonNode* doc)
 {
-  char mb_id[8],db_id[4][8];
+  xl3s[crate]->UpdateCrateConfig(0x1<<card);
+  SetupDebugDoc(crate,card,doc);
+
   char put_db_address[500];
-  update_crate_config(crate,0x1<<card,thread_fdset);
-  time_t the_time;
-  the_time = time(0); //
-  char datetime[100];
-  sprintf(datetime,"%s",(char *) ctime(&the_time));
-  datetime[strlen(datetime)-1] = '\0';
-
-  sprintf(mb_id,"%04x",crate_config[crate][card].mb_id);
-  sprintf(db_id[0],"%04x",crate_config[crate][card].db_id[0]);
-  sprintf(db_id[1],"%04x",crate_config[crate][card].db_id[1]);
-  sprintf(db_id[2],"%04x",crate_config[crate][card].db_id[2]);
-  sprintf(db_id[3],"%04x",crate_config[crate][card].db_id[3]);
-
-  JsonNode *config = json_mkobject();
-  JsonNode *db = json_mkarray();
-  int i;
-  for (i=0;i<4;i++){
-    JsonNode *db1 = json_mkobject();
-    json_append_member(db1,"db_id",json_mkstring(db_id[i]));
-    json_append_member(db1,"slot",json_mknumber((double)i));
-    json_append_element(db,db1);
-  }
-  json_append_member(config,"db",db);
-  json_append_member(config,"fec_id",json_mkstring(mb_id));
-  json_append_member(config,"crate_id",json_mknumber((double)crate));
-  json_append_member(config,"slot",json_mknumber((double)card));
-  if (CURRENT_LOCATION == PENN_TESTSTAND)
-    json_append_member(config,"loc",json_mkstring("penn"));
-  if (CURRENT_LOCATION == ABOVE_GROUND_TESTSTAND)
-    json_append_member(config,"loc",json_mkstring("surface"));
-  if (CURRENT_LOCATION == UNDERGROUND)
-    json_append_member(config,"loc",json_mkstring("underground"));
-  json_append_member(doc,"config",config);
-
-  json_append_member(doc,"timestamp",json_mknumber((double)(long int) the_time));
-  json_append_member(doc,"created",json_mkstring(datetime));
-
   sprintf(put_db_address,"%s/%s/%s",DB_SERVER,DB_BASE_NAME,id);
   pouch_request *post_response = pr_init();
   pr_set_method(post_response, PUT);
@@ -659,7 +629,7 @@ int post_debug_doc_with_id(int crate, int card, char *id, JsonNode* doc, fd_set 
   pr_do(post_response);
   int ret = 0;
   if (post_response->httpresponse != 201){
-    pt_printsend("error code %d\n",(int)post_response->httpresponse);
+    printf("error code %d\n",(int)post_response->httpresponse);
     ret = -1;
   }
   pr_free(post_response);
@@ -667,7 +637,8 @@ int post_debug_doc_with_id(int crate, int card, char *id, JsonNode* doc, fd_set 
     free(data);
   }
   return 0;
-};
+}
+/*
 
 int post_debug_doc_mem_test(int crate, int card, JsonNode* doc, fd_set *thread_fdset)
 {
