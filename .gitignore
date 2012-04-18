@@ -8,3 +8,4 @@ data/config.cfg
 trig_scan*.txt
 *.png
 config/local
+*history*

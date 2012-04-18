@@ -84,8 +84,8 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
     free(adc_buf);
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("CaldTest: %s\n",s);
   }
 
   printf("****************************************\n");

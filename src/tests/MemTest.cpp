@@ -58,8 +58,8 @@ int MemTest(int crateNum, int slotNum, int updateDB, int finalTest)
       json_delete(newdoc); // Only have to delete the head node
     }
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("MemTest: %s\n",s);
   }
 
   printf("****************************************\n");

@@ -39,9 +39,9 @@ int MTCModel::RegWrite(uint32_t address, uint32_t data)
 
   try{
     SendCommand(packet);
-  }catch(int e){
+  }catch(const char* s){
     free(packet);
-    throw e;
+    throw s;
   }
   return 0;
 }
@@ -65,9 +65,9 @@ int MTCModel::RegRead(uint32_t address, uint32_t *data)
 
   try{
     SendCommand(packet);
-  }catch(int e){
+  }catch(const char* s){
     free(packet);
-    throw e;
+    throw s;
   }
   result = (uint32_t *) (readstruct+1);
   *data = *result;
@@ -91,7 +91,7 @@ int MTCModel::SendCommand(SBCPacket *packet,int withResponse, int timeout)
     // eventually raise an exception
     int err = fLink->GetNextPacket(packet,timeout);
     if (err)
-      throw 2;
+      throw "Time out waiting for GetNextPacket";
   }
   return 0;
 }
@@ -147,9 +147,9 @@ int MTCModel::MultiSoftGT(int number)
   *data_ptr = 0x0;
   try{
     SendCommand(packet);
-  }catch(int e){
+  }catch(const char* s){
     free(packet);
-    throw e;
+    throw s;
   }
   return 0;
 }
@@ -548,9 +548,9 @@ int MTCModel::XilinxLoad()
   int errors;
   try{
     errors = fLink->SendXilinxPacket(packet);
-  }catch(int e){
+  }catch(const char* s){
     free(packet);
-    throw e;
+    throw s;
   }
 
   long errorCode = payloadPtr->errorCode;

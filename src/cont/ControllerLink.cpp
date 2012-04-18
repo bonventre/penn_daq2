@@ -13,6 +13,7 @@
 #include "CGTTest.h"
 #include "ChinjScan.h"
 #include "CrateCBal.h"
+#include "DiscCheck.h"
 #include "GTValidTest.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
@@ -813,6 +814,24 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     CrateCBal(crateNum,slotMask,channelMask,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"disc_check",10) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: disc_check -c [crate num (int)] "
+          "-s [slot mask (hex)] -n [num pedestals] -d (update database)\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    int numPeds = GetInt(input,'n',100000);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    DiscCheck(crateNum,slotMask,numPeds,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"gtvalid_test",12) == 0){

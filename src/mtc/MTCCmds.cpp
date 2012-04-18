@@ -37,8 +37,8 @@ int SBCControl(int connect, int kill, int manual, const char *idFile)
       mtc->Connect();
     }
   }
-  catch(int e){
-    printf("There was a network problem!\n");
+  catch(const char* s){
+    printf("SBCControl: %s\n",s);
   }
   return 0;
 }
@@ -148,8 +148,8 @@ int MTCInit(int xilinx)
     }
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("MTCInit: %s\n",s);
   }
   printf("****************************************\n");
   return 0;
@@ -165,8 +165,8 @@ int MTCRead(uint32_t address)
     else
       printf("Read from %08x, got %08x\n",address,result);
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("MTCRead: %s\n",s);
   }
 
   return 0;
@@ -182,8 +182,8 @@ int MTCWrite(uint32_t address, uint32_t data)
     else
       printf("Wrote to %08x\n",address);
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("MTCWrite: %s\n",s);
   }
 
   return 0;

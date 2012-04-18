@@ -270,8 +270,8 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
     }
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("CGTTest: %s\n",s);
   }
 
   printf("Ending cgt test\n");

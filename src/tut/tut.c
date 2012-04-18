@@ -97,6 +97,7 @@ COMMAND commands[] = {
     { "['cgt_test']", (Function *)NULL, (char *)NULL },
     { "['chinj_scan']", (Function *)NULL, (char *)NULL },
     { "['crate_cbal']", (Function *)NULL, (char *)NULL },
+    { "['disc_check']", (Function *)NULL, (char *)NULL },
     { "['gtvalid_test']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }

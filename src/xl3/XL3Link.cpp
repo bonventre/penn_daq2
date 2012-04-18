@@ -10,6 +10,9 @@
 
 XL3Link::XL3Link(int crateNum) : GenericLink(XL3_PORT + crateNum)
 {
+  fBytesLeft = 0;
+  fTempBytes = 0;
+  memset(fTempPacket,0,sizeof(fTempPacket));
   fCrateNum = crateNum; 
   pthread_mutex_init(&fRecvQueueLock,NULL);
   pthread_cond_init(&fRecvQueueCond,NULL);
@@ -34,9 +37,40 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
       break;
   }
 
+  char *inputP = input;
+  while (totalLength > 0){
+    if (fTempBytes == 0){
+      if (totalLength >= XL3_PACKET_SIZE){
+        ProcessPacket((XL3Packet *)inputP); 
+        totalLength -= XL3_PACKET_SIZE;
+        inputP += XL3_PACKET_SIZE;
+      }else{
+        memcpy(fTempPacket,inputP,totalLength);
+        fBytesLeft = XL3_PACKET_SIZE-totalLength; 
+        fTempBytes = totalLength;
+        break;
+      }
+    }else{
+      if (totalLength >= fBytesLeft){
+        memcpy(fTempPacket+fTempBytes,inputP,fBytesLeft);
+        ProcessPacket((XL3Packet *)fTempPacket);
+        memset(fTempPacket,0,sizeof(fTempPacket));
+        inputP += fBytesLeft;
+        totalLength -= fBytesLeft;
+        fBytesLeft = 0;
+        fTempBytes = 0;
+      }else{
+        memcpy(fTempPacket+fTempBytes,inputP,totalLength);
+        fBytesLeft -= totalLength;
+        fTempBytes += totalLength;
+        break;
+      }
+    }
+  }
+}
 
-  XL3Packet *packet = (XL3Packet *) input;
-//  printf("Got type: %02x\n",packet->header.packetType);
+void XL3Link::ProcessPacket(XL3Packet *packet)
+{
 //  uint32_t *p = (uint32_t *) packet;
 //  for (int j=0;j<10;j++)
 //    printf("%d: %08x\n",j,*(p+j));
@@ -44,9 +78,9 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
     case PING_ID:
       {
       packet->header.packetType = PONG_ID;
-      bufferevent_lock(bev);
+      bufferevent_lock(fBev);
       bufferevent_write(fBev,packet,sizeof(XL3Packet));
-      bufferevent_unlock(bev);
+      bufferevent_unlock(fBev);
       break;
       }
     case MESSAGE_ID:
@@ -77,7 +111,6 @@ void XL3Link::RecvCallback(struct bufferevent *bev)
       pthread_mutex_unlock(&fRecvQueueLock);
       break;
   }
-
 }
 
 
@@ -109,7 +142,7 @@ int XL3Link::GetNextPacket(XL3Packet *packet,int waitSeconds)
     while (fRecvQueue.empty()){
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
-        printf("Wait timed out!\n");
+        printf("XL3Link::GetNextPacket: Wait timed out!\n");
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }
@@ -139,7 +172,7 @@ int XL3Link::GetNextCmdAck(Command *command,int waitSeconds)
     while (fRecvCmdQueue.empty()){
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
-        printf("Wait timed out!\n");
+        printf("XL3Link::GetNextCmdAck: Wait timed out!\n");
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }

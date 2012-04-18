@@ -33,8 +33,8 @@ int BoardID(int crateNum, uint32_t slotMask)
 
 
   }
-  catch(int e){
-    printf("There was a network error!\n");
+  catch(const char* s){
+    printf("BoardID: %s\n",s);
   }
 
   printf("****************************************\n");
