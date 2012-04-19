@@ -525,7 +525,7 @@ int PostFECDBDoc(int crate, int slot, JsonNode *doc)
   return ret;
 }
 
-int UpdateFECDBDdoc(JsonNode *doc)
+int UpdateFECDBDoc(JsonNode *doc)
 {
   char put_db_address[500];
   sprintf(put_db_address,"%s/%s/%s",FECDB_SERVER,FECDB_BASE_NAME,json_get_string(json_find_member(doc,"_id")));
@@ -739,6 +739,110 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
   if(*data){
     free(data);
   }
+  return 0;
+}
+
+int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
+{
+  printf("*** Generating FEC documents from ECAL ***\n");
+
+  printf("Using ECAL %s\n",id); 
+
+  // get the ecal document with the configuration
+  char get_db_address[500];
+  sprintf(get_db_address,"%s/%s/%s",DB_SERVER,DB_BASE_NAME,id);
+  pouch_request *ecaldoc_response = pr_init();
+  pr_set_method(ecaldoc_response, GET);
+  pr_set_url(ecaldoc_response, get_db_address);
+  pr_do(ecaldoc_response);
+  if (ecaldoc_response->httpresponse != 200){
+    printf("Unable to connect to database. error code %d\n",(int)ecaldoc_response->httpresponse);
+    return -1;
+  }
+  JsonNode *ecalconfig_doc = json_decode(ecaldoc_response->resp.data);
+
+  uint32_t testedMask = 0x0;
+  uint32_t crateMask = 0x0;
+  uint16_t slotMasks[20];
+  for (int i=0;i<20;i++){
+    slotMasks[i] = 0x0;
+  }
+
+  // get the configuration
+  JsonNode *crates = json_find_member(ecalconfig_doc,"crates");
+  int num_crates = json_get_num_mems(crates);
+  for (int i=0;i<num_crates;i++){
+    JsonNode *one_crate = json_find_element(crates,i);
+    int crate_num = json_get_number(json_find_member(one_crate,"crate_id"));
+    crateMask |= (0x1<<crate_num);
+    JsonNode *slots = json_find_member(one_crate,"slots");
+    int num_slots = json_get_num_mems(slots);
+    for (int j=0;j<num_slots;j++){
+      JsonNode *one_slot = json_find_element(slots,j);
+      int slot_num = json_get_number(json_find_member(one_slot,"slot_id"));
+      slotMasks[crate_num] |= (0x1<<slot_num);
+    }
+  }
+
+
+  // get all the ecal test results for all crates/slots
+  sprintf(get_db_address,"%s/%s/%s/get_ecal?startkey=\"%s\"&endkey=\"%s\"",DB_SERVER,DB_BASE_NAME,DB_VIEWDOC,id,id);
+  pouch_request *ecal_response = pr_init();
+  pr_set_method(ecal_response, GET);
+  pr_set_url(ecal_response, get_db_address);
+  pr_do(ecal_response);
+  if (ecal_response->httpresponse != 200){
+    printf("Unable to connect to database. error code %d\n",(int)ecal_response->httpresponse);
+    return -1;
+  }
+
+  JsonNode *ecalfull_doc = json_decode(ecal_response->resp.data);
+  JsonNode *ecal_rows = json_find_member(ecalfull_doc,"rows");
+  int total_rows = json_get_num_mems(ecal_rows); 
+  if (total_rows == 0){
+    printf("No documents for this ECAL yet! (id %s)\n",id);
+    return -1;
+  }
+
+  // loop over crates/slots, create a fec document for each
+  for (int i=0;i<19;i++){
+    if ((0x1<<i) & crateMask){
+      for (int j=0;j<16;j++){
+        if ((0x1<<j) & slotMasks[i]){
+          printf("crate %d slot %d\n",i,j);
+          testedMask = 0x0;
+
+          // lets generate the fec document
+          JsonNode *doc;
+          CreateFECDBDoc(i,j,&doc,ecalconfig_doc);
+
+          for (int k=0;k<total_rows;k++){
+            JsonNode *ecalone_row = json_find_element(ecal_rows,k);
+            JsonNode *test_doc = json_find_member(ecalone_row,"value");
+            JsonNode *config = json_find_member(test_doc,"config");
+            char *testtype = json_get_string(json_find_member(test_doc,"type"));
+            if ((json_get_number(json_find_member(config,"crate_id")) == i) && (json_get_number(json_find_member(config,"slot")) == j)){
+              printf("test type is %s\n",json_get_string(json_find_member(test_doc,"type")));
+              AddECALTestResults(doc,test_doc);
+            }
+          }
+
+          PostFECDBDoc(i,j,doc);
+
+          json_delete(doc); // only delete the head node
+        }
+      }
+    }
+  }
+
+  json_delete(ecalfull_doc);
+  pr_free(ecal_response);
+  json_delete(ecalconfig_doc);
+  pr_free(ecaldoc_response);
+
+  printf("Finished creating fec document!\n");
+  printf("**************************\n");
+
   return 0;
 }
 
