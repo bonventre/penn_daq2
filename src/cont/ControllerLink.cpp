@@ -1166,6 +1166,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"ecal",4) == 0){
     if (GetFlag(input,'h')){
       printf("Usage: ecal -c [crate mask (hex)] -s [all slot masks (hex)] -(00-18) [one slot mask (hex)]\n");
+      printf("-d (create FEC db docs)\n");
       printf("-l [ecal id to update / finish tests (string)] -t [test mask to update / finish (hex)]\n");
       printf("For test mask, the bit map is: \n");
       printf("0: fec_test, 1: board_id, 2: cgt_test, 3: crate_cbal\n");
@@ -1180,12 +1181,13 @@ void *ControllerLink::ProcessCommand(void *arg)
     char loadECAL[500];
     memset(loadECAL,'\0',sizeof(loadECAL));
     GetString(input,loadECAL,'l',"");
+    int createDocs = GetFlag(input,'d');
     int busy = LockConnections(1,crateMask);
     if (busy){
       printf("Those connections are currently in use.\n");
       return NULL;
     }
-    ECAL(crateMask,slotMasks,testMask,loadECAL);
+    ECAL(crateMask,slotMasks,testMask,loadECAL,createDocs);
     UnlockConnections(1,crateMask);
 
 
