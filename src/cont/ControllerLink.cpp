@@ -25,6 +25,7 @@
 #include "ZDisc.h"
 #include "RunPedestals.h"
 #include "FinalTest.h"
+#include "ECAL.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -1161,6 +1162,32 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     FinalTest(crateNum,slotMask,testMask,skip);
     UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"ecal",4) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: ecal -c [crate mask (hex)] -s [all slot masks (hex)] -(00-18) [one slot mask (hex)]\n");
+      printf("-l [ecal id to update / finish tests (string)] -t [test mask to update / finish (hex)]\n");
+      printf("For test mask, the bit map is: \n");
+      printf("0: fec_test, 1: board_id, 2: cgt_test, 3: crate_cbal\n");
+      printf("4: ped_run, 5: set_ttot, 6: get_ttot, 7: disc_check\n");
+      printf("8: gtvalid_test, 9: zdisc\n");
+      return NULL;
+    }
+    uint32_t crateMask = GetUInt(input,'c',0x4);
+    uint32_t slotMasks[19];
+    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    uint32_t testMask = GetUInt(input,'t',0x0);
+    char loadECAL[500];
+    memset(loadECAL,'\0',sizeof(loadECAL));
+    GetString(input,loadECAL,'l',"");
+    int busy = LockConnections(1,crateMask);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    ECAL(crateMask,slotMasks,testMask,loadECAL);
+    UnlockConnections(1,crateMask);
+
 
   }
 }

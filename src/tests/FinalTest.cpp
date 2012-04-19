@@ -167,7 +167,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
     CGTTest(crateNum,slotMask,0xFFFFFFFF,1,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,1,1);
+    PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,1,0,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
     CrateCBal(crateNum,slotMask,0xFFFFFFFF,1,1);

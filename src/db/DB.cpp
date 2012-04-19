@@ -638,73 +638,10 @@ int PostDebugDocWithID(int crate, int card, char *id, JsonNode* doc)
   }
   return 0;
 }
-/*
 
-int post_debug_doc_mem_test(int crate, int card, JsonNode* doc, fd_set *thread_fdset)
-{
-  char mb_id[8],db_id[4][8];
-  char put_db_address[500];
-  time_t the_time;
-  the_time = time(0); //
-  char datetime[100];
-  sprintf(datetime,"%s",(char *) ctime(&the_time));
-  datetime[strlen(datetime)-1] = '\0';
-
-  sprintf(mb_id,"%04x",crate_config[crate][card].mb_id);
-  sprintf(db_id[0],"%04x",crate_config[crate][card].db_id[0]);
-  sprintf(db_id[1],"%04x",crate_config[crate][card].db_id[1]);
-  sprintf(db_id[2],"%04x",crate_config[crate][card].db_id[2]);
-  sprintf(db_id[3],"%04x",crate_config[crate][card].db_id[3]);
-
-  JsonNode *config = json_mkobject();
-  JsonNode *db = json_mkarray();
-  int i;
-  for (i=0;i<4;i++){
-    JsonNode *db1 = json_mkobject();
-    json_append_member(db1,"db_id",json_mkstring(db_id[i]));
-    json_append_member(db1,"slot",json_mknumber((double)i));
-    json_append_element(db,db1);
-  }
-  json_append_member(config,"db",db);
-  json_append_member(config,"fec_id",json_mkstring(mb_id));
-  json_append_member(config,"crate_id",json_mknumber((double)crate));
-  json_append_member(config,"slot",json_mknumber((double)card));
-  if (CURRENT_LOCATION == PENN_TESTSTAND)
-    json_append_member(config,"loc",json_mkstring("penn"));
-  if (CURRENT_LOCATION == ABOVE_GROUND_TESTSTAND)
-    json_append_member(config,"loc",json_mkstring("surface"));
-  if (CURRENT_LOCATION == UNDERGROUND)
-    json_append_member(config,"loc",json_mkstring("underground"));
-  json_append_member(doc,"config",config);
-
-  json_append_member(doc,"timestamp",json_mknumber((double)(long int) the_time));
-  json_append_member(doc,"created",json_mkstring(datetime));
-
-  // TODO: this might be leaking a lot...
-  sprintf(put_db_address,"%s/%s",DB_SERVER,DB_BASE_NAME);
-  pouch_request *post_response = pr_init();
-  pr_set_method(post_response, POST);
-  pr_set_url(post_response, put_db_address);
-  char *data = json_encode(doc);
-  pr_set_data(post_response, data);
-  pr_do(post_response);
-  int ret = 0;
-  if (post_response->httpresponse != 201){
-    pt_printsend("error code %d\n",(int)post_response->httpresponse);
-    ret = -1;
-  }
-  pr_free(post_response);
-  if(*data){
-    free(data);
-  }
-  printf("exiting\n");
-  return ret;
-};
-
-int post_ecal_doc(uint32_t crate_mask, uint16_t *slot_mask, char *logfile, char *id, fd_set *thread_fdset)
+int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id)
 {
   JsonNode *doc = json_mkobject();
-  printf("in post ecal\n");
 
   // lets get what we need from the current crate init doc
   char get_db_address[500];
@@ -712,12 +649,10 @@ int post_ecal_doc(uint32_t crate_mask, uint16_t *slot_mask, char *logfile, char 
   pouch_request *init_response = pr_init();
   pr_set_method(init_response, GET);
   pr_set_url(init_response, get_db_address);
-  printf("do\n");
   pr_do(init_response);
-  printf("did\n");
   if (init_response->httpresponse != 200){
-    pt_printsend("Unable to connect to database. error code %d\n",(int)init_response->httpresponse);
-    return;
+    printf("Unable to connect to database. error code %d\n",(int)init_response->httpresponse);
+    return -1;
   }
   JsonNode *init_doc = json_decode(init_response->resp.data);
   JsonNode *settings = json_mkobject();
@@ -736,29 +671,26 @@ int post_ecal_doc(uint32_t crate_mask, uint16_t *slot_mask, char *logfile, char 
 
   char masks[8];
 
-  int i,j;
   JsonNode *crates = json_mkarray();
-  for (i=0;i<19;i++){
-    if ((0x1<<i) & crate_mask){
+  for (int i=0;i<19;i++){
+    if ((0x1<<i) & crateMask){
       JsonNode *one_crate = json_mkobject();
       json_append_member(one_crate,"crate_id",json_mknumber(i));
-      sprintf(masks,"%04x",slot_mask[i]);
+      sprintf(masks,"%04x",slotMasks[i]);
       json_append_member(one_crate,"slot_mask",json_mkstring(masks));
 
       JsonNode *slots = json_mkarray();
-      for (j=0;j<16;j++){
-        if ((0x1<<j) & slot_mask[i]){
+      for (int j=0;j<16;j++){
+        if ((0x1<<j) & slotMasks[i]){
           char mb_id[8],db_id[4][8];
           char put_db_address[500];
-          printf("updating crate config for %d, %d\n",i,j);
-          update_crate_config(i,0x1<<j,thread_fdset);
-          printf("updated\n");
+          xl3s[i]->UpdateCrateConfig(0x1<<j);
 
-          sprintf(mb_id,"%04x",crate_config[i][j].mb_id);
-          sprintf(db_id[0],"%04x",crate_config[i][j].db_id[0]);
-          sprintf(db_id[1],"%04x",crate_config[i][j].db_id[1]);
-          sprintf(db_id[2],"%04x",crate_config[i][j].db_id[2]);
-          sprintf(db_id[3],"%04x",crate_config[i][j].db_id[3]);
+          sprintf(mb_id,"%04x",xl3s[i]->GetMBID(j));
+          sprintf(db_id[0],"%04x",xl3s[i]->GetDBID(j,0));
+          sprintf(db_id[1],"%04x",xl3s[i]->GetDBID(j,1));
+          sprintf(db_id[2],"%04x",xl3s[i]->GetDBID(j,2));
+          sprintf(db_id[3],"%04x",xl3s[i]->GetDBID(j,3));
 
           JsonNode *one_slot = json_mkobject();
           json_append_member(one_slot,"slot_id",json_mknumber(j));
@@ -796,12 +728,10 @@ int post_ecal_doc(uint32_t crate_mask, uint16_t *slot_mask, char *logfile, char 
   pr_set_url(post_response, put_db_address);
   char *data = json_encode(doc);
   pr_set_data(post_response, data);
-  printf("about to post\n");
   pr_do(post_response);
-  printf("posted\n");
   int ret = 0;
   if (post_response->httpresponse != 201){
-    pt_printsend("error code %d\n",(int)post_response->httpresponse);
+    printf("error code %d\n",(int)post_response->httpresponse);
     ret = -1;
   }
   pr_free(post_response);
@@ -810,6 +740,5 @@ int post_ecal_doc(uint32_t crate_mask, uint16_t *slot_mask, char *logfile, char 
     free(data);
   }
   return 0;
-};
+}
 
-*/
