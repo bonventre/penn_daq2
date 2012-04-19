@@ -106,7 +106,16 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
       }
     case MEGA_BUNDLE_ID:
       {
-        //FIXME
+        MegaBundleHeader *mega = (MegaBundleHeader *) packet->payload;
+        SwapLongBlock(mega,sizeof(MegaBundleHeader)/sizeof(uint32_t));
+        SwapLongBlock(mega+1,mega->info & 0xFFFFFF);
+        MiniBundleHeader *mini = (MiniBundleHeader *) (packet->payload + sizeof(MegaBundleHeader));
+        printf("Bundle: size = %u, passmin = %u, mini = %08x, ",mega->info & 0xFFFFFF,mega->passMin,mini->info);
+        if (mini->info & 0x80000000){
+          uint32_t passCur = *(uint32_t *) (mini+1);
+          printf("passcur = %d",passCur);
+        }
+        printf("\n");
         break;
       }
     case ERROR_ID:

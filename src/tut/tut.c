@@ -115,6 +115,7 @@ COMMAND commands[] = {
     { "['run_pedestals_mtc']", (Function *)NULL, (char *)NULL },
     { "['run_pedestals_crate']", (Function *)NULL, (char *)NULL },
     { "['final_test']", (Function *)NULL, (char *)NULL },
+    { "['ecal']", (Function *)NULL, (char *)NULL },
     //_!_end_commands_!_
     { (char *)NULL, (Function *)NULL, (char*)NULL }
 };
