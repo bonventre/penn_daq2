@@ -146,6 +146,7 @@ int MTCLink::GetNextPacket(SBCPacket *packet,int waitSeconds)
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
         printf("MTCLink::GetNextPacket: Wait timed out!\n");
+        printf("There was %d\n",evbuffer_get_length(bufferevent_get_input(fBev)));
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }

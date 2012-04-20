@@ -92,6 +92,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
   }
   if (testMask == 0x0 || (testMask & 0x3FF) == 0x3FF){
     printf("Doing all tests\n");
+    testMask = 0xFFFFFFFF;
   }else{
     printf("Doing ");
     for (int i=0;i<10;i++)
