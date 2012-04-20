@@ -63,8 +63,11 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
         uint32_t select_reg = FEC_SEL*i;
 
         slot_errors = 0;
-        for (int j=0;j<32;j++)
+        for (int j=0;j<32;j++){
+          tacbits_save[0][j] = 0;
+          tacbits_save[1][j] = 0;
           chan_errors[j] = 0;
+        }
 
         // select which tac we are working on
         for (int wt=0;wt<2;wt++){
@@ -388,7 +391,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
         printf("Chan Tacbits GTValid 0/1:\n");
         for (int j=0;j<32;j++){
           if ((0x1<<j) & channelMask){
-            printf("%d 0x%hx %f %f",
+            printf("%d 0x%02x %f %f",
                 j,tacbits_save[1][j]*16 + tacbits_save[0][j],
                 gtchan_set[0][j],gtchan_set[1][j]);
             if (isetm_save[0] == ISETM || isetm_save[1] == ISETM)

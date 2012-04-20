@@ -59,9 +59,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
     error_flags[ef] = 0;
 
   // malloc
-  printf("about to malloc\n");
   pmt_buf = (uint32_t *) malloc(0x100000*sizeof(uint32_t));
-  printf("malloced\n");
   if (pmt_buf == NULL){
     printf("Problem mallocing space for pedestals. Exiting\n");
     return -1;

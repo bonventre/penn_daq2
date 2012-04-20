@@ -14,6 +14,7 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
   uint16_t *point_buf;
   uint16_t *adc_buf;
   point_buf = (uint16_t *) malloc(16*MAX_SAMPLES*sizeof(uint16_t));
+  memset(point_buf,0,16*MAX_SAMPLES*sizeof(uint16_t));
   adc_buf = (uint16_t *) malloc(16*4*MAX_SAMPLES*sizeof(uint16_t));
   if ((point_buf == NULL) || (adc_buf == NULL)){
     printf("Problem mallocing for cald test. Exiting\n");
@@ -42,6 +43,17 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
     int total_points = xl3s[crateNum]->GetCaldTestResults(point_buf,adc_buf);
 
     printf("Got results of cald test. %d points received.\n",total_points);
+    for (int i=0;i<16;i++){
+      if ((0x1<<i) & slotMask){
+        int iter = 0;
+        while(iter<=MAX_SAMPLES){
+          if (iter != 0 && point_buf[i*MAX_SAMPLES+iter] == 0)
+            break;
+          printf("Slot %d - %u : %4u %4u %4u %4u\n",i,point_buf[i*MAX_SAMPLES+iter],adc_buf[i*4*MAX_SAMPLES+iter*4],adc_buf[i*4*MAX_SAMPLES+iter*4+1],adc_buf[i*4*MAX_SAMPLES+iter*4+2],adc_buf[i*4*MAX_SAMPLES+iter*4+3]);
+          iter++;
+        }
+      }
+    }
 
     if (updateDB){
       printf("updating database\n");
@@ -58,7 +70,6 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
           while(iter<=MAX_SAMPLES){
             if (iter != 0 && point_buf[i*MAX_SAMPLES+iter] == 0)
               break;
-            printf("Slot %d - %u : %4u %4u %4u %4u\n",i,point_buf[i*MAX_SAMPLES+iter],adc_buf[i*4*MAX_SAMPLES+iter*4],adc_buf[i*4*MAX_SAMPLES+iter*4+1],adc_buf[i*4*MAX_SAMPLES+iter*4+2],adc_buf[i*4*MAX_SAMPLES+iter*4+3]);
             json_append_element(points,json_mknumber((double)point_buf[i*MAX_SAMPLES+iter]));
             json_append_element(adc0,json_mknumber((double)adc_buf[i*4*MAX_SAMPLES+iter*4]));
             json_append_element(adc1,json_mknumber((double)adc_buf[i*4*MAX_SAMPLES+iter*4+1]));
