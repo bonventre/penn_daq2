@@ -162,6 +162,12 @@ int XL3Link::SendPacket(XL3Packet *packet)
 {
   SwapShortBlock(&packet->header.packetNum,1);
   bufferevent_lock(fBev);
+  pthread_mutex_lock(&fRecvQueueLock);
+  if (!fRecvQueue.empty())
+    printf("Theres still stuff in the queue!\n");
+  if (!fRecvCmdQueue.empty())
+    printf("There are still cmd acks in the queue\n");
+  pthread_mutex_unlock(&fRecvQueueLock);
   bufferevent_write(fBev,packet,sizeof(XL3Packet));
   bufferevent_unlock(fBev);
   return 0;

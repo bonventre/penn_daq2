@@ -14,12 +14,13 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
   uint16_t *point_buf;
   uint16_t *adc_buf;
   point_buf = (uint16_t *) malloc(16*MAX_SAMPLES*sizeof(uint16_t));
-  memset(point_buf,0,16*MAX_SAMPLES*sizeof(uint16_t));
   adc_buf = (uint16_t *) malloc(16*4*MAX_SAMPLES*sizeof(uint16_t));
   if ((point_buf == NULL) || (adc_buf == NULL)){
     printf("Problem mallocing for cald test. Exiting\n");
     return -1;
   }
+  memset(adc_buf,0,16*4*MAX_SAMPLES*sizeof(uint16_t));
+  memset(point_buf,0,16*MAX_SAMPLES*sizeof(uint16_t));
 
   int num_slots = 0;
   for (int i=0;i<16;i++)
@@ -46,7 +47,7 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
     for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
         int iter = 0;
-        while(iter<=MAX_SAMPLES){
+        while(iter<=MAX_SAMPLES && iter < total_points){
           if (iter != 0 && point_buf[i*MAX_SAMPLES+iter] == 0)
             break;
           printf("Slot %d - %u : %4u %4u %4u %4u\n",i,point_buf[i*MAX_SAMPLES+iter],adc_buf[i*4*MAX_SAMPLES+iter*4],adc_buf[i*4*MAX_SAMPLES+iter*4+1],adc_buf[i*4*MAX_SAMPLES+iter*4+2],adc_buf[i*4*MAX_SAMPLES+iter*4+3]);
@@ -67,7 +68,7 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
           JsonNode *adc2 = json_mkarray();
           JsonNode *adc3 = json_mkarray();
           int iter = 0;
-          while(iter<=MAX_SAMPLES){
+          while(iter<=MAX_SAMPLES && iter < total_points){
             if (iter != 0 && point_buf[i*MAX_SAMPLES+iter] == 0)
               break;
             json_append_element(points,json_mknumber((double)point_buf[i*MAX_SAMPLES+iter]));

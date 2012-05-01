@@ -124,7 +124,16 @@ int FifoTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
         sprintf(cur_msg,"Slot %d - Now firing %d more soft gts\n",i,remainder);
         printf("%s",cur_msg);
         sprintf(error_history+strlen(error_history),"%s",cur_msg);
-        mtc->MultiSoftGT(remainder);
+        gtcount = 0;
+        while (gtcount < remainder){
+          if (remainder - gtcount > 5000){
+            mtc->MultiSoftGT(5000);
+            gtcount += 5000;
+          }else{
+            mtc->MultiSoftGT(remainder-gtcount);
+            gtcount += remainder-gtcount;
+          }
+        }
 
         CheckFifo(crateNum,i,&diff,error_history);
 
@@ -144,7 +153,17 @@ int FifoTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
         sprintf(cur_msg,"Slot %d - Now overfill FEC (firing %d more soft GTs)\n",i,remainder+3);
         sprintf(error_history+strlen(error_history),"%s",cur_msg);
         printf("%s",cur_msg);
-        mtc->MultiSoftGT(remainder+3);
+        gtcount = 0;
+        remainder+=3;
+        while (gtcount < remainder){
+          if (remainder - gtcount > 5000){
+            mtc->MultiSoftGT(5000);
+            gtcount += 5000;
+          }else{
+            mtc->MultiSoftGT(remainder-gtcount);
+            gtcount += remainder-gtcount;
+          }
+        }
 
         CheckFifo(crateNum,i,&diff,error_history);
         uint32_t busy_bits,test_id;
@@ -202,7 +221,7 @@ int FifoTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
 
         int busErrors = 0;
         for (int j=0;j<12;j++){
-            busErrors += xl3s[crateNum]->RW(READ_MEM + FEC_SEL*i,0x0,&bundle[j]);
+          busErrors += xl3s[crateNum]->RW(READ_MEM + FEC_SEL*i,0x0,&bundle[j]);
         }
         if (busErrors){
           sprintf(cur_msg,"Slot %d - Got expected bus errors (%d).\n",i,busErrors);

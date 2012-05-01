@@ -563,7 +563,7 @@ int GetPedestal(int crateNum, int slotNum, uint32_t channelMask, struct pedestal
   int min_num_words = 0;
   for (int i=0;i<32;i++)
     if ((0x1<<i) & channelMask)
-      min_num_words += (num_pulses-25)*3; //??
+      min_num_words += (num_pulses-25)*3*0; //FIXME
   int max_errors = 250;
 
   int words_in_mem;
@@ -582,8 +582,8 @@ int GetPedestal(int crateNum, int slotNum, uint32_t channelMask, struct pedestal
       pedestals[i].thiscell[j].qlxbar = 0;
       pedestals[i].thiscell[j].qlxrms = 0;
       pedestals[i].thiscell[j].qhlbar = 0;
-      pedestals[i].thiscell[j].qhlbar = 0;
-      pedestals[i].thiscell[j].qhsrms = 0;
+      pedestals[i].thiscell[j].qhlrms = 0;
+      pedestals[i].thiscell[j].qhsbar = 0;
       pedestals[i].thiscell[j].qhsrms = 0;
       pedestals[i].thiscell[j].tacbar = 0;
       pedestals[i].thiscell[j].tacrms = 0;

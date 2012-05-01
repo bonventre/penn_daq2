@@ -28,6 +28,8 @@
 
 int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
 {
+
+  int updateDB = 1;
   printf("*** Starting Final Test ****************\n");
 
   JsonNode *ftDocs[16];
@@ -67,7 +69,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   BoardID(crateNum,slotMask);
   printf("----------------------------------------\n");
 
-  if (!skip){
+  if (!skip && updateDB){
     for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
         printf("Please enter any comments for slot %i motherboard now.\n",i);
@@ -145,11 +147,13 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   }
 
   // update the database
+  if (updateDB){
   for (int i=0;i<16;i++){
     if ((0x1<<i) & slotMask){
       json_append_member(ftDocs[i],"type",json_mkstring("final_test"));
       PostDebugDocWithID(crateNum, i, finalTestIDs[crateNum][i], ftDocs[i]);
     }
+  }
   }
 
   printf("----------------------------------------\n");
@@ -157,20 +161,22 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   int testCounter = 0;
 
   if ((0x1<<testCounter) & testMask)
-    FECTest(crateNum,slotMask,1,1);
+    FECTest(crateNum,slotMask,updateDB,1);
   testCounter++;
 
   if ((0x1<<testCounter) & testMask)
-    VMon(crateNum,slotMask,1,1);
+    VMon(crateNum,slotMask,updateDB,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    CGTTest(crateNum,slotMask,0xFFFFFFFF,1,1);
+    CGTTest(crateNum,slotMask,0xFFFFFFFF,updateDB,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,1,0,1);
+    PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,updateDB,0,1);
   testCounter++;
+  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0);
+  MTCInit(1);
   if ((0x1<<testCounter) & testMask)
-    CrateCBal(crateNum,slotMask,0xFFFFFFFF,1,1);
+    CrateCBal(crateNum,slotMask,0xFFFFFFFF,updateDB,1);
   testCounter++;
 
   printf("----------------------------------------\n");
@@ -179,59 +185,62 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   CrateInit(crateNum,slotMask,0,0,0,1,0,0,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
-    ChinjScan(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,10,5000,400,0,1,1,1);
+    ChinjScan(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,10,5000,400,0,1,updateDB,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    SetTTot(crateNum,slotMask,400,1,1);
+    SetTTot(crateNum,slotMask,400,updateDB,1);
   testCounter++;
 
   // load cbal and ttot values now
   CrateInit(crateNum,slotMask,0,0,0,1,0,1,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
-    GetTTot(crateNum,slotMask,390,1,1);
+    GetTTot(crateNum,slotMask,390,updateDB,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    DiscCheck(crateNum,slotMask,500000,1,1);
+    DiscCheck(crateNum,slotMask,500000,updateDB,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    GTValidTest(crateNum,slotMask,0xFFFFFFFF,400,0,1,1);
+    GTValidTest(crateNum,slotMask,0xFFFFFFFF,400,0,updateDB,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    ZDisc(crateNum,slotMask,10000,0,1,1);
+    ZDisc(crateNum,slotMask,10000,0,updateDB,1);
   testCounter++;
 
   MTCInit(0);
   CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
-    MbStabilityTest(crateNum,slotMask,50,1,1);
+    MbStabilityTest(crateNum,slotMask,50,updateDB,1);
   testCounter++;
   if ((0x1<<testCounter) & testMask)
-    FifoTest(crateNum,slotMask,1,1);
+    FifoTest(crateNum,slotMask,updateDB,1);
   testCounter++;
 
   // load alternate xilinx
   CrateInit(crateNum,slotMask,2,0,0,0,0,0,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
-    CaldTest(crateNum,slotMask,3500,750,200,1,1,1);
+    CaldTest(crateNum,slotMask,3500,750,200,1,updateDB,1);
   testCounter++;
 
   for (int i=0;i<16;i++){
     if ((0x1<<i) & slotMask){
       CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0); 
       if ((0x1<<testCounter) & testMask)
-        MemTest(crateNum,i,1,1);
+        MemTest(crateNum,i,updateDB,1);
     }
   }
+  testCounter++;
 
   CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0); 
 
-  printf("Ready for see_refl test. Hit enter to begin or type quit to end the final test\n");
-  contConnection->GetInput(comments);
-  if (strncmp("quit",comments,4) != 0){
-    SeeReflection(crateNum,slotMask,0xFFFFFFFF,255,1000,1,1);
+  if ((0x1<<testCounter) & testMask){
+    printf("Ready for see_refl test. Hit enter to begin or type quit to end the final test\n");
+    contConnection->GetInput(comments);
+    if (strncmp("quit",comments,4) != 0){
+      SeeReflection(crateNum,slotMask,0xFFFFFFFF,255,1000,updateDB,1);
+    }
   }
 
   printf("----------------------------------------\n");
