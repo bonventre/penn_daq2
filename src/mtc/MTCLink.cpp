@@ -91,6 +91,7 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
         SBCPacket *packet = (SBCPacket *) fTempPacket;
         pthread_mutex_lock(&fRecvQueueLock);
         fRecvQueue.push(*packet);
+        //printf("Got packet, size %d empty %d\n",fRecvQueue.size(),fRecvQueue.empty());
         pthread_cond_signal(&fRecvQueueCond);
         pthread_mutex_unlock(&fRecvQueueLock);
         memset(fTempPacket,0,sizeof(fTempPacket));
@@ -108,6 +109,7 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
         SBCPacket *packet = (SBCPacket *) fTempPacket;
         pthread_mutex_lock(&fRecvQueueLock);
         fRecvQueue.push(*packet);
+        //printf("Got packet, size %d empty %d\n",fRecvQueue.size(),fRecvQueue.empty());
         pthread_cond_signal(&fRecvQueueCond);
         pthread_mutex_unlock(&fRecvQueueLock);
         memset(fTempPacket,0,sizeof(fTempPacket));
@@ -118,6 +120,8 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
       }
     }
   }
+//  if (fTempBytes)
+//    printf("%d bytes left\n",fBytesLeft);
 }
 
 
@@ -145,8 +149,15 @@ int MTCLink::GetNextPacket(SBCPacket *packet,int waitSeconds)
     while (fRecvQueue.empty()){
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
-        printf("MTCLink::GetNextPacket: Wait timed out!\n");
+        printf("MTCLink::GetNextPacket: Wait timed out! (supposedly)\n");
+        if (!fRecvQueue.empty()){
+          printf("it was fake\n");
+          break;
+        }
+        printf("Guess it was real\n");
         printf("There was %d\n",evbuffer_get_length(bufferevent_get_input(fBev)));
+        printf("size is %d, empty is %d\n",fRecvQueue.size(),fRecvQueue.empty());
+        printf("Bytes left is %d %d\n",fBytesLeft,fTempBytes);
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }

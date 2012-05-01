@@ -43,6 +43,7 @@ int MTCModel::RegWrite(uint32_t address, uint32_t data)
     free(packet);
     throw s;
   }
+  free(packet);
   return 0;
 }
 
@@ -71,6 +72,7 @@ int MTCModel::RegRead(uint32_t address, uint32_t *data)
   }
   result = (uint32_t *) (readstruct+1);
   *data = *result;
+  free(packet);
   return 0;
 }
 
@@ -151,6 +153,7 @@ int MTCModel::MultiSoftGT(int number)
     free(packet);
     throw s;
   }
+  free(packet);
   return 0;
 }
 
