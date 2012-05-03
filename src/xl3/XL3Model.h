@@ -24,6 +24,8 @@ class XL3Model{
     int GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, int timeout = 2);
     int GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf);
 
+    int CheckQueue(int empty){return fLink->CheckQueue(empty);};
+
     int RW(uint32_t address, uint32_t data, uint32_t *result);
     int ChangeMode(int mode, uint16_t dataAvailMask);
     int UpdateCrateConfig(uint16_t slotMask);

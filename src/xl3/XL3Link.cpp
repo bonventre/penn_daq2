@@ -110,12 +110,12 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
         SwapLongBlock(mega,sizeof(MegaBundleHeader)/sizeof(uint32_t));
         SwapLongBlock(mega+1,mega->info & 0xFFFFFF);
         MiniBundleHeader *mini = (MiniBundleHeader *) (packet->payload + sizeof(MegaBundleHeader));
-        printf("Bundle: size = %u, passmin = %u, mini = %08x, ",mega->info & 0xFFFFFF,mega->passMin,mini->info);
+        //printf("Bundle: size = %u, passmin = %u, mini = %08x, ",mega->info & 0xFFFFFF,mega->passMin,mini->info);
         if (mini->info & 0x80000000){
           uint32_t passCur = *(uint32_t *) (mini+1);
-          printf("passcur = %d",passCur);
+          //printf("passcur = %d",passCur);
         }
-        printf("\n");
+        //printf("\n");
         break;
       }
     case ERROR_ID:
@@ -230,4 +230,20 @@ int XL3Link::GetNextCmdAck(Command *command,int waitSeconds)
   fRecvCmdQueue.pop();
   pthread_mutex_unlock(&fRecvQueueLock);
   return 0;
+}
+
+int XL3Link::CheckQueue(int empty)
+{
+  if (fRecvQueue.empty() && fRecvCmdQueue.empty()){
+    if (fBytesLeft){
+      printf("%d bytes left\n",fBytesLeft);
+      return -3;
+    }
+    return 0;
+  }else if (empty){
+    while(!fRecvQueue.empty()) fRecvQueue.pop();
+    while(!fRecvCmdQueue.empty()) fRecvCmdQueue.pop();
+    return -1;
+  }
+  return -2;
 }

@@ -98,7 +98,10 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
             sprintf(cur_msg,"Not enough bundles slot %d: expected %d, found %u\n",
                 i,numgt*3*num_chans,result & 0x000FFFFF);
             printf("%s",cur_msg);
-            sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+            if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+              sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+            else
+              max_errors[i] = 2;
             missing_bundles[i] = 1;
           }
 
@@ -133,7 +136,10 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
             sprintf(cur_msg,"Not enough bundles slot %d: expected %d, found %u\n",
                 i,3*num_chans,result & 0x000FFFFF);
             printf("%s",cur_msg);
-            sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+            if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+              sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+            else
+              max_errors[i] = 2;
             missing_bundles[i] = 1;
           }
 
@@ -158,21 +164,30 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
               sprintf(cur_msg,"Crate wrong for slot %d, chan %u: expected %d, read %u\n",
                   i,chan_id,crateNum,crate_id);
               printf("%s",cur_msg);
-              sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              else
+                max_errors[i] = 2;
               chan_errors[i][chan_id] = 1;
             } 
             if (slot_id != i){
               sprintf(cur_msg,"Slot wrong for slot %d chan %u: expected %d, read %u\n",
                   i,chan_id,i,slot_id);
               printf("%s",cur_msg);
-              sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              else
+                max_errors[i] = 2;
               chan_errors[i][chan_id] = 1;
             } 
             if (nc_id != 0x0){
               sprintf(cur_msg,"NC_CC wrong for slot %d chan %u: expected %d, read %u\n",
                   i,chan_id,0,nc_id);
               printf("%s",cur_msg);
-              sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              else
+                max_errors[i] = 2;
               chan_errors[i][chan_id] = 1;
             } 
             if ((gt16_id + (65536*gt8_id)) != total_pulses){
@@ -182,7 +197,10 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
                     i,chan_id,total_pulses-total_pulses%65536,(65536*gt8_id),bundles[0],
                     bundles[1],bundles[2]);
                 printf("%s",cur_msg);
-                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+                if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                  sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+                else
+                  max_errors[i] = 2;
 
               }else if (gt8_id == total_pulses/65536){
                 sprintf(cur_msg,"Bad lower 16 gtid bits for slot %d chan %u: expected %d, read %u\n"
@@ -190,14 +208,20 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
                     i,chan_id,total_pulses%65536,gt16_id,bundles[0],
                     bundles[1],bundles[2]);
                 printf("%s",cur_msg);
-                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+                if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                  sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+                else
+                  max_errors[i] = 2;
               }else{
                 sprintf(cur_msg,"Bad gtid for slot %d chan %u: expected %d, read %u\n"
                     "%08x %08x %08x\n",
                     i,chan_id,total_pulses,gt16_id+(65536*gt8_id),bundles[0],
                     bundles[1],bundles[2]);
                 printf("%s",cur_msg);
-                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+                if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                  sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+                else
+                  max_errors[i] = 2;
               }
               chan_errors[i][chan_id] = 1;
             } 
@@ -205,7 +229,10 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
               sprintf(cur_msg,"Synclear error for slot %d chan %u.\n",
                   i,chan_id);
               printf("%s",cur_msg);
-              sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              else
+                max_errors[i] = 2;
               chan_errors[i][chan_id] = 1;
             } 
           } // end loop over bundles being read out
@@ -214,7 +241,10 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
             if ((0x1<<k) & badchanmask){
               sprintf(cur_msg,"No bundle found for slot %d chan %d\n",i,k);
               printf("%s",cur_msg);
-              sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
+                sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
+              else
+                max_errors[i] = 2;
               chan_errors[i][k] = 1;
             }
           }
@@ -225,7 +255,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
       // check if we should stop any slot
       // because there are too many errors
       for (int i=0;i<16;i++){
-        if ((strlen(error_history[i]) > 5000) && (max_errors[i] == 0)){
+        if (((strlen(error_history[i]) > 5000) && (max_errors[i] == 0)) || (max_errors[i] == 2)){
           printf("Too many errors slot %d. Skipping that slot\n",i);
           max_errors[i] = 1;
         }

@@ -23,6 +23,7 @@ static const unsigned short d_tacref= 133;
 static const unsigned short d_vmax=   134;
 static const unsigned short d_vres=   135;
 static const unsigned short d_hvref=  136;
-				
+
+static const char dacNames[13][50] = {"rmp","vli","vsi","vthr","vbal high gain","vbal low gain","rmpup","iseta","isetm","tacref","vmax","vres","hvref"};
 #endif
 

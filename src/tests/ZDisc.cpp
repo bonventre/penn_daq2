@@ -63,6 +63,7 @@ int ZDisc(int crateNum, uint32_t slotMask, float rate, int offset, int updateDB,
           JsonNode *upperdacnode = json_mkarray();
           JsonNode *zerodacnode = json_mkarray();
           JsonNode *errorsnode = json_mkarray();
+          int passflag = 1;
           for (int j=0;j<32;j++){
             json_append_element(maxratenode,json_mknumber(results->maxRate[j]));	
             json_append_element(lowerratenode,json_mknumber(results->lowerRate[j]));	
@@ -71,7 +72,12 @@ int ZDisc(int crateNum, uint32_t slotMask, float rate, int offset, int updateDB,
             json_append_element(lowerdacnode,json_mknumber((double)results->lowerDacSetting[j]));	
             json_append_element(upperdacnode,json_mknumber((double)results->upperDacSetting[j]));	
             json_append_element(zerodacnode,json_mknumber((double)results->zeroDacSetting[j]));	
-            json_append_element(errorsnode,json_mkbool(0));//FIXME	
+            if (results->maxRate[j] == 0 || results->lowerRate[j] == 0 || results->upperRate[j] == 0 || results->zeroDacSetting[j] == 255){
+              passflag = 0;
+              json_append_element(errorsnode,json_mkbool(1));	
+            }else{
+              json_append_element(errorsnode,json_mkbool(0));	
+            }
           }
           json_append_member(newdoc,"max_rate",maxratenode);
           json_append_member(newdoc,"lower_rate",lowerratenode);
@@ -82,7 +88,7 @@ int ZDisc(int crateNum, uint32_t slotMask, float rate, int offset, int updateDB,
           json_append_member(newdoc,"zero_dac",zerodacnode);
           json_append_member(newdoc,"target_rate",json_mknumber(rate));
           json_append_member(newdoc,"errors",errorsnode);
-          json_append_member(newdoc,"pass",json_mkbool(1));//FIXME
+          json_append_member(newdoc,"pass",json_mkbool(passflag));
           if (finalTest)
             json_append_member(newdoc,"final_test_id",json_mkstring(finalTestIDs[crateNum][i]));	
           if (ecal)

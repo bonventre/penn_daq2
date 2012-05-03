@@ -212,3 +212,13 @@ int MTCLink::SendXilinxPacket(SBCPacket *packet, int waitSeconds)
   return 0;
 }
 
+int MTCLink::CheckQueue(int empty)
+{
+  if (fRecvQueue.empty()){
+    return 0;
+  }else if (empty){
+    while(!fRecvQueue.empty()) fRecvQueue.pop();
+    return -1;
+  }
+  return -2;
+}

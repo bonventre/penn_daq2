@@ -53,7 +53,10 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
 {
   uint16_t type = packet->header.packetType;
   packet->header.packetNum = fCommandNum;
+  int recvCommandNum = fCommandNum;
+  recvCommandNum %= 65536;
   fCommandNum++;
+  fCommandNum %= 65536;
   fLink->SendPacket(packet);
   if (withResponse){
     int numPackets = 0;
@@ -68,11 +71,11 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
         throw "SendCommand: GetNextPacket timed out";
       if (numPackets > maxTries)
         throw "SendCommand: Got too many wrong packet types";
-      if (packet->header.packetNum > (fCommandNum-1))
+      if (packet->header.packetNum > recvCommandNum && ((65536-packet->header.packetNum) + recvCommandNum < 5000))
         throw "SendCommand: Packet Num too high";
       if (packet->header.packetType != type)
         printf("Got %02x instead of %02x\n",packet->header.packetType,type);
-    }while(packet->header.packetType != type || packet->header.packetNum < (fCommandNum-1));
+    }while(packet->header.packetType != type || packet->header.packetNum != recvCommandNum);
   }
   return 0;
 }

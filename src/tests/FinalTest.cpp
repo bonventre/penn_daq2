@@ -170,6 +170,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   if ((0x1<<testCounter) & testMask)
     CGTTest(crateNum,slotMask,0xFFFFFFFF,updateDB,1);
   testCounter++;
+  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0);
   if ((0x1<<testCounter) & testMask)
     PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,updateDB,0,1);
   testCounter++;
@@ -183,6 +184,10 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
 
   // load cbal values now
   CrateInit(crateNum,slotMask,0,0,0,1,0,0,0,0,0);
+
+  if ((0x1<<testCounter) & testMask)
+    PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,updateDB,1,1);
+  testCounter++;
 
   if ((0x1<<testCounter) & testMask)
     ChinjScan(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,10,5000,400,0,1,updateDB,1);

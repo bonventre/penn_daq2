@@ -23,6 +23,7 @@ class MTCLink : public GenericLink {
     int GetNextPacket(SBCPacket *packet,int waitSeconds=5);
     int SendPacket(SBCPacket *packet);
     int SendXilinxPacket(SBCPacket *packet, int waitSeconds=5);
+    int CheckQueue(int empty);
 
   private:
     std::queue<SBCPacket> fRecvQueue;

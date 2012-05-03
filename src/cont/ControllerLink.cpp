@@ -26,6 +26,8 @@
 #include "RunPedestals.h"
 #include "FinalTest.h"
 #include "ECAL.h"
+#include "FindNoise.h"
+#include "DACSweep.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
@@ -109,6 +111,28 @@ void ControllerLink::GetInput(char *results,int maxLength)
   else
     memcpy(results,fInput,strlen(fInput));
   pthread_mutex_unlock(&fInputLock);
+}
+
+int ControllerLink::GrabNextInput(char *results, int maxLength, int setup)
+{
+  pthread_mutex_lock(&fInputLock);
+  if (setup){
+    fLock = 1;
+    pthread_mutex_unlock(&fInputLock);
+    return 0;
+  }else{
+    if (fLock == 0){
+      if (maxLength)
+        memcpy(results,fInput,maxLength);
+      else
+        memcpy(results,fInput,strlen(fInput));
+      pthread_mutex_unlock(&fInputLock);
+      return 1;
+    }else{
+      pthread_mutex_unlock(&fInputLock);
+      return 0;
+    }
+  }
 }
 
 void *ControllerLink::ProcessCommand(void *arg)
@@ -1146,9 +1170,9 @@ void *ControllerLink::ProcessCommand(void *arg)
       printf("Usage: final_test -c [crate num (int)] -s [slot mask (hex)] -q (skip text input) -t [test mask if you want only a subset (hex)]\n");
       printf("For test mask, the bit map is: \n");
       printf("0: fec_test, 1: vmon, 2: cgt_test, 3: ped_run\n");
-      printf("4: crate_cbal, 5: chinj_scan, 6: set_ttot, 7: get_ttot\n");
-      printf("8: disc_check, 9: gtvalid_test, 10: zdisc, 11: mb_stability_test\n");
-      printf("12: fifo_test, 13: cald_test, 14: mem_test\n");
+      printf("4: crate_cbal, 5: ped_run 6: chinj_scan, 7: set_ttot\n");
+      printf("8: get_ttot, 9: disc_check, 10: gtvalid_test, 11: zdisc\n");
+      printf("12: mb_stability_test, 13: fifo_test, 14: cald_test, 15: mem_test\n");
       return NULL;
     }
     int crateNum = GetInt(input,'c',2);
@@ -1190,6 +1214,61 @@ void *ControllerLink::ProcessCommand(void *arg)
     ECAL(crateMask,slotMasks,testMask,loadECAL,createDocs);
     UnlockConnections(1,crateMask);
 
+  }else if (strncmp(input,"find_noise",10) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: find_noise -c [crate mask (hex)] -(00-18) [slot masks (hex)] -s [all slot masks (hex)] -d (update database)\n");
+      return NULL;
+    }
+    uint32_t crateMask = GetUInt(input,'c',0x4);
+    uint32_t slotMasks[19];
+    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    int updateDB = GetFlag(input,'d');
+    int busy = LockConnections(1,crateMask);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    FindNoise(crateMask,slotMasks,20,1,updateDB);
+    UnlockConnections(1,crateMask);
+
+  }else if (strncmp(input,"dac_sweep",9) == 0){
+    if (GetFlag(input,'h')){
+      printf("Usage: dac_sweep -c [crate number (int)] -s [slot mask (hex)] -m [dac mask (hex)] -n [to pic a specific dac]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t dacMask = GetUInt(input,'m',0xFFFFFFFF);
+    int updateDB = GetFlag(input,'d');
+    int dacNum = GetInt(input,'n',-1);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      printf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    DACSweep(crateNum,slotMask,dacMask,dacNum,updateDB);
+    UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"check_recv_queues",17) == 0){
+    int empty = GetFlag(input,'e');
+    if (LockConnections(1,0x0)){
+      int result = mtc->CheckQueue(empty);
+      if (result == -1)
+        printf("Fixed mtc queue\n");
+      else if (result == -2)
+        printf("MTC queue not empty!\n");
+      UnlockConnections(1,0x0);
+    }
+    for (int i=0;i<19;i++){
+      if (LockConnections(0,(0x1<<i))){
+        int result = xl3s[i]->CheckQueue(empty);
+        if (result == -1)
+          printf("Fixed xl3 %d queue\n",i);
+        else if (result == -2)
+          printf("xl3 %d queue not empty!\n",i);
+        UnlockConnections(0,(0x1<<i));
+      }
+    }
 
   }
 }
