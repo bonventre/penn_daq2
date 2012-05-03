@@ -155,9 +155,9 @@ int MTCLink::GetNextPacket(SBCPacket *packet,int waitSeconds)
           break;
         }
         printf("Guess it was real\n");
-        printf("There was %d\n",evbuffer_get_length(bufferevent_get_input(fBev)));
-        printf("size is %d, empty is %d\n",fRecvQueue.size(),fRecvQueue.empty());
-        printf("Bytes left is %d %d\n",fBytesLeft,fTempBytes);
+        printf("There was %d\n",(int)evbuffer_get_length(bufferevent_get_input(fBev)));
+        printf("size is %d, empty is %d\n",(int)fRecvQueue.size(),(int)fRecvQueue.empty());
+        printf("Bytes left is %d %d\n",(int)fBytesLeft,(int)fTempBytes);
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }

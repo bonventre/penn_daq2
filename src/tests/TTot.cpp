@@ -31,6 +31,10 @@ int GetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
         for (int j=0;j<32;j++){
           tot_errors[i][j] = 0;
           printf("%d\t %d\t %d\t %d",crateNum,i,j,times[i*32+j]);
+          if (times[i*32+j] == 9999){
+            printf(">>> Bad time measurement\n");
+            tot_errors[i][j] = 3;
+          }
           if (targetTime > times[i*32+j]){
             if (targetTime < 9999){
               printf(">>> Warning: Time less than %d nsec",targetTime);
@@ -275,6 +279,8 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
             JsonNode *one_chip = json_mkobject();
             json_append_member(one_chip,"rmp",json_mknumber((double) allrmps[i][k]));
             json_append_member(one_chip,"vsi",json_mknumber((double) allvsis[i][k]));
+            json_append_member(one_chip,"rmpup",json_mknumber((double) rmpup[k]));
+            json_append_member(one_chip,"vli",json_mknumber((double) vli[k]));
 
             JsonNode *all_chans = json_mkarray();
             for (int j=0;j<4;j++){
