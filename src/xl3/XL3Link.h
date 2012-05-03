@@ -23,6 +23,7 @@ class XL3Link : public GenericLink {
     int GetNextPacket(XL3Packet *packet,int waitSeconds=5);
     int GetNextCmdAck(Command *command,int waitSeconds=5);
     int SendPacket(XL3Packet *packet);
+    int CheckQueue(int empty);
 
   private:
     int fCrateNum;

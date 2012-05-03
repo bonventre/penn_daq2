@@ -13,7 +13,7 @@
 
 int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int numPedestals, int upper, int lower, int updateDB, int balanced, int finalTest, int ecal)
 {
-  printf("*** Starting Pedestal Run ******** *****\n");
+  printf("*** Starting Pedestal Run **************\n");
 
   printf("-------------------------------------------\n");
   printf("Crate:		    %2d\n",crateNum);

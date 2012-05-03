@@ -15,6 +15,7 @@ class ControllerLink : public GenericLink {
     void EventCallback(struct bufferevent *bev, short what);
 
     void GetInput(char *results,int maxLength=0);
+    int GrabNextInput(char *results, int maxLength, int setup);
     static void *ProcessCommand(void *arg);
 
   private:

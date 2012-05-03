@@ -334,8 +334,9 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
 
             // we are done, save the setup
             isetm_save[wt] = isetm_new[wt];
-            for (int j=0;j<32;j++)
-              tacbits_save[wt][j] = tacbits_new[wt][j];
+            if (twiddleOn)
+              for (int j=0;j<32;j++)
+                tacbits_save[wt][j] = tacbits_new[wt][j];
 
             // remeasure gtvalid
             for (int j=0;j<32;j++)

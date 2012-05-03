@@ -53,6 +53,8 @@ class MTCModel{
     void Lock(){fLink->SetLock(1);};
     void UnLock(){fLink->SetLock(0);};
 
+    int CheckQueue(int empty){return fLink->CheckQueue(empty);};
+
     int GetGTCount(uint32_t *count);
     float SetGTDelay(float gtdel);
     int SoftGT();
