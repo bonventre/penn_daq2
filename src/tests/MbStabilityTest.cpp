@@ -11,7 +11,7 @@
 
 int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, int finalTest)
 {
-  printf("*** Starting MB Stability Test *********\n");
+  lprintf("*** Starting MB Stability Test *********\n");
 
   uint32_t result;
 
@@ -39,11 +39,11 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
   chan_mask_rand[2] = 0x44444444;
   chan_mask_rand[3] = 0x88888888;
 
-  printf("Crate: %d, slot mask: %04x\n",crateNum,slotMask);
+  lprintf("Crate: %d, slot mask: %04x\n",crateNum,slotMask);
 
-  printf("Channel mask used: 0x%08x, 0x%08x, 0x%08x, 0x%08x\n",
+  lprintf("Channel mask used: 0x%08x, 0x%08x, 0x%08x, 0x%08x\n",
       chan_mask_rand[0],chan_mask_rand[1],chan_mask_rand[2],chan_mask_rand[3]);
-  printf("Going to fire %d times\n",numPeds);
+  lprintf("Going to fire %d times\n",numPeds);
   for (int i=0;i<16;i++)
     sprintf(error_history[i]+strlen(error_history[i]),"Going to fire %d times\n",numPeds);
 
@@ -55,7 +55,7 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
     //if (setup_pedestals(0,25,150,0,(0x1<<crateNum)+MSK_TUB,(0x1<<crateNum)+MSK_TUB))
     if (mtc->SetupPedestals(0,DEFAULT_PED_WIDTH,DEFAULT_GT_DELAY,DEFAULT_GT_FINE_DELAY,
           (0x1<<crateNum)+MSK_TUB,(0x1<<crateNum)+MSK_TUB)){
-      printf("Error setting up mtc. Exiting\n");
+      lprintf("Error setting up mtc. Exiting\n");
       return -1;
     }
 
@@ -93,7 +93,7 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
 
       // fire pulser once
       if (nfire == num_print){
-        printf("Pulser fired %u times.\n",nfire);
+        lprintf("Pulser fired %u times.\n",nfire);
         for (int i=0;i<16;i++){
           if (((0x1<<i) & slotMask) && (slot_errors[i] == 0)){
             sprintf(error_history[i]+strlen(error_history[i]),"Pulser fired %u times.\n",nfire);
@@ -117,7 +117,7 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
             sprintf(temp_msg+strlen(temp_msg),">>>testing crate %d, slot %d\n",crateNum,j);
             sprintf(temp_msg+strlen(temp_msg),">>>stopping at pulser iteration %u\n",nfire);
             sprintf(error_history[j]+strlen(error_history[j]),"%s",temp_msg);
-            printf("%s",temp_msg);
+            lprintf("%s",temp_msg);
             slot_errors[j] = 1 ;
           }
         }
@@ -136,7 +136,7 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
               sprintf(temp_msg+strlen(temp_msg),">>>testing crate %d, slot %d\n",crateNum,j);
               sprintf(temp_msg+strlen(temp_msg),">>>stopping at pulser iteration %u\n",nfire);
               sprintf(error_history[j]+strlen(error_history[j]),"%s",temp_msg);
-              printf("%s",temp_msg);
+              lprintf("%s",temp_msg);
               slot_errors[j] = 1 ;
               break;
             }
@@ -168,7 +168,7 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
               sprintf(temp_msg+strlen(temp_msg),"***************************************\n");
               sprintf(temp_msg+strlen(temp_msg),">>>Stopping at pulser iteration %u\n",nfire);
               sprintf(error_history[j]+strlen(error_history[j]),"%s",temp_msg);
-              printf("%s",temp_msg);
+              lprintf("%s",temp_msg);
               slot_errors[j] = 1;
               break;
             }
@@ -184,7 +184,7 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
               sprintf(temp_msg+strlen(temp_msg),"***************************************\n");
               sprintf(temp_msg+strlen(temp_msg),">>>Stopping at pulser iteration %u\n",nfire);
               sprintf(error_history[j]+strlen(error_history[j]),"%s",temp_msg);
-              printf("%s",temp_msg);
+              lprintf("%s",temp_msg);
               slot_errors[j] = 1;
               break;
             }
@@ -201,7 +201,7 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
                 sprintf(temp_msg+strlen(temp_msg),"***************************************\n");
                 sprintf(temp_msg+strlen(temp_msg),">>>Stopping at pulser iteration %u\n",nfire);
                 sprintf(error_history[j]+strlen(error_history[j]),"%s",temp_msg);
-                printf("%s",temp_msg);
+                lprintf("%s",temp_msg);
                 slot_errors[j] = 1;
                 break;
               }
@@ -216,10 +216,10 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
     } // loop over nfire
 
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       for (int slot=0;slot<16;slot++){
         if ((0x1<<slot) & slotMask){
-          printf("updating slot %d\n",slot);
+          lprintf("updating slot %d\n",slot);
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("mb_stability_test"));
           json_append_member(newdoc,"printout",json_mkstring(error_history[slot]));
@@ -233,12 +233,12 @@ int MbStabilityTest(int crateNum, uint32_t slotMask, int numPeds, int updateDB, 
     }
 
 
-    printf("Ending mb stability test\n");
+    lprintf("Ending mb stability test\n");
   }
   catch(const char* s){
-    printf("MbStabilityTest: %s\n",s);
+    lprintf("MbStabilityTest: %s\n",s);
   }
-  printf("********************************\n");
+  lprintf("********************************\n");
 
   return 0;
 }

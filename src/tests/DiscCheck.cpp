@@ -10,7 +10,7 @@
 
 int DiscCheck(int crateNum, uint32_t slotMask, int numPeds, int updateDB, int finalTest, int ecal)
 {
-  printf("*** Starting Discriminator Check *******\n");
+  lprintf("*** Starting Discriminator Check *******\n");
 
 
   int errors, slot;
@@ -28,7 +28,7 @@ int DiscCheck(int crateNum, uint32_t slotMask, int numPeds, int updateDB, int fi
     //if (setup_pedestals(0,25,150,0,(0x1<<crateNum)+MSK_TUB,(0x1<<crateNum)+MSK_TUB))
     if (mtc->SetupPedestals(0,DEFAULT_PED_WIDTH,DEFAULT_GT_DELAY,DEFAULT_GT_FINE_DELAY,
           (0x1<<crateNum)+MSK_TUB,(0x1<<crateNum)+MSK_TUB)){
-      printf("Error setting up mtc. Exiting\n");
+      lprintf("Error setting up mtc. Exiting\n");
       return -1;
     }
 
@@ -77,7 +77,7 @@ int DiscCheck(int crateNum, uint32_t slotMask, int numPeds, int updateDB, int fi
         p = 0;
       }
       if (p%50000 == 0)
-        printf("%d\n",p);
+        lprintf("%d\n",p);
     }
 
     // get final data
@@ -106,7 +106,7 @@ int DiscCheck(int crateNum, uint32_t slotMask, int numPeds, int updateDB, int fi
           chan_diff[i][j] = 0;
           cdiff = count_f[i][j] - count_i[i][j];
           if (cdiff != numPeds){
-            printf("cmos_count != nped for slot %d chan %d. Nped: %d, cdiff: (%d - %d) %d\n",
+            lprintf("cmos_count != nped for slot %d chan %d. Nped: %d, cdiff: (%d - %d) %d\n",
                 i,j,numPeds,count_f[i][j],count_i[i][j],cdiff);
             chan_errors[i][j] = 1;
             chan_diff[i][j] = cdiff-numPeds;
@@ -116,10 +116,10 @@ int DiscCheck(int crateNum, uint32_t slotMask, int numPeds, int updateDB, int fi
       }
     }
 
-    printf("Disc check complete!\n");
+    lprintf("Disc check complete!\n");
 
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       for (int slot=0;slot<16;slot++){
         if ((0x1<<slot) & slotMask){
           JsonNode *newdoc = json_mkobject();
@@ -152,9 +152,9 @@ int DiscCheck(int crateNum, uint32_t slotMask, int numPeds, int updateDB, int fi
 
   }
   catch(const char* s){
-    printf("DiscCheck: %s\n",s);
+    lprintf("DiscCheck: %s\n",s);
   }
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

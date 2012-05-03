@@ -8,7 +8,7 @@
 
 int VMon(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
 {
-  printf("*** Starting VMon **********************\n");
+  lprintf("*** Starting VMon **********************\n");
 
   float voltages[16][21];
   for (int i=0;i<16;i++)
@@ -35,20 +35,20 @@ int VMon(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
 
     // now lets print out the results
     for (int k=0;k<2;k++){
-      printf("slot             %2d     %2d     %2d     %2d     %2d     %2d     %2d     %2d\n",k*8,k*8+1,k*8+2,k*8+3,k*8+4,k*8+5,k*8+6,k*8+7);
+      lprintf("slot             %2d     %2d     %2d     %2d     %2d     %2d     %2d     %2d\n",k*8,k*8+1,k*8+2,k*8+3,k*8+4,k*8+5,k*8+6,k*8+7);
       for (int i=0;i<21;i++){
-        printf("%10s   ",voltages_name[i]);
+        lprintf("%10s   ",voltages_name[i]);
         for (int j=0;j<8;j++){
-          printf("%6.2f ",voltages[j+k*8][i]);
+          lprintf("%6.2f ",voltages[j+k*8][i]);
         }
-        printf("\n");
+        lprintf("\n");
       }
-      printf("\n");
+      lprintf("\n");
     }
 
     // update the database
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       char hextostr[50];
       for (int slot=0;slot<16;slot++){
         if ((0x1<<slot) & slotMask){
@@ -84,10 +84,10 @@ int VMon(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
 
   }
   catch(const char* s){
-    printf("VMon: %s\n",s);
+    lprintf("VMon: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

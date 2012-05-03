@@ -13,25 +13,25 @@
 
 int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int setupCrates, int setupMTC)
 {
-  printf("*** Setting up a Pedestal Run **********\n\n");
+  lprintf("*** Setting up a Pedestal Run **********\n\n");
 
   int errors;
 
   if (setupCrates){
-    printf("Crate Settings:\n");
-    printf("--------------------------------\n");
-    printf("Crate Mask:     0x%05x\n",crateMask);
+    lprintf("Crate Settings:\n");
+    lprintf("--------------------------------\n");
+    lprintf("Crate Mask:     0x%05x\n",crateMask);
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        printf("Crate %d: Slot Mask:    0x%04x\n",i,slotMasks[i]); 
-    printf("Channel Mask:     0x%08x\n\n",channelMask);
+        lprintf("Crate %d: Slot Mask:    0x%04x\n",i,slotMasks[i]); 
+    lprintf("Channel Mask:     0x%08x\n\n",channelMask);
   }
   if (setupMTC){
-    printf("MTC Settings:\n");
-    printf("--------------------------------\n");
-    printf("GT delay (ns):      %3hu\n",gtDelay);
-    printf("Pedestal Width (ns):      %2d\n",pedWidth);
-    printf("Pulser Frequency (Hz):      %3.0f\n\n",frequency);
+    lprintf("MTC Settings:\n");
+    lprintf("--------------------------------\n");
+    lprintf("GT delay (ns):      %3hu\n",gtDelay);
+    lprintf("Pedestal Width (ns):      %2d\n",pedWidth);
+    lprintf("Pulser Frequency (Hz):      %3.0f\n\n",frequency);
   }
 
   try {
@@ -40,7 +40,7 @@ int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float
   if (setupCrates){
     for (int i=0;i<19;i++){
       if ((0x1<<i) & crateMask){
-        printf("Preparing crate %d.\n",i);
+        lprintf("Preparing crate %d.\n",i);
         xl3s[i]->ChangeMode(INIT_MODE,0x0);
         for (int slot=0;slot<16;slot++){
           if ((0x1<<slot) & slotMasks[i]){
@@ -58,7 +58,7 @@ int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float
         xl3s[i]->DeselectFECs();
 
         if (errors){
-          printf("Error setting up crate %d, exiting\n",i);
+          lprintf("Error setting up crate %d, exiting\n",i);
           return -1;
         }
       }
@@ -67,11 +67,11 @@ int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float
 
   // now set up pedestals on mtc
   if (setupMTC){
-    printf("Preparing mtcd\n");
+    lprintf("Preparing mtcd\n");
     errors = mtc->SetupPedestals(frequency,pedWidth,gtDelay,DEFAULT_GT_FINE_DELAY,
         crateMask | MSK_TUB, crateMask | MSK_TUB);
     if (errors){
-      printf("run_pedestals: Error setting up MTC. Exiting\n");
+      lprintf("run_pedestals: Error setting up MTC. Exiting\n");
       mtc->UnsetPedCrateMask(MASKALL);
       mtc->UnsetGTCrateMask(MASKALL);
       return -1;
@@ -86,16 +86,16 @@ int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float
 
   }
   catch(const char* s){
-    printf("RunPedestals: %s\n",s);
+    lprintf("RunPedestals: %s\n",s);
   }
 
-  printf("****************************************\n\n");
+  lprintf("****************************************\n\n");
   return 0;
 }
 
 int RunPedestalsEnd(int crateMask, int setupCrates, int setupMTC)
 {
-  printf("*** Turning off Pedestal Run ***********\n\n");
+  lprintf("*** Turning off Pedestal Run ***********\n\n");
 
   try {
 
@@ -104,14 +104,14 @@ int RunPedestalsEnd(int crateMask, int setupCrates, int setupMTC)
     if (setupCrates)
       for (int i=0;i<19;i++)
         if ((0x1<<i) & crateMask){
-          printf("Stopping crate %d\n",i);
+          lprintf("Stopping crate %d\n",i);
           xl3s[i]->ChangeMode(INIT_MODE,0x0);
           xl3s[i]->SetCratePedestals(0xFFFF,0x0);
         }
 
     // turn off the pulser and unmask all the crates
     if (setupMTC){
-      printf("Stopping mtcd\n");
+      lprintf("Stopping mtcd\n");
       mtc->DisablePulser();
       mtc->DisablePedestal();
       mtc->UnsetPedCrateMask(MASKALL);
@@ -120,9 +120,9 @@ int RunPedestalsEnd(int crateMask, int setupCrates, int setupMTC)
 
   }
   catch(const char* s){
-    printf("RunPedestals: %s\n",s);
+    lprintf("RunPedestals: %s\n",s);
   }
 
-  printf("****************************************\n\n");
+  lprintf("****************************************\n\n");
   return 0;
 }

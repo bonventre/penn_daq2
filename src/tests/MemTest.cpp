@@ -8,7 +8,7 @@
 
 int MemTest(int crateNum, int slotNum, int updateDB, int finalTest)
 {
-  printf("*** Starting Mem Test ******************\n");
+  lprintf("*** Starting Mem Test ******************\n");
   XL3Packet packet;
   packet.header.packetType = MEM_TEST_ID;
   MemTestArgs *args = (MemTestArgs *) packet.payload;
@@ -16,14 +16,14 @@ int MemTest(int crateNum, int slotNum, int updateDB, int finalTest)
   args->slotNum = slotNum;
   SwapLongBlock(packet.payload,sizeof(MemTestArgs)/sizeof(uint32_t));
   try{
-    printf("Getting crate configuration\n");
+    lprintf("Getting crate configuration\n");
     xl3s[crateNum]->UpdateCrateConfig(0x1<<slotNum);
-    printf("Starting Mem test\n");
+    lprintf("Starting Mem test\n");
     xl3s[crateNum]->SendCommand(&packet,1,30);
     SwapLongBlock(packet.payload,sizeof(MemTestResults)/sizeof(uint32_t));
     
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       char hextostr[50];
       JsonNode *newdoc = json_mkobject();
       json_append_member(newdoc,"type",json_mkstring("mem_test"));
@@ -59,10 +59,10 @@ int MemTest(int crateNum, int slotNum, int updateDB, int finalTest)
     }
   }
   catch(const char* s){
-    printf("MemTest: %s\n",s);
+    lprintf("MemTest: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

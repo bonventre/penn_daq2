@@ -12,6 +12,7 @@
 #include "GTValidTest.h"
 #include "CrateCBal.h"
 #include "ZDisc.h"
+#include "FindNoise.h"
 
 #include "XL3Model.h"
 #include "MTCModel.h"
@@ -30,16 +31,17 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
 
   strftime(logName, 256, "ECAL_%Y_%m_%d_%H_%M_%S_", loctime);
   sprintf(logName+strlen(logName), "%d.log", (int)moretime.tv_usec);
-  //FIXME
-  //start_logging_to_file(logName);
+  ecalLogFile = fopen(logName,"a+");
+  if (ecalLogFile == NULL)
+    lprintf("Problem enabling logging for ecal, could not open log file!\n");
 
 
-  printf("*** Starting ECAL **********************\n");
+  lprintf("*** Starting ECAL **********************\n");
 
   char comments[1000];
   memset(comments,'\0',1000);
 
-  printf("\nYou have selected the following configuration:\n\n");
+  lprintf("\nYou have selected the following configuration:\n\n");
 
   memset(ecalID,'\0',sizeof(ecalID));
   if (strlen(loadECAL)){
@@ -51,7 +53,8 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     pr_set_url(ecaldoc_response, get_db_address);
     pr_do(ecaldoc_response);
     if (ecaldoc_response->httpresponse != 200){
-      printf("Unable to connect to database. error code %d\n",(int)ecaldoc_response->httpresponse);
+      lprintf("Unable to connect to database. error code %d\n",(int)ecaldoc_response->httpresponse);
+      fclose(ecalLogFile);
       return -1;
     }
     JsonNode *ecalconfig_doc = json_decode(ecaldoc_response->resp.data);
@@ -80,58 +83,58 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
 
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        printf("crate %d: 0x%04x\n",i,slotMasks[i]);
+        lprintf("crate %d: 0x%04x\n",i,slotMasks[i]);
 
-    printf("You will be updating ECAL %s\n",loadECAL);
+    lprintf("You will be updating ECAL %s\n",loadECAL);
     strcpy(ecalID,loadECAL);
   }else{
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
     GetNewID(ecalID);
-    printf("Creating new ECAL %s\n",ecalID);
+    lprintf("Creating new ECAL %s\n",ecalID);
   }
   if (testMask == 0x0 || (testMask & 0x3FF) == 0x3FF){
-    printf("Doing all tests\n");
+    lprintf("Doing all tests\n");
     testMask = 0xFFFFFFFF;
   }else{
-    printf("Doing ");
+    lprintf("Doing ");
     for (int i=0;i<10;i++)
       if ((0x1<<i) & testMask)
-        printf("%s ",testList[i]);
-    printf("\n");
+        lprintf("%s ",testList[i]);
+    lprintf("\n");
   }
 
-  printf("------------------------------------------\n");
-  printf("Hit enter to start, or type quit if anything is incorrect\n");
+  lprintf("------------------------------------------\n");
+  lprintf("Hit enter to start, or type quit if anything is incorrect\n");
   contConnection->GetInput(comments);
   if (strncmp("quit",comments,4) == 0){
-    printf("Exiting ECAL\n");
-    //DeleteLogfile();
+    lprintf("Exiting ECAL\n");
+    fclose(ecalLogFile);
     return 0;
   }
-  printf("------------------------------------------\n");
+  lprintf("------------------------------------------\n");
 
   for (int i=0;i<19;i++)
     if ((0x1<<i) & crateMask)
       CrateInit(i,slotMasks[i],1,1,0,0,0,0,0,0,0);
   MTCInit(1);
 
-  printf("------------------------------------------\n");
-  printf("If there were any problems initializing the crates, type quit to exit. Otherwise hit enter to continue.\n");
+  lprintf("------------------------------------------\n");
+  lprintf("If there were any problems initializing the crates, type quit to exit. Otherwise hit enter to continue.\n");
   contConnection->GetInput(comments);
   if (strncmp("quit",comments,4) == 0){
-    printf("Exiting ECAL\n");
-    //DeleteLogfile();
+    lprintf("Exiting ECAL\n");
+    fclose(ecalLogFile);
     return 0;
   }
-  printf("------------------------------------------\n");
+  lprintf("------------------------------------------\n");
 
 
   if (strlen(loadECAL) == 0){
-    printf("Creating ECAL document...\n");
+    lprintf("Creating ECAL document...\n");
     PostECALDoc(crateMask,slotMasks,logName,ecalID);
-    printf("Created! Starting tests\n");
-    printf("------------------------------------------\n");
+    lprintf("Created! Starting tests\n");
+    lprintf("------------------------------------------\n");
   }
 
   int testCounter = 0;
@@ -229,16 +232,16 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
       if ((0x1<<i) & crateMask)
         ZDisc(i,slotMasks[i],10000,0,1,0,1);
 
-  //FIXME
-  //find noise
+  if ((0x1<<testCounter) & testMask)
+    FindNoise(crateMask,slotMasks,20,0,1,1);
 
-  printf("ECAL finished!\n");
+  lprintf("ECAL finished!\n");
 
   if (createFECDocs)
     GenerateFECDocFromECAL(0x0, ecalID);
 
-  printf("****************************************\n");
-  //CloseLogfile();
+  lprintf("****************************************\n");
+  fclose(ecalLogFile);
   return 0;
 }
 

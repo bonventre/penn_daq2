@@ -11,7 +11,7 @@
 
 int GetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int finalTest, int ecal)
 {
-  printf("*** Starting Get TTot ******************\n");
+  lprintf("*** Starting Get TTot ******************\n");
 
 
   uint16_t times[32*16];
@@ -25,32 +25,32 @@ int GetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
     int result = MeasureTTot(crateNum,slotMask,150,times);
 
     // print out results
-    printf("Crate\t Slot\t Channel\t Time:\n");
+    lprintf("Crate\t Slot\t Channel\t Time:\n");
     for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
         for (int j=0;j<32;j++){
           tot_errors[i][j] = 0;
-          printf("%d\t %d\t %d\t %d",crateNum,i,j,times[i*32+j]);
+          lprintf("%d\t %d\t %d\t %d",crateNum,i,j,times[i*32+j]);
           if (times[i*32+j] == 9999){
-            printf(">>> Bad time measurement\n");
+            lprintf(">>> Bad time measurement\n");
             tot_errors[i][j] = 3;
           }
           if (targetTime > times[i*32+j]){
             if (targetTime < 9999){
-              printf(">>> Warning: Time less than %d nsec",targetTime);
+              lprintf(">>> Warning: Time less than %d nsec",targetTime);
               tot_errors[i][j] = 1;
             }
           }else if(targetTime == 9999){
-            printf(">>> Problem measuring time for this channel\n");
+            lprintf(">>> Problem measuring time for this channel\n");
             tot_errors[i][j] = 2;
           }
-          printf("\n");
+          lprintf("\n");
         }
       }
     }
 
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       int slot;
       for (slot=0;slot<16;slot++){
         if ((0x1<<slot) & slotMask){
@@ -84,10 +84,10 @@ int GetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
 
   }
   catch(const char* s){
-    printf("GetTTot: %s\n",s);
+    lprintf("GetTTot: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 
@@ -146,7 +146,7 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
           result = CheckTTot(crateNum,i,(0x1<<k),MAX_TIME,diff);
           tot_errors[i][k] = 0;
           if (diff[k] == 1){
-            printf("Error - Not getting TUB triggers on channel %d!\n",k);
+            lprintf("Error - Not getting TUB triggers on channel %d!\n",k);
             tot_errors[i][k] = 2;
           }
         }
@@ -165,7 +165,7 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
         }
         xl3s[crateNum]->MultiLoadsDac(num_dacs,dac_nums,dac_values,slot_nums);
 
-        printf("Setting ttot for crate/board %d %d, target time %d\n",crateNum,i,targetTime);
+        lprintf("Setting ttot for crate/board %d %d, target time %d\n",crateNum,i,targetTime);
         chips_not_finished = 0xFF;
 
         // loop until all ttot measurements are larger than target ttime
@@ -181,36 +181,36 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
               // check if above or below
               if ((diff[4*j+0] > 0) && (diff[4*j+1] > 0) && (diff[4*j+2] > 0)
                   && (diff[4*j+3] > 0)){
-                //printf("above\n");
+                //lprintf("above\n");
                 rmp_high[j] = rmp[j];
 
                 // if we have narrowed it down to the first setting that works, we are done
                 if ((rmp[j] - rmp_low[j]) == 1){
-                  printf("Chip %d finished\n",j);
+                  lprintf("Chip %d finished\n",j);
                   chips_not_finished &= ~(0x1<<j);
                   allrmps[i][j] = rmp[j];
                   allvsis[i][j] = vsi[j];
                 }
               }else{
-                //printf("below\n");
+                //lprintf("below\n");
                 rmp_low[j] = rmp[j];
                 if (rmp[j] == MAX_RMP_VALUE){
                   if (vsi[j] > MIN_VSI_VALUE){
                     rmp_high[j] = MAX_RMP_VALUE;
                     rmp_low[j] = RMP_DEFAULT-10;
                     vsi[j] -= 2;
-                    //printf("%d - vsi: %d\n",j,vsi[j]);
+                    //lprintf("%d - vsi: %d\n",j,vsi[j]);
                   }else{
                     // out of bounds, end loop with error
-                    printf("RMP/VSI is too big for disc chip %d! (%d %d)\n",j,rmp[j],vsi[j]);
-                    printf("Aborting slot %d setup.\n",i);
+                    lprintf("RMP/VSI is too big for disc chip %d! (%d %d)\n",j,rmp[j],vsi[j]);
+                    lprintf("Aborting slot %d setup.\n",i);
                     tot_errors[i][j*4+0] = 1;
                     tot_errors[i][j*4+1] = 1;
                     tot_errors[i][j*4+2] = 1;
                     tot_errors[i][j*4+3] = 1;
                     for (int l=0;l<8;l++)
                       if (chips_not_finished & (0x1<<l)){
-                        printf("Slot %d Chip %d\tRMP/VSI: %d %d <- unfinished\n",i,l,rmp[l],vsi[l]);
+                        lprintf("Slot %d Chip %d\tRMP/VSI: %d %d <- unfinished\n",i,l,rmp[l],vsi[l]);
                         allrmps[i][l] = rmp[l];
                         allvsis[i][l] = vsi[l];
                       }
@@ -259,15 +259,15 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
 
         result = MeasureTTot(crateNum,(0x1<<i),150,alltimes);
 
-        printf("Final timing measurements:\n");
+        lprintf("Final timing measurements:\n");
         for (int j=0;j<8;j++){
-          printf("Chip %d (RMP/VSI %d %d) Times:\t%d\t%d\t%d\t%d\n",
+          lprintf("Chip %d (RMP/VSI %d %d) Times:\t%d\t%d\t%d\t%d\n",
               j,rmp[j],vsi[j],alltimes[i*32+j*4+0],alltimes[i*32+j*4+1],
               alltimes[i*32+j*4+2],alltimes[i*32+j*4+3]);
         }
 
         if (updateDB){
-          printf("updating the database\n");
+          lprintf("updating the database\n");
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("set_ttot"));
           json_append_member(newdoc,"targettime",json_mknumber((double)targetTime));
@@ -309,14 +309,14 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
       } // if in slot mask
     } // end loop over slots
 
-    printf("Set ttot complete\n");
+    lprintf("Set ttot complete\n");
 
   }
   catch(const char* s){
-    printf("SetTTot: %s\n",s);
+    lprintf("SetTTot: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 
@@ -339,7 +339,7 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
         // set up gt delay
         real_delay = mtc->SetGTDelay((float) time);
         while ((real_delay > (float) time) || ((real_delay + (float) increment) < (float) time)){
-          printf("got %f instead of %f, trying again\n",real_delay,(float) time);
+          lprintf("got %f instead of %f, trying again\n",real_delay,(float) time);
           real_delay = mtc->SetGTDelay((float) time);
         }
         // get the cmos count before sending pulses
@@ -354,7 +354,7 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
           fin[j] = temp[0][j];
         for (int j=0;j<32;j++){
           fin[j] -= init[j];
-          //printf("for %d at time %d, got %d of %d\n",j,time,fin[j],2*NUM_PEDS);
+          //lprintf("for %d at time %d, got %d of %d\n",j,time,fin[j],2*NUM_PEDS);
           // check if we got all the pedestals from the TUB too
           if ((fin[j] >= 2*NUM_PEDS) && ((0x1<<j) & ~chan_done_mask)){
             chan_done_mask |= (0x1<<j); 
@@ -385,7 +385,7 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
         real_delay = mtc->SetGTDelay((float) disc_times[i*32+j]-TUB_DELAY+50);
         while (real_delay < ((float) disc_times[i*32+j] - TUB_DELAY + 50 - 5))
         {
-          printf("2 - got %f instead of %f, trying again\n",real_delay,(float) disc_times[i*32+j] - TUB_DELAY + 50);
+          lprintf("2 - got %f instead of %f, trying again\n",real_delay,(float) disc_times[i*32+j] - TUB_DELAY + 50);
           real_delay = mtc->SetGTDelay((float) disc_times[i*32+j]-TUB_DELAY+50);
         }
 
@@ -397,7 +397,7 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
         fin[j] -= init[j];
         if (fin[j] < 2*NUM_PEDS){
           // we didn't get the peds without the other channels enabled
-          printf("Error channel %d - pedestals went away after other channels turned off!\n",j);
+          lprintf("Error channel %d - pedestals went away after other channels turned off!\n",j);
           disc_times[i*32+j] = 9999;
         }
       }
@@ -424,7 +424,7 @@ int CheckTTot(int crate, int slot_num, uint32_t chan_mask, int goal_time, int *d
     real_delay = mtc->SetGTDelay((float) goal_time - TUB_DELAY);
     while (real_delay < ((float) goal_time - TUB_DELAY - 5))
     {
-      printf("3 - got %f instead of %f, trying again\n",real_delay,(float)goal_time - TUB_DELAY);
+      lprintf("3 - got %f instead of %f, trying again\n",real_delay,(float)goal_time - TUB_DELAY);
       real_delay = mtc->SetGTDelay((float) goal_time - TUB_DELAY);
     }
 
@@ -446,7 +446,7 @@ int CheckTTot(int crate, int slot_num, uint32_t chan_mask, int goal_time, int *d
         if (i==0)
           diff[k] = 1;
       }else{
-        //printf("%d was short. Got %d out of %d (%d before, %d after)\n",k,fin[k],2*NUM_PEDS,init[k],fin[k]+init[k]);
+        //lprintf("%d was short. Got %d out of %d (%d before, %d after)\n",k,fin[k],2*NUM_PEDS,init[k],fin[k]+init[k]);
         // if its shorter either time, flag it as too short
         diff[k] = 0;
       }

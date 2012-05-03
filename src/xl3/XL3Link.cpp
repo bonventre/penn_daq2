@@ -73,7 +73,7 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
 {
 //  uint32_t *p = (uint32_t *) packet;
 //  for (int j=0;j<10;j++)
-//    printf("%d: %08x\n",j,*(p+j));
+//    lprintf("%d: %08x\n",j,*(p+j));
   switch (packet->header.packetType){
     case PING_ID:
       {
@@ -85,7 +85,7 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
       }
     case MESSAGE_ID:
       {
-        printf("%s",packet->payload);
+        lprintf("%s",packet->payload);
         break;
       }
     case CMD_ACK_ID:
@@ -106,40 +106,79 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
       }
     case MEGA_BUNDLE_ID:
       {
+        struct timeval start,end;
+        if (megaBundleCount == 0){
+          gettimeofday(&start,0);
+          startTime = start.tv_sec*1000000 + start.tv_usec;
+          recvBytes = 0;
+        }
+        gettimeofday(&end,0);
+        endTime = end.tv_sec*1000000 + end.tv_usec;
+        long int avg_dt = endTime - startTime;
+
         MegaBundleHeader *mega = (MegaBundleHeader *) packet->payload;
         SwapLongBlock(mega,sizeof(MegaBundleHeader)/sizeof(uint32_t));
-        SwapLongBlock(mega+1,mega->info & 0xFFFFFF);
-        MiniBundleHeader *mini = (MiniBundleHeader *) (packet->payload + sizeof(MegaBundleHeader));
-        //printf("Bundle: size = %u, passmin = %u, mini = %08x, ",mega->info & 0xFFFFFF,mega->passMin,mini->info);
-        if (mini->info & 0x80000000){
-          uint32_t passCur = *(uint32_t *) (mini+1);
-          //printf("passcur = %d",passCur);
+        int wordsLeft = (mega->info & 0xFFFFFF);
+        SwapLongBlock(mega+1,wordsLeft);
+        int numBundles = 0;
+        MiniBundleHeader *mini = (MiniBundleHeader *) (mega+1);
+        while (wordsLeft){
+          wordsLeft--;
+          int miniSize = (mini->info & 0xFFFFFF);
+          if (mini->info & 0x80000000){
+            uint32_t passcur = *(uint32_t *) (mini+1);
+            //lprintf("PassCur minibundle: %d\n",passcur);
+          }else{
+            numBundles += miniSize/3; 
+            int card = (mini->info & 0x0F000000) >> 24;
+          }
+          if (miniSize > wordsLeft){
+            lprintf("Corrupted minibundle! Size = %d\n",miniSize);
+            break;
+          }
+          mini += 1 + miniSize;
+          wordsLeft -= miniSize;
         }
-        //printf("\n");
+
+
+
+        if (numBundles > 0){
+          recvBytes += numBundles*12;
+          megaBundleCount++;
+
+          if (megaBundleCount%BUNDLE_PRINT == 0){
+            long int inst_dt = endTime - lastPrintTime;
+            lastPrintTime = endTime;
+            lprintf("recv average: %8.2f Mb/s \t d/dt: %8.2f Mb/s (time: %2.4f us/bundle)\n",
+                (float) (recvBytes*8/(float)avg_dt),
+                (float)(numBundles*12*8*BUNDLE_PRINT/(float)inst_dt),
+                1.0/(float)(recvBytes*8/(float)avg_dt)*96);
+          }
+        }
         break;
       }
     case ERROR_ID:
       {
         ErrorPacket *errors = (ErrorPacket *) packet->payload;
-        printf("Error: cmdRejected:%d, transferError:%d, xl3DAUnknown:%d\n",errors->cmdRejected,errors->transferError,errors->xl3DataAvailUnknown);
-        printf("bundleread: ");
+        lprintf("Error: cmdRejected:%d, transferError:%d, xl3DAUnknown:%d\n",errors->cmdRejected,errors->transferError,errors->xl3DataAvailUnknown);
+        lprintf("bundleread: ");
         for (int i=0;i<16;i++)
-          printf("%d ",errors->fecBundleReadError[i]);
-        printf("\n");
-        printf("bundleresync: ");
+          lprintf("%d ",errors->fecBundleReadError[i]);
+        lprintf("\n");
+        lprintf("bundleresync: ");
         for (int i=0;i<16;i++)
-          printf("%d ",errors->fecBundleResyncError[i]);
-        printf("\n");
-        printf("memlevelunknown: ");
+          lprintf("%d ",errors->fecBundleResyncError[i]);
+        lprintf("\n");
+        lprintf("memlevelunknown: ");
         for (int i=0;i<16;i++)
-          printf("%d ",errors->fecMemLevelUnknown[i]);
-        printf("\n");
+          lprintf("%d ",errors->fecMemLevelUnknown[i]);
+        lprintf("\n");
         break;
       }
     case SCREWED_ID:
       {
         //FIXME
-        printf("Screwed\n");
+        lprintf("Screwed\n");
         break;
       }
     default:
@@ -155,7 +194,7 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
 void XL3Link::AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd, struct sockaddr *address, int socklen)
 {
   GenericLink::AcceptCallback(listener,fd,address,socklen);
-  printf("XL3 %d connected\n",fCrateNum);
+  lprintf("XL3 %d connected\n",fCrateNum);
 }
 
 int XL3Link::SendPacket(XL3Packet *packet)
@@ -164,9 +203,9 @@ int XL3Link::SendPacket(XL3Packet *packet)
   bufferevent_lock(fBev);
   pthread_mutex_lock(&fRecvQueueLock);
   if (!fRecvQueue.empty())
-    printf("Theres still stuff in the queue!\n");
+    lprintf("Theres still stuff in the queue!\n");
   if (!fRecvCmdQueue.empty())
-    printf("There are still cmd acks in the queue\n");
+    lprintf("There are still cmd acks in the queue\n");
   pthread_mutex_unlock(&fRecvQueueLock);
   bufferevent_write(fBev,packet,sizeof(XL3Packet));
   bufferevent_unlock(fBev);
@@ -186,7 +225,7 @@ int XL3Link::GetNextPacket(XL3Packet *packet,int waitSeconds)
     while (fRecvQueue.empty()){
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
-        printf("XL3Link::GetNextPacket: Wait timed out!\n");
+        lprintf("XL3Link::GetNextPacket: Wait timed out!\n");
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }
@@ -216,7 +255,7 @@ int XL3Link::GetNextCmdAck(Command *command,int waitSeconds)
     while (fRecvCmdQueue.empty()){
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
-        printf("XL3Link::GetNextCmdAck: Wait timed out!\n");
+        lprintf("XL3Link::GetNextCmdAck: Wait timed out!\n");
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }
@@ -236,7 +275,7 @@ int XL3Link::CheckQueue(int empty)
 {
   if (fRecvQueue.empty() && fRecvCmdQueue.empty()){
     if (fBytesLeft){
-      printf("%d bytes left\n",fBytesLeft);
+      lprintf("%d bytes left\n",fBytesLeft);
       return -3;
     }
     return 0;

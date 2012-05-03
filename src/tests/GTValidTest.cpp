@@ -11,7 +11,7 @@
 
 int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtCutoff, int twiddleOn, int updateDB, int finalTest, int ecal)
 {
-  printf("*** Starting GT Valid Test *************\n");
+  lprintf("*** Starting GT Valid Test *************\n");
 
   uint32_t result;
   int error;
@@ -53,7 +53,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
     xl3s[crateNum]->DeselectFECs();
 
     if (mtc->SetupPedestals(0,DEFAULT_PED_WIDTH,10,0,(0x1<<crateNum),(0x1<<crateNum))){
-      printf("Error setting up mtc. Exiting\n");
+      lprintf("Error setting up mtc. Exiting\n");
       return -1;
     }
 
@@ -92,10 +92,10 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
               error+= xl3s[crateNum]->LoadsDac(d_iseta[1],ISETA_NO_TWIDDLE,i);
             }
             if (error){
-              printf("Error setting up TAC voltages. Exiting\n");
+              lprintf("Error setting up TAC voltages. Exiting\n");
               return -1;
             }
-            printf("Dacs loaded\n");
+            lprintf("Dacs loaded\n");
 
             // load cmos shift register to enable twiddle bits
             packet.header.packetType = LOAD_TACBITS_ID;
@@ -112,7 +112,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
             SwapLongBlock(packet.payload,2);
             SwapShortBlock(packet.payload+8,32);
             xl3s[crateNum]->SendCommand(&packet);
-            printf("TAC bits loaded\n");
+            lprintf("TAC bits loaded\n");
           }
 
           // some other initialization
@@ -132,7 +132,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
             }
           }
 
-          printf("Measuring GTVALID for crate %d, slot %d, TAC %d\n",
+          lprintf("Measuring GTVALID for crate %d, slot %d, TAC %d\n",
               crateNum,i,wt);
 
           // loop over channel to measure inital GTVALID
@@ -144,12 +144,12 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
               gtchan[j] = gt_temp;
               gt_start[wt][j] = gtchan[j];
               if (error != 0){
-                printf("Error getting gtdelay at slot %d, channel %d\n",i,j);
+                lprintf("Error getting gtdelay at slot %d, channel %d\n",i,j);
                 return -1;
               }
             } // end if chan mask
           } // end loop over channels
-          printf("\nMeasured initial GTValids\n");
+          lprintf("\nMeasured initial GTValids\n");
 
           // find maximum gtvalid time
           gmax[wt] = 0.0;
@@ -174,24 +174,24 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
 
           // initial printout
           if (wt == 1){
-            printf("GTVALID initial results, time in ns:\n");
-            printf("---------------------------------------\n");
-            printf("Crate Slot Chan GTDELAY 0/1:\n");
+            lprintf("GTVALID initial results, time in ns:\n");
+            lprintf("---------------------------------------\n");
+            lprintf("Crate Slot Chan GTDELAY 0/1:\n");
             for (int j=0;j<32;j++){
               if ((0x1<<j) & channelMask)
-                printf("%d %d %d %f %f\n",crateNum,i,j,gt_start[0][j],gt_start[1][j]);
+                lprintf("%d %d %d %f %f\n",crateNum,i,j,gt_start[0][j],gt_start[1][j]);
             }
-            printf("TAC 0 max at chan %d: %f\n",cmax[0],gmax[0]);
-            printf("TAC 1 max at chan %d: %f\n",cmax[1],gmax[1]);
-            printf("TAC 0 min at chan %d: %f\n",cmin[0],gmin[0]);
-            printf("TAC 1 min at chan %d: %f\n",cmin[1],gmin[1]);
+            lprintf("TAC 0 max at chan %d: %f\n",cmax[0],gmax[0]);
+            lprintf("TAC 1 max at chan %d: %f\n",cmax[1],gmax[1]);
+            lprintf("TAC 0 min at chan %d: %f\n",cmin[0],gmin[0]);
+            lprintf("TAC 1 min at chan %d: %f\n",cmin[1],gmin[1]);
           }
 
           // if gt_cutoff is set, we are going to change
           // the ISETM dacs untill all the channels are
           // just below it.
           if (gtCutoff != 0){
-            printf("Finding ISETM values for crate %d, slot %d TAC %d\n",
+            lprintf("Finding ISETM values for crate %d, slot %d TAC %d\n",
                 crateNum,i,wt);
             isetm_new[0] = ISETM;
             isetm_new[1] = ISETM;
@@ -202,21 +202,21 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
               // load a new dac value
               error = xl3s[crateNum]->LoadsDac(d_isetm[wt],isetm_new[wt],i);
               if (error){
-                printf("Error loading Dacs. Exiting\n");
+                lprintf("Error loading Dacs. Exiting\n");
                 return -1;
               }
               // get a new measure of gtvalid
               xl3s[crateNum]->RW(PED_ENABLE_R + select_reg + WRITE_REG,0x1<<cmax[wt],&result);
               error = GetGTDelay(crateNum,i,wt,&gt_temp,isetm_new[0],isetm_new[1]);
               if (error != 0){
-                printf("Error getting gtdelay at slot %d, channel %d\n",i,cmax[wt]);
+                lprintf("Error getting gtdelay at slot %d, channel %d\n",i,cmax[wt]);
                 return -1;
               }
               if (gt_temp <= gtCutoff){
                 done = 1;
               }else{
                 if (isetm_new[wt] == 255){
-                  printf("warning - ISETM set to max!\n");
+                  lprintf("warning - ISETM set to max!\n");
                   done = 1;
                 }else{
                   isetm_new[wt]++;
@@ -225,7 +225,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
 
             } // end while gt_temp > gt_cutoff 
 
-            printf("\nFound ISETM value, checking new maximum\n");
+            lprintf("\nFound ISETM value, checking new maximum\n");
 
             // check that we still have the max channel
             for (int j=0;j<32;j++){
@@ -233,7 +233,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
                 xl3s[crateNum]->RW(PED_ENABLE_R + select_reg + WRITE_REG,0x1<<j,&result);
                 error = GetGTDelay(crateNum,i,wt,&gt_temp,isetm_new[0],isetm_new[1]);
                 if (error != 0){
-                  printf("Error getting gtdelay at slot %d, channel %d\n",i,j);
+                  lprintf("Error getting gtdelay at slot %d, channel %d\n",i,j);
                   return -1;
                 }
                 gtchan[j] = gt_temp;
@@ -253,7 +253,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
             // if the maximum channel has changed
             // refind the good isetm value
             if (chan_max_sec != cmax[wt]){
-              printf("Warning, second chan_max not same as first.\n");
+              lprintf("Warning, second chan_max not same as first.\n");
               cmax[wt] = chan_max_sec;
               gmax[wt] = gt_max_sec;
               gt_temp = gmax[wt];
@@ -263,7 +263,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
                 xl3s[crateNum]->RW(PED_ENABLE_R + select_reg + WRITE_REG,0x1<<cmax[wt],&result);
                 error = GetGTDelay(crateNum,i,wt,&gt_temp,isetm_new[0],isetm_new[1]);
                 if (error != 0){
-                  printf("Error getting gtdelay at slot %d, channel %d\n",i,cmax[wt]);
+                  lprintf("Error getting gtdelay at slot %d, channel %d\n",i,cmax[wt]);
                   return -1;
                 }
               }
@@ -290,7 +290,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
                     xl3s[crateNum]->RW(PED_ENABLE_R + select_reg + WRITE_REG,0x1<<j,&result);
                     error = GetGTDelay(crateNum,i,wt,&gt_temp,isetm_new[0],isetm_new[1]);
                     if (error != 0){
-                      printf("Error getting gtdelay at slot %d, channel %d\n",i,j);
+                      lprintf("Error getting gtdelay at slot %d, channel %d\n",i,j);
                       return -1;
                     }
                     gtchan_set[wt][j] = gt_temp;
@@ -298,20 +298,20 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
                 }
                 done = 1;
                 // now successively turn off twiddle bits
-                printf("\n");
+                lprintf("\n");
                 for (int j=0;j<32;j++){
                   if ((0x1<<j) & channelMask){
                     if ((gtchan_set[wt][j] <= gtCutoff) && (gtflag[wt][j] == 0) &&
                         (tacbits_new[wt][j] != 0x0)){
                       tacbits_new[wt][j]-=0x1; // decrement twiddle by 1
                       done = 0;
-                      printf("Channel %d, %f, tacbits at %01x\n",j,gtchan_set[wt][j],tacbits_new[wt][j]);
+                      lprintf("Channel %d, %f, tacbits at %01x\n",j,gtchan_set[wt][j],tacbits_new[wt][j]);
                     }else if ((gtchan_set[wt][j] > gtCutoff) && (gtflag[wt][j] == 0)){
                       tacbits_new[wt][j] += 0x1; // go up just one
                       if (tacbits_new[wt][j] > 0x7)
                         tacbits_new[wt][j] = 0x7; //max
                       gtflag[wt][j] = 1; // this channel is as close to gt_cutoff as possible
-                      printf("Channel %d ok\n",j);
+                      lprintf("Channel %d ok\n",j);
                     }
                   }
                 }
@@ -327,7 +327,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
                 SwapLongBlock(packet.payload,2);
                 SwapShortBlock(packet.payload+8,32);
                 xl3s[crateNum]->SendCommand(&packet);
-                printf("TAC bits loaded\n");
+                lprintf("TAC bits loaded\n");
 
               } // end while not done
             } // end if do_twiddle
@@ -346,7 +346,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
                 xl3s[crateNum]->RW(PED_ENABLE_R + select_reg + WRITE_REG,0x1<<j,&result);
                 error = GetGTDelay(crateNum,i,wt,&gt_temp,isetm_new[0],isetm_new[1]);
                 if (error != 0){
-                  printf("Error getting gtdelay at slot %d, channel %d\n",i,j);
+                  lprintf("Error getting gtdelay at slot %d, channel %d\n",i,j);
                   return -1;
                 }
                 gtchan_set[wt][j] = gt_temp;
@@ -379,36 +379,36 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
         xl3s[crateNum]->RW(PED_ENABLE_R + select_reg + WRITE_REG,0x0,&result);
 
         // print out
-        printf("\nCrate %d Slot %d - GTVALID FINAL results, time in ns:\n",crateNum,i);
-        printf("--------------------------------------------------------\n");
+        lprintf("\nCrate %d Slot %d - GTVALID FINAL results, time in ns:\n",crateNum,i);
+        lprintf("--------------------------------------------------------\n");
         if (!twiddleOn)
-          printf(" >>> ISETA0/1 = 0, no TAC twiddle bits set\n");
-        printf("set up: VMAX: %hu, TACREF: %hu, ",VMAX,TACREF);
+          lprintf(" >>> ISETA0/1 = 0, no TAC twiddle bits set\n");
+        lprintf("set up: VMAX: %hu, TACREF: %hu, ",VMAX,TACREF);
         if (twiddleOn)
-          printf("ISETA: %hu\n",ISETA);
+          lprintf("ISETA: %hu\n",ISETA);
         else
-          printf("ISETA: %hu\n",ISETA_NO_TWIDDLE);
-        printf("Found ISETM0: %d, ISETM1: %d\n",isetm_save[0],isetm_save[1]);
-        printf("Chan Tacbits GTValid 0/1:\n");
+          lprintf("ISETA: %hu\n",ISETA_NO_TWIDDLE);
+        lprintf("Found ISETM0: %d, ISETM1: %d\n",isetm_save[0],isetm_save[1]);
+        lprintf("Chan Tacbits GTValid 0/1:\n");
         for (int j=0;j<32;j++){
           if ((0x1<<j) & channelMask){
-            printf("%d 0x%02x %f %f",
+            lprintf("%d 0x%02x %f %f",
                 j,tacbits_save[1][j]*16 + tacbits_save[0][j],
                 gtchan_set[0][j],gtchan_set[1][j]);
             if (isetm_save[0] == ISETM || isetm_save[1] == ISETM)
-              printf(">>> Warning: isetm not adjusted\n");
+              lprintf(">>> Warning: isetm not adjusted\n");
             else
-              printf("\n");
+              lprintf("\n");
           }
         }
 
-        printf(">>> Maximum TAC0 GTValid - Chan %d: %f\n",
+        lprintf(">>> Maximum TAC0 GTValid - Chan %d: %f\n",
             chan_max_set[0],gt_max_set[0]);
-        printf(">>> Minimum TAC0 GTValid - Chan %d: %f\n",
+        lprintf(">>> Minimum TAC0 GTValid - Chan %d: %f\n",
             chan_min_set[0],gt_min_set[0]);
-        printf(">>> Maximum TAC1 GTValid - Chan %d: %f\n",
+        lprintf(">>> Maximum TAC1 GTValid - Chan %d: %f\n",
             chan_max_set[1],gt_max_set[1]);
-        printf(">>> Minimum TAC1 GTValid - Chan %d: %f\n",
+        lprintf(">>> Minimum TAC1 GTValid - Chan %d: %f\n",
             chan_min_set[1],gt_min_set[1]);
 
         if (abs(isetm_save[1] - isetm_save[0]) > 10)
@@ -420,7 +420,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
 
         //store in DB
         if (updateDB){
-          printf("updating the database\n");
+          lprintf("updating the database\n");
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("cmos_m_gtvalid"));
 
@@ -470,17 +470,17 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
 
   }
   catch(const char* s){
-    printf("GTValidTest: %s\n",s);
+    lprintf("GTValidTest: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 
 
 int GetGTDelay(int crateNum, int slotNum, int wt, float *get_gtchan, uint16_t isetm0, uint16_t isetm1)
 {
-  printf(".");
+  lprintf(".");
   fflush(stdout);
 
   float upper_limit, lower_limit, current_delay;
@@ -548,7 +548,7 @@ int GetGTDelay(int crateNum, int slotNum, int wt, float *get_gtchan, uint16_t is
     xl3s[crateNum]->RW(FIFO_WRITE_PTR_R + select_reg + READ_REG,0x0,&result);
     num_read = (result & 0x000FFFFF)/3;
     if (num_read < (NGTVALID*0.75)){
-      printf("Uh oh, still not all the events! wrong TAC failing\n");
+      lprintf("Uh oh, still not all the events! wrong TAC failing\n");
       *get_gtchan = -1;
     }else{
       *get_gtchan = upper_limit;

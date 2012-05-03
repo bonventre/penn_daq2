@@ -1,6 +1,7 @@
 bin/*
 build/*
 logs/*
+macro/*
 *.swp
 *.log
 ssh_key*

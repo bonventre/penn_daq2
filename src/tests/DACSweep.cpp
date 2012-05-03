@@ -9,8 +9,8 @@
 
 int DACSweep(int crateNum, uint32_t slotMask, uint32_t dacMask, int dacNum, int updateDB)
 {
-  printf("*** Starting DAC Sweep *****************\n");
-  printf("Hit enter to move on to the next dac or type quit to exit\n");
+  lprintf("*** Starting DAC Sweep *****************\n");
+  lprintf("Hit enter to move on to the next dac or type quit to exit\n");
   const unsigned short *dac_nums[13] = {d_rmp,d_vli,d_vsi,d_vthr,d_vbal_hgain,d_vbal_lgain,d_rmpup,d_iseta,d_isetm,&d_tacref,&d_vmax,&d_vres,&d_hvref};
   int num_dacs[13] = {8,8,8,32,32,32,8,2,2,1,1,1,1};  
 
@@ -19,25 +19,25 @@ int DACSweep(int crateNum, uint32_t slotMask, uint32_t dacMask, int dacNum, int 
       if (dacNum == -1){
         for (int j=0;j<13;j++){
           if ((0x1<<j) & dacMask){
-            printf("Checking %s dacs\n",dacNames[j]);
+            lprintf("Checking %s dacs\n",dacNames[j]);
             for (int k=0;k<num_dacs[j];k++){
-              printf("%d ",k);
+              lprintf("%d ",k);
               fflush(stdout);
               if (SingleDacSweep(crateNum,i,dac_nums[j][k])){
-                printf("\n****************************************\n");
+                lprintf("\n****************************************\n");
                 return 0;
               }
             }
-            printf("\n");
+            lprintf("\n");
           }
         }
       }else{
-        printf("Checking dac %d\n",dacNum);
+        lprintf("Checking dac %d\n",dacNum);
         SingleDacSweep(crateNum,i,dacNum);
       }
     }
   }
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

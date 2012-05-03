@@ -8,7 +8,7 @@
 
 int FECTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest, int ecal)
 {
-  printf("*** Starting FEC Test ******************\n");
+  lprintf("*** Starting FEC Test ******************\n");
   XL3Packet packet;
   packet.header.packetType = FEC_TEST_ID;
   FECTestArgs *args = (FECTestArgs *) packet.payload;
@@ -20,10 +20,10 @@ int FECTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest, int ec
     SwapLongBlock(packet.payload,sizeof(FECTestResults)/sizeof(uint32_t));
 
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       for (int slot=0;slot<16;slot++){
         if ((0x1<<slot) & slotMask){
-          printf("updating slot %d\n",slot);
+          lprintf("updating slot %d\n",slot);
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("fec_test"));
           json_append_member(newdoc,"pedestal",
@@ -61,10 +61,10 @@ int FECTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest, int ec
 
   }
   catch(const char* s){
-    printf("FECTest: %s\n",s);
+    lprintf("FECTest: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

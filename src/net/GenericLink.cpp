@@ -19,7 +19,7 @@ GenericLink::GenericLink(int port)
   sin.sin_port = htons(port);
   fListener = evconnlistener_new_bind(evBase,&GenericLink::AcceptCallbackHandler,this,LEV_OPT_CLOSE_ON_FREE | LEV_OPT_REUSEABLE, -1, (struct sockaddr*)&sin, sizeof(sin));
   if (!fListener){
-    printf("Couldn't create listener on port %d\n",port);
+    lprintf("Couldn't create listener on port %d\n",port);
     throw 1;
   }
 }

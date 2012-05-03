@@ -13,7 +13,7 @@
 
 int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int numPedestals, float upper, float lower, int qSelect, int pedOn, int updateDB, int finalTest)
 {
-  printf("*** Starting Charge Injection Test *****\n");
+  lprintf("*** Starting Charge Injection Test *****\n");
 
   float *qhls;
   float *qhss;
@@ -37,7 +37,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
   tacs = (float *) malloc(32*16*2*26*sizeof(float));
   scan_errors = (int *) malloc(32*16*2*26*sizeof(int));
   if (pmt_buffer == NULL || ped == NULL || qhls == NULL || qhss == NULL || qlxs == NULL || tacs == NULL || scan_errors == NULL){
-    printf("Problem mallocing! Exiting\n");
+    lprintf("Problem mallocing! Exiting\n");
     if (pmt_buffer != NULL)
       free(pmt_buffer);
     if (ped != NULL)
@@ -96,7 +96,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
       xl3s[crateNum]->DeselectFECs(); 
 
       if (errors){
-        printf("error setting up FEC crate for pedestals. Exiting.\n");
+        lprintf("error setting up FEC crate for pedestals. Exiting.\n");
         free(pmt_buffer);
         free(ped);
         free(qhls);
@@ -112,7 +112,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
 
       errors = mtc->SetupPedestals(0,pedWidth,gtDelay,DEFAULT_GT_FINE_DELAY,(0x1<<crateNum),(0x1<<crateNum));
       if (errors){
-        printf("Error setting up MTC for pedestals. Exiting.\n");
+        lprintf("Error setting up MTC for pedestals. Exiting.\n");
         mtc->UnsetPedCrateMask(MASKALL);
         mtc->UnsetGTCrateMask(MASKALL);
         free(pmt_buffer);
@@ -161,8 +161,8 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
 
           //check for readout errors
           if (count <= 0){
-            printf("there was an error in the count!\n");
-            printf("Errors reading out MB(%2d) (errno %i)\n", slot_iter, count);
+            lprintf("there was an error in the count!\n");
+            lprintf("Errors reading out MB(%2d) (errno %i)\n", slot_iter, count);
             errors+=1;
             continue;
           }else{
@@ -178,7 +178,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
           for (int i=0;i<count;i++){
             crateID = (int) UNPK_CRATE_ID(pmt_iter);
             if (crateID != crateNum){
-              printf("Invalid crate ID seen! (crate ID %2d, bundle %2i)\n", crateID, i);
+              lprintf("Invalid crate ID seen! (crate ID %2d, bundle %2i)\n", crateID, i);
               pmt_iter+=3;
               continue;
             }
@@ -250,9 +250,9 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
           // PRINT RESULTS //
           ///////////////////
 
-          printf("########################################################\n");
-          printf("Slot (%2d)\n", slot_iter);
-          printf("########################################################\n");
+          lprintf("########################################################\n");
+          lprintf("Slot (%2d)\n", slot_iter);
+          lprintf("########################################################\n");
 
           for (int i = 0; i<32; i++){
             //pt_printsend("Ch Cell  #   Qhl         Qhs         Qlx         TAC\n");
@@ -303,7 +303,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
                 }
               }
               if (j==0){
-                printf("%2d %3d %4d %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f\n",
+                lprintf("%2d %3d %4d %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f\n",
                     dacvalue,i,ped[i].thiscell[j].per_cell,
                     ped[i].thiscell[j].qhlbar, ped[i].thiscell[j].qhlrms,
                     ped[i].thiscell[j].qhsbar, ped[i].thiscell[j].qhsrms,
@@ -347,7 +347,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
 
     // lets update this database
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       for (int i=0;i<16;i++)
       {
         if ((0x1<<i) & slotMask){
@@ -417,9 +417,9 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
     }
 
     if (errors)
-      printf("There were %d errors\n", errors);
+      lprintf("There were %d errors\n", errors);
     else
-      printf("No errors seen\n");
+      lprintf("No errors seen\n");
 
     free(qhls);
     free(qhss);
@@ -429,7 +429,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
 
   }
   catch(const char* s){
-    printf("ChinjScan: %s\n",s);
+    lprintf("ChinjScan: %s\n",s);
     if (pmt_buffer != NULL)
       free(pmt_buffer);
     if (ped != NULL)
@@ -447,7 +447,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
 
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

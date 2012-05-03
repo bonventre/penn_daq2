@@ -74,7 +74,7 @@ int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)
       if (packet->header.packetNum > recvCommandNum && ((65536-packet->header.packetNum) + recvCommandNum < 5000))
         throw "SendCommand: Packet Num too high";
       if (packet->header.packetType != type)
-        printf("Got %02x instead of %02x\n",packet->header.packetType,type);
+        lprintf("Got %02x instead of %02x\n",packet->header.packetType,type);
     }while(packet->header.packetType != type || packet->header.packetNum != recvCommandNum);
   }
   return 0;
@@ -106,7 +106,7 @@ int XL3Model::GetMultiFCResults(int numCmds, int packetNum, uint32_t *result, in
         continue;
     }
     if (command.cmdNum != cmdNum){
-      printf("Expected %d, got %d\n",cmdNum,command.cmdNum);
+      lprintf("Expected %d, got %d\n",cmdNum,command.cmdNum);
       throw "GetMultiFCResults: Got wrong command number";
     }
     busErrors += command.flags;
@@ -181,7 +181,7 @@ int XL3Model::UpdateCrateConfig(uint16_t slotMask)
     DeselectFECs();
   }
   catch(const char* s){
-    printf("Error: Unable to update crate configuration\n");
+    lprintf("Error: Unable to update crate configuration\n");
     throw s;
   }
   return 0;
@@ -286,20 +286,20 @@ int32_t XL3Model::ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, in
     if (checkLimit){
       if ((3*limit) < diff){
         if (diff > 1.5*(3*limit))
-          printf("Memory level much higher than expected (%d > %d). "
+          lprintf("Memory level much higher than expected (%d > %d). "
               "Possible fifo overflow\n",diff,3*limit);
         else
-          printf("Memory level over expected (%d > %d)\n",diff,3*limit);
+          lprintf("Memory level over expected (%d > %d)\n",diff,3*limit);
         diff = 3*limit;
       }else if ((3*limit) > diff){
-        printf("Memory level under expected (%d < %d)\n",diff,3*limit);
+        lprintf("Memory level under expected (%d < %d)\n",diff,3*limit);
       }
     }else{
       diff = diff >= 3*limit ? 3*limit : diff;
     }
 
     // lets read out the bundles!
-    printf("Attempting to read %d bundles\n",diff/3);
+    lprintf("Attempting to read %d bundles\n",diff/3);
     // we need to read it out MAX_FEC_COMMANDS at a time
     int readsLeft = diff;
     int thisRead;
@@ -330,7 +330,7 @@ int32_t XL3Model::ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, in
     DeselectFECs();
   }
   catch(const char* s){
-    printf("There was a network error trying to read out bundles!\n");
+    lprintf("There was a network error trying to read out bundles!\n");
     throw s;
   }
   return count;
@@ -390,7 +390,7 @@ int XL3Model::SetupChargeInjection(uint32_t slotMask, uint32_t chanMask, uint32_
       // now set the dac
       error = LoadsDac(d_hvref,dacValue,slot_iter);
       if (error){
-        printf("setup_chinj: error loading charge injection dac\n");
+        lprintf("setup_chinj: error loading charge injection dac\n");
       }
     } // end if slot_mask
   } // end loop over slots
