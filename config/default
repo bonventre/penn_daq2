@@ -1,0 +1,42 @@
+# database
+DB_ADDRESS=localhost
+DB_PORT=5984
+DB_USERNAME=
+DB_PASSWORD=
+DB_BASE_NAME=debugdb
+DB_VIEWDOC=_design/crate_init_views/_view
+
+FECDB_ADDRESS=localhost
+FECDB_PORT=5984
+FECDB_USERNAME=
+FECDB_PASSWORD=
+FECDB_BASE_NAME=debugdb
+FECDB_VIEWDOC=_design/penn_daq_views/_view
+
+# net
+MAX_PENDING_CONS=20
+
+# xl3
+XL3_PORT=44601
+NEED_TO_SWAP=1
+
+# sbc
+SBC_PORT=44630
+SBC_USER=daq
+SBC_SERVER=10.0.0.30
+#ORCA_READOUT_PATH=/home/daq/orcareadout
+ORCA_READOUT_PATH=/etc/rc.d/orcareadout
+MTC_XILINX_LOCATION=data/mtcxilinx.rbt
+DEFAULT_SSHKEY=ssh_key
+
+# controller
+CONT_PORT=44600
+CONT_CMD_ACK=_._
+CONT_CMD_BSY=_!_
+
+# viewer
+VIEW_PORT=44599
+
+# other
+BUNDLE_PRINT=1000
+CURRENT_LOCATION=penn
