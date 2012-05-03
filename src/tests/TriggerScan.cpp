@@ -10,7 +10,7 @@
 
 int TriggerScan(uint32_t crateMask, uint32_t *slotMasks, int triggerSelect, int dacSelect, int maxNhit, int minThresh, const char* fileName, int quickMode)
 {
-  printf("*** Starting Trigger Scan  *************\n");
+  lprintf("*** Starting Trigger Scan  *************\n");
 
   uint32_t select_reg,result,beforegt,aftergt;
   int num_fecs = 0;
@@ -24,17 +24,17 @@ int TriggerScan(uint32_t crateMask, uint32_t *slotMasks, int triggerSelect, int 
 
   FILE *file = fopen(fileName,"w");
   if (file == (FILE *) NULL){
-    printf("Failed to open file!\n");
+    lprintf("Failed to open file!\n");
     return -1;
   }
 
   try {
 
-    printf("Starting a trigger scan.\n");
+    lprintf("Starting a trigger scan.\n");
     int errors = mtc->SetupPedestals(0, DEFAULT_PED_WIDTH, DEFAULT_GT_DELAY,0,
         crateMask,crateMask);
     if (errors){
-      printf("Error setting up MTC for pedestals. Exiting\n");
+      lprintf("Error setting up MTC for pedestals. Exiting\n");
       mtc->UnsetPedCrateMask(MASKALL);
       mtc->UnsetGTCrateMask(MASKALL);
       fclose(file);
@@ -54,9 +54,9 @@ int TriggerScan(uint32_t crateMask, uint32_t *slotMasks, int triggerSelect, int 
     if (maxNhit == 0){
       maxNhit = num_fecs*32;
     }else if (maxNhit > num_fecs*32){
-      printf("You dont have enough fecs to test nhit that high!\n");
+      lprintf("You dont have enough fecs to test nhit that high!\n");
       maxNhit = num_fecs*32;
-      printf("Testing nhit up to %d\n",maxNhit);
+      lprintf("Testing nhit up to %d\n",maxNhit);
     }
 
     // we loop over threshold, coming down from max
@@ -184,19 +184,19 @@ int TriggerScan(uint32_t crateMask, uint32_t *slotMasks, int triggerSelect, int 
           fprintf(file,"%d %d %f\n",ithresh,i,values[i]);
         }
       }
-      printf("Finished %d\n",ithresh);
+      lprintf("Finished %d\n",ithresh);
     } // end loop over thresh
 
     mtc->UnsetGTMask(MASKALL);
-    printf("Finished trigger scan!\n");
+    lprintf("Finished trigger scan!\n");
 
   }
   catch(const char* s){
-    printf("TriggerScan: %s\n",s);
+    lprintf("TriggerScan: %s\n",s);
   }
 
   fclose(file);
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

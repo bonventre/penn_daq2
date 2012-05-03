@@ -13,26 +13,26 @@
 
 int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int numPedestals, int upper, int lower, int updateDB, int balanced, int finalTest, int ecal)
 {
-  printf("*** Starting Pedestal Run **************\n");
+  lprintf("*** Starting Pedestal Run **************\n");
 
-  printf("-------------------------------------------\n");
-  printf("Crate:		    %2d\n",crateNum);
-  printf("Slot Mask:		    0x%4x\n",slotMask);
-  printf("Pedestal Mask:	    0x%08x\n",channelMask);
-  printf("GT delay (ns):	    %3hu\n", gtDelay);
-  printf("Pedestal Width (ns):    %2d\n",pedWidth);
-  printf("Pulser Frequency (Hz):  %3.0f\n",frequency);
-  printf("Num pedestals:    %d\n",numPedestals);
-  printf("Lower/Upper pedestal check range: %d %d\n",lower,upper);
+  lprintf("-------------------------------------------\n");
+  lprintf("Crate:		    %2d\n",crateNum);
+  lprintf("Slot Mask:		    0x%4x\n",slotMask);
+  lprintf("Pedestal Mask:	    0x%08x\n",channelMask);
+  lprintf("GT delay (ns):	    %3hu\n", gtDelay);
+  lprintf("Pedestal Width (ns):    %2d\n",pedWidth);
+  lprintf("Pulser Frequency (Hz):  %3.0f\n",frequency);
+  lprintf("Num pedestals:    %d\n",numPedestals);
+  lprintf("Lower/Upper pedestal check range: %d %d\n",lower,upper);
 
   uint32_t *pmt_buffer = (uint32_t *) malloc(0x100000*sizeof(uint32_t));
   if (pmt_buffer == (uint32_t *) NULL){
-    printf("Problem mallocing!\n");
+    lprintf("Problem mallocing!\n");
     return -1;
   }
   struct pedestal *ped = (struct pedestal *) malloc(32*sizeof(struct pedestal)); 
   if (ped == (struct pedestal *) NULL){
-    printf("Problem mallocing!\n");
+    lprintf("Problem mallocing!\n");
     free(pmt_buffer);
     return -1;
   }
@@ -60,7 +60,7 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
     errors += xl3s[crateNum]->SetCratePedestals(slotMask,channelMask);
     xl3s[crateNum]->DeselectFECs();
     if (errors){
-      printf("Error setting up crate for pedestals. Exiting\n");
+      lprintf("Error setting up crate for pedestals. Exiting\n");
       free(pmt_buffer);
       free(ped);
       return -1;
@@ -70,7 +70,7 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
     errors = mtc->SetupPedestals(frequency,pedWidth,gtDelay,DEFAULT_GT_FINE_DELAY,
         (0x1<<crateNum),(0x1<<crateNum));
     if (errors){
-      printf("Error setting up MTC for pedestals. Exiting\n");
+      lprintf("Error setting up MTC for pedestals. Exiting\n");
       mtc->UnsetPedCrateMask(MASKALL);
       mtc->UnsetGTCrateMask(MASKALL);
       free(pmt_buffer);
@@ -126,13 +126,13 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
         int count = xl3s[crateNum]->ReadOutBundles(slot,pmt_buffer,numPedestals*16*num_channels,1);
 
         if (count <= 0){
-          printf("There was an error in the count!\n");
-          printf("Errors reading out MB %2d (errno %d)\n",slot,count);
+          lprintf("There was an error in the count!\n");
+          lprintf("Errors reading out MB %2d (errno %d)\n",slot,count);
           errors++;
           continue;
         }
 
-        printf("MB %d: %d bundles read out.\n",slot,count);
+        lprintf("MB %d: %d bundles read out.\n",slot,count);
         if (count < numPedestals*16*num_channels)
           errors++;
 
@@ -143,7 +143,7 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
         for (int i=0;i<count;i++){
           crateID = (int) UNPK_CRATE_ID(pmt_iter);
           if (crateID != crateNum){
-            printf( "Invalid crate ID seen! (crate ID %2d, bundle %2i)\n",crateID,i);
+            lprintf( "Invalid crate ID seen! (crate ID %2d, bundle %2i)\n",crateID,i);
 
             pmt_iter+=3;
             continue;
@@ -213,18 +213,18 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
         }
 
         // print results
-        printf("########################################################\n");
-        printf("Slot (%2d)\n", slot);
-        printf("########################################################\n");
+        lprintf("########################################################\n");
+        lprintf("Slot (%2d)\n", slot);
+        lprintf("########################################################\n");
 
         uint32_t error_flag[32];
 
         for (int i = 0; i<32; i++){
           error_flag[i] = 0;
           if ((0x1<<i) & channelMask){
-            printf("Ch Cell  #   Qhl         Qhs         Qlx         TAC\n");
+            lprintf("Ch Cell  #   Qhl         Qhs         Qlx         TAC\n");
             for (int j=0;j<16;j++){
-              printf("%2d %3d %4d %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f\n",
+              lprintf("%2d %3d %4d %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f\n",
                   i,j,ped[i].thiscell[j].per_cell,
                   ped[i].thiscell[j].qhlbar, ped[i].thiscell[j].qhlrms,
                   ped[i].thiscell[j].qhsbar, ped[i].thiscell[j].qhsrms,
@@ -242,19 +242,19 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
                   ped[i].thiscell[j].tacbar < TACBAR_MIN)
 
                 error_flag[i] |= 0x2;
-              //printf("%d %d %d %d\n",ped[i].thiscell[j].qhlbar,ped[i].thiscell[j].qhsbar,ped[i].thiscell[j].qlxbar,ped[i].thiscell[j].tacbar);
+              //lprintf("%d %d %d %d\n",ped[i].thiscell[j].qhlbar,ped[i].thiscell[j].qhsbar,ped[i].thiscell[j].qlxbar,ped[i].thiscell[j].tacbar);
             }
             if (error_flag[i] & 0x1)
-              printf(">>>Wrong no of pedestals for this channel\n");
+              lprintf(">>>Wrong no of pedestals for this channel\n");
             if (error_flag[i] & 0x2)
-              printf(">>>Bad Q pedestal for this channel\n");
+              lprintf(">>>Bad Q pedestal for this channel\n");
           }
         }
 
 
         // update database
         if (updateDB){
-          printf("updating the database\n");
+          lprintf("updating the database\n");
           JsonNode *newdoc = json_mkobject();
           JsonNode *num = json_mkarray();
           JsonNode *qhl = json_mkarray();
@@ -340,17 +340,17 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
     xl3s[crateNum]->SetCratePedestals(slotMask,0x0);
     xl3s[crateNum]->DeselectFECs();
     if (errors)
-      printf("There were %d errors\n",errors);
+      lprintf("There were %d errors\n",errors);
     else
-      printf("No errors seen\n");
+      lprintf("No errors seen\n");
 
   }
   catch(const char* s){
-    printf("PedRun: %s\n",s);
+    lprintf("PedRun: %s\n",s);
   }
   free(pmt_buffer);
   free(ped);
-  printf("****************************************\n");
+  lprintf("****************************************\n");
 
   return 0;
 }

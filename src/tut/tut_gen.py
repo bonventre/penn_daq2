@@ -15,9 +15,9 @@ try:
   while linemarker < len(penn_daq_lines):
     line = penn_daq_lines[linemarker]
     if "if (strncmp(input," in line:
-      valid_commands.append(re.findall('"([^"]*)"', line))
-    linemarker += 1
 #      valid_commands.append(re.findall(r'(?<=\").+(?=\")', line)[0])
+      valid_commands.append(re.findall('"([^"]*)"', line)[0])
+    linemarker += 1
 
   # open the tut source
   tut = open("src/tut/tut.c", "r")

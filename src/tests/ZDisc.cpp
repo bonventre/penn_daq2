@@ -8,10 +8,10 @@
 
 int ZDisc(int crateNum, uint32_t slotMask, float rate, int offset, int updateDB, int finalTest, int ecal)
 {
-  printf("*** Starting Zero Discriminator ********\n");
+  lprintf("*** Starting Zero Discriminator ********\n");
 
-  printf("Desired rate:\t %5.1f\n",rate);
-  printf("Offset:\t %d\n",offset);
+  lprintf("Desired rate:\t %5.1f\n",rate);
+  lprintf("Offset:\t %d\n",offset);
 
   try {
 
@@ -31,27 +31,27 @@ int ZDisc(int crateNum, uint32_t slotMask, float rate, int offset, int updateDB,
         SwapLongBlock(results,97); // not all is uint32_ts
 
         // printout
-        printf("channel    max rate,       lower,       upper\n");
-        printf("------------------------------------------\n");
+        lprintf("channel    max rate,       lower,       upper\n");
+        lprintf("------------------------------------------\n");
         for (int j=0;j<32;j++)
-          printf("ch (%2d)   %5.2f(MHz)  %6.1f(KHz)  %6.1f(KHz)\n",
+          lprintf("ch (%2d)   %5.2f(MHz)  %6.1f(KHz)  %6.1f(KHz)\n",
               j,results->maxRate[j]/1E6,results->lowerRate[j]/1E3,
               results->upperRate[j]/1E3);
-        printf("Dac Settings\n");
-        printf("channel     Max   Lower   Upper   U+L/2\n");
+        lprintf("Dac Settings\n");
+        lprintf("channel     Max   Lower   Upper   U+L/2\n");
         for (int j=0;j<32;j++)
         {
-          printf("ch (%2i)   %5hu   %5hu   %5hu   %5hu\n",
+          lprintf("ch (%2i)   %5hu   %5hu   %5hu   %5hu\n",
               j,results->maxDacSetting[j],results->lowerDacSetting[j],
               results->upperDacSetting[j],results->zeroDacSetting[j]);
           if (results->lowerDacSetting[j] > results->maxDacSetting[j])
-            printf(" <- lower > max! (MaxRate(MHz):%5.2f, lowrate(KHz):%5.2f\n",
+            lprintf(" <- lower > max! (MaxRate(MHz):%5.2f, lowrate(KHz):%5.2f\n",
                 results->maxRate[j]/1E6,results->lowerRate[j]/1E3);
         }
 
         // update the database
         if (updateDB){
-          printf("updating the database\n");
+          lprintf("updating the database\n");
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("zdisc"));
 
@@ -102,14 +102,14 @@ int ZDisc(int crateNum, uint32_t slotMask, float rate, int offset, int updateDB,
       } // end if in slot mask
     } // end loop over slots
 
-    printf("Zero Discriminator complete.\n");
+    lprintf("Zero Discriminator complete.\n");
 
   }
   catch(const char* s){
-    printf("ZDisc: %s\n",s);
+    lprintf("ZDisc: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

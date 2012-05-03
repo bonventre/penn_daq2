@@ -25,7 +25,7 @@ int MTCLink::Connect()
 {
   fFD = socket(AF_INET, SOCK_STREAM, 0);
   if (fFD <= 0){
-    printf("Error opening a new socket for sbc connection!\n");
+    lprintf("Error opening a new socket for sbc connection!\n");
     throw "Error opening a new socket\n";
   }
 
@@ -37,7 +37,7 @@ int MTCLink::Connect()
   // make the connection
   if (connect(fFD,(struct sockaddr*) &sbc_addr,sizeof(sbc_addr))<0){
     close(fFD);
-    printf("Problem connecting to sbc socket!\n");
+    lprintf("Problem connecting to sbc socket!\n");
     throw "Problem connecting to socket\n";
   }
 
@@ -48,7 +48,7 @@ int MTCLink::Connect()
   bufferevent_setwatermark(fBev, EV_READ, 0, 0); 
   bufferevent_setcb(fBev,&GenericLink::RecvCallbackHandler,&GenericLink::SentCallbackHandler,&GenericLink::EventCallbackHandler,this);
   bufferevent_enable(fBev,EV_READ | EV_WRITE);
-  printf("Connected to SBC!\n");
+  lprintf("Connected to SBC!\n");
   return 0;
 }
 
@@ -91,7 +91,7 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
         SBCPacket *packet = (SBCPacket *) fTempPacket;
         pthread_mutex_lock(&fRecvQueueLock);
         fRecvQueue.push(*packet);
-        //printf("Got packet, size %d empty %d\n",fRecvQueue.size(),fRecvQueue.empty());
+        //lprintf("Got packet, size %d empty %d\n",fRecvQueue.size(),fRecvQueue.empty());
         pthread_cond_signal(&fRecvQueueCond);
         pthread_mutex_unlock(&fRecvQueueLock);
         memset(fTempPacket,0,sizeof(fTempPacket));
@@ -109,7 +109,7 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
         SBCPacket *packet = (SBCPacket *) fTempPacket;
         pthread_mutex_lock(&fRecvQueueLock);
         fRecvQueue.push(*packet);
-        //printf("Got packet, size %d empty %d\n",fRecvQueue.size(),fRecvQueue.empty());
+        //lprintf("Got packet, size %d empty %d\n",fRecvQueue.size(),fRecvQueue.empty());
         pthread_cond_signal(&fRecvQueueCond);
         pthread_mutex_unlock(&fRecvQueueLock);
         memset(fTempPacket,0,sizeof(fTempPacket));
@@ -121,7 +121,7 @@ void MTCLink::RecvCallback(struct bufferevent *bev)
     }
   }
 //  if (fTempBytes)
-//    printf("%d bytes left\n",fBytesLeft);
+//    lprintf("%d bytes left\n",fBytesLeft);
 }
 
 
@@ -149,15 +149,15 @@ int MTCLink::GetNextPacket(SBCPacket *packet,int waitSeconds)
     while (fRecvQueue.empty()){
       int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
       if (rc == ETIMEDOUT) {
-        printf("MTCLink::GetNextPacket: Wait timed out! (supposedly)\n");
+        lprintf("MTCLink::GetNextPacket: Wait timed out! (supposedly)\n");
         if (!fRecvQueue.empty()){
-          printf("it was fake\n");
+          lprintf("it was fake\n");
           break;
         }
-        printf("Guess it was real\n");
-        printf("There was %d\n",(int)evbuffer_get_length(bufferevent_get_input(fBev)));
-        printf("size is %d, empty is %d\n",(int)fRecvQueue.size(),(int)fRecvQueue.empty());
-        printf("Bytes left is %d %d\n",(int)fBytesLeft,(int)fTempBytes);
+        lprintf("Guess it was real\n");
+        lprintf("There was %d\n",(int)evbuffer_get_length(bufferevent_get_input(fBev)));
+        lprintf("size is %d, empty is %d\n",(int)fRecvQueue.size(),(int)fRecvQueue.empty());
+        lprintf("Bytes left is %d %d\n",(int)fBytesLeft,(int)fTempBytes);
         rc = pthread_mutex_unlock(&fRecvQueueLock);
         return 1;
       }
@@ -192,7 +192,7 @@ int MTCLink::SendXilinxPacket(SBCPacket *packet, int waitSeconds)
       while (fRecvQueue.empty()){
         int rc = pthread_cond_timedwait(&fRecvQueueCond,&fRecvQueueLock,&ts);
         if (rc == ETIMEDOUT) {
-          printf("MTCLink::SendXilinxPacket: Wait timed out!\n");
+          lprintf("MTCLink::SendXilinxPacket: Wait timed out!\n");
           rc = pthread_mutex_unlock(&fRecvQueueLock);
           return 1;
         }

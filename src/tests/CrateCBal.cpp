@@ -13,7 +13,7 @@
 
 int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB, int finalTest, int ecal)
 {
-  printf("*** Starting Crate Charge Balancing  ***\n");
+  lprintf("*** Starting Crate Charge Balancing  ***\n");
 
 
   // constants
@@ -61,7 +61,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
   // malloc
   pmt_buf = (uint32_t *) malloc(0x100000*sizeof(uint32_t));
   if (pmt_buf == NULL){
-    printf("Problem mallocing space for pedestals. Exiting\n");
+    lprintf("Problem mallocing space for pedestals. Exiting\n");
     return -1;
   }
 
@@ -69,7 +69,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
 
     // set up pulser for soft GT mode
     if (mtc->SetupPedestals(0,50,125,0,(0x1<<crateNum)+MSK_TUB,(0x1<<crateNum)+MSK_TUB)){
-      printf("problem setting up pedestals on mtc. Exiting\n");
+      lprintf("problem setting up pedestals on mtc. Exiting\n");
       free(pmt_buf);
       return -1;
     }
@@ -80,8 +80,8 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
         uint32_t select_reg = FEC_SEL*i;
         xl3s[crateNum]->RW(GENERAL_CSR_R + select_reg + WRITE_REG,0xF,&result);
 
-        printf("--------------------------------\n");
-        printf("Balancing Crate %d, Slot %d\n",crateNum,i);
+        lprintf("--------------------------------\n");
+        lprintf("Balancing Crate %d, Slot %d\n",crateNum,i);
 
         // initialize variables
         int skip_slot = 0;
@@ -134,7 +134,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
         num_dacs++;
         // now lets load these dacs
         if (xl3s[crateNum]->MultiLoadsDac(num_dacs,dac_nums,dac_values,slot_nums) != 0){
-          printf("Error loading dacs. Skipping slot\n");
+          lprintf("Error loading dacs. Skipping slot\n");
           for (int j=0;j<32;j++)
             error_flags[j] = 5;
           skip_slot = 1;
@@ -171,7 +171,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
               }
             }
             if (xl3s[crateNum]->MultiLoadsDac(num_dacs,dac_nums,dac_values,slot_nums)){
-              printf("Error loading dacs. Skipping slot\n");
+              lprintf("Error loading dacs. Skipping slot\n");
               for (int j=0;j<32;j++)
                 error_flags[j] = 5;
               skip_slot = 1;
@@ -180,7 +180,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             num_dacs = 0;
             // get pedestal data
             if (GetPedestal(crateNum,i,channelMask,x1,chan_param,pmt_buf)){
-              printf("Error during pedestal running or reading. Skipping slot\n");
+              lprintf("Error during pedestal running or reading. Skipping slot\n");
               for (int j=0;j<32;j++)
                 error_flags[j] = 5;
               skip_slot = 1;
@@ -190,7 +190,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             if (wg == 1){
               xl3s[crateNum]->RW(CMOS_LGISEL_R + select_reg + WRITE_REG,0x1,&result); 
               if (GetPedestal(crateNum,i,channelMask,x1l,chan_param,pmt_buf)){
-                printf("Error during pedestal running or reading. Skipping slot\n");
+                lprintf("Error during pedestal running or reading. Skipping slot\n");
                 for (int j=0;j<32;j++)
                   error_flags[j] = 5;
                 skip_slot = 1;
@@ -213,7 +213,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
               }
             }
             if (xl3s[crateNum]->MultiLoadsDac(num_dacs,dac_nums,dac_values,slot_nums)){
-              printf("Error loading dacs. Skipping slot\n");
+              lprintf("Error loading dacs. Skipping slot\n");
               for (int j=0;j<32;j++)
                 error_flags[j] = 5;
               skip_slot = 1;
@@ -222,7 +222,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             num_dacs = 0;
             // get pedestal data
             if (GetPedestal(crateNum,i,channelMask,x2,chan_param,pmt_buf)){
-              printf("Error during pedestal running or reading. Skipping slot\n");
+              lprintf("Error during pedestal running or reading. Skipping slot\n");
               for (int j=0;j<32;j++)
                 error_flags[j] = 5;
               skip_slot = 1;
@@ -232,7 +232,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             if (wg == 1){
               xl3s[crateNum]->RW(CMOS_LGISEL_R + select_reg + WRITE_REG,0x1,&result); 
               if (GetPedestal(crateNum,i,channelMask,x2l,chan_param,pmt_buf)){
-                printf("Error during pedestal running or reading. Skipping slot\n");
+                lprintf("Error during pedestal running or reading. Skipping slot\n");
                 for (int j=0;j<32;j++)
                   error_flags[j] = 5;
                 skip_slot = 1;
@@ -250,8 +250,8 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             do{
               // make sure we arent stuck forever
               if (iterations++ > max_iterations){
-                printf("Too many interations, exiting with some channels unbalanced.\n");
-                //printf("Making best guess for unbalanced channels\n");
+                lprintf("Too many interations, exiting with some channels unbalanced.\n");
+                //lprintf("Making best guess for unbalanced channels\n");
                 for (int j=0;j<32;j++)
                   if (wg == 0){
                     if (chan_param[j].hi_balanced == 0)
@@ -287,7 +287,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                   // make sure we straddle best fit point
                   // i.e. the both have the sign on first run
                   if (((f1[j]*f2[j]) > 0.0) && (iterations == 1)){
-                    printf("Error: channel %d does not appear balanceable. (%f, %f)\n",
+                    lprintf("Error: channel %d does not appear balanceable. (%f, %f)\n",
                         j,f1[j],f2[j]);
                     // turn this channel off and go on
                     if (fabs(f1[j]) < fabs(f2[j])){
@@ -339,7 +339,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
 
                     // make sure we arent stuck
                     if (tmp_bal[j] == x2_bal[j]){
-                      printf("channel %d in local trap. Nudging\n",j);
+                      lprintf("channel %d in local trap. Nudging\n",j);
                       int kick = (int) (rand()%35) + 150;
                       tmp_bal[j] = (tmp_bal[j] >= 45) ? (tmp_bal[j]-kick) : (tmp_bal[j] + kick);
                     }
@@ -369,7 +369,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
               // we have new pedestal values for each channel
               // lets load them up
               if (xl3s[crateNum]->MultiLoadsDac(num_dacs,dac_nums,dac_values,slot_nums)){
-                printf("Error loading dacs. Skipping slot\n");
+                lprintf("Error loading dacs. Skipping slot\n");
                 for (int j=0;j<32;j++)
                   error_flags[j] = 5;
                 skip_slot = 1;
@@ -381,7 +381,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
               // if there are still channels left to go
               if (active_chans != 0x0){
                 if (GetPedestal(crateNum,i,channelMask,tmp,chan_param,pmt_buf)){
-                  printf("Error during pedestal running or reading. Skipping slot\n");
+                  lprintf("Error during pedestal running or reading. Skipping slot\n");
                   for (int j=0;j<32;j++)
                     error_flags[j] = 5;
                   skip_slot = 1;
@@ -391,7 +391,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                 if (wg == 1){
                   xl3s[crateNum]->RW(CMOS_LGISEL_R + select_reg + WRITE_REG,0x1,&result); 
                   if (GetPedestal(crateNum,i,channelMask,tmpl,chan_param,pmt_buf)){
-                    printf("Error during pedestal running or reading. Skipping slot\n");
+                    lprintf("Error during pedestal running or reading. Skipping slot\n");
                     for (int j=0;j<32;j++)
                       error_flags[j] = 5;
                     skip_slot = 1;
@@ -429,40 +429,40 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
         } // end if skip_slot == 0
 
         active_chans = orig_active_chans;
-        printf("\nFinal VBAL table:\n");
+        lprintf("\nFinal VBAL table:\n");
 
         // print out results
         for (int j=0;j<32;j++){
           if ((0x1<<j) & active_chans){
             // if fully balanced
             if ((chan_param[j].hi_balanced == 1) && (chan_param[j].low_balanced == 1)){
-              printf("Ch %2i High: %3i. low; %3i. -> Balanced.\n",
+              lprintf("Ch %2i High: %3i. low; %3i. -> Balanced.\n",
                   j,chan_param[j].high_gain_balance,chan_param[j].low_gain_balance);
               // check for extreme values
               if ((chan_param[j].high_gain_balance == 255) ||
                   (chan_param[j].high_gain_balance == 0)){
                 chan_param[j].high_gain_balance = 150;
-                printf(">>>High gain balance extreme, setting to 150.\n");
+                lprintf(">>>High gain balance extreme, setting to 150.\n");
                 error_flags[j] = 1;
               }
               if ((chan_param[j].low_gain_balance == 255) ||
                   (chan_param[j].low_gain_balance == 0)){
                 chan_param[j].low_gain_balance = 150;
-                printf(">>>High gain balance extreme, setting to 150.\n");
+                lprintf(">>>High gain balance extreme, setting to 150.\n");
                 error_flags[j] = 1;
               }
               if ((chan_param[j].high_gain_balance > 225) ||
                   (chan_param[j].high_gain_balance < 50) ||
                   (chan_param[j].low_gain_balance > 255) ||
                   (chan_param[j].low_gain_balance < 50)){
-                printf(">>> Warning: extreme balance value.\n");
+                lprintf(">>> Warning: extreme balance value.\n");
                 error_flags[j] = 2;
               }
             }
             // if partially balanced
             else if ((chan_param[j].hi_balanced == 1) || (chan_param[j].low_balanced == 1)){
               error_flags[j] = 3;
-              printf("Ch %2i High: %3i. Low: %3i -> Partially balanced, "
+              lprintf("Ch %2i High: %3i. Low: %3i -> Partially balanced, "
                   "will set extreme to 150\n",
                   j,chan_param[j].high_gain_balance,chan_param[j].low_gain_balance);
               if ((chan_param[j].high_gain_balance == 255) ||
@@ -475,7 +475,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             // if unbalanced
             else{
               error_flags[j] = 4;
-              printf("Ch %2i                       -> Unbalanced, set to 150\n",j);
+              lprintf("Ch %2i                       -> Unbalanced, set to 150\n",j);
               chan_param[j].high_gain_balance = 150;
               chan_param[j].low_gain_balance = 150;
               return_value++;
@@ -488,7 +488,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
 
         // now update database
         if (updateDB){
-          printf("updating the database\n");
+          lprintf("updating the database\n");
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("crate_cbal"));
 
@@ -537,11 +537,11 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
 
   }
   catch(const char* s){
-    printf("CrateCBal: %s\n",s);
+    lprintf("CrateCBal: %s\n",s);
   }
 
-  printf("End of crate_cbal\n");
-  printf("****************************************\n");
+  lprintf("End of crate_cbal\n");
+  lprintf("****************************************\n");
 
   free(pmt_buf);
   return 0;
@@ -549,7 +549,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
 
 int GetPedestal(int crateNum, int slotNum, uint32_t channelMask, struct pedestal *pedestals, struct channel_params *chan_params, uint32_t *pmt_buf)
 {
-  printf(".");
+  lprintf(".");
   fflush(stdout);
 
   uint32_t result;
@@ -570,7 +570,7 @@ int GetPedestal(int crateNum, int slotNum, uint32_t channelMask, struct pedestal
   ParsedBundle pmt_data;
 
   if (pedestals == 0){
-    printf("Error: null pointer passed to GetPedestal! Exiting\n");
+    lprintf("Error: null pointer passed to GetPedestal! Exiting\n");
     return 666;
   }
   for (int i=0;i<32;i++){
@@ -617,7 +617,7 @@ int GetPedestal(int crateNum, int slotNum, uint32_t channelMask, struct pedestal
 
   // if it is too low, abort
   if (words_in_mem < min_num_words){
-    printf("Less than %d bundles in memory (there are %d). Exiting\n",
+    lprintf("Less than %d bundles in memory (there are %d). Exiting\n",
         min_num_words,words_in_mem);
     return 10;
   }

@@ -21,7 +21,7 @@ int SBCControl(int connect, int kill, int manual, const char *idFile)
       mtc->CloseConnection(); 
       char kill_cmd[500];
       sprintf(kill_cmd,"%s %s stop",base_cmd,ORCA_READOUT_PATH);
-      printf("sbc_control: Stopping remote OrcaReadout process\n");
+      lprintf("sbc_control: Stopping remote OrcaReadout process\n");
       system(kill_cmd);
     }
 
@@ -31,21 +31,21 @@ int SBCControl(int connect, int kill, int manual, const char *idFile)
       if (!manual){
         char start_cmd[500];
         sprintf(start_cmd,"%s %s start",base_cmd,ORCA_READOUT_PATH);
-        printf("sbc_control: Starting remote OrcaReadout process\n");
+        lprintf("sbc_control: Starting remote OrcaReadout process\n");
         system(start_cmd);
       }
       mtc->Connect();
     }
   }
   catch(const char* s){
-    printf("SBCControl: %s\n",s);
+    lprintf("SBCControl: %s\n",s);
   }
   return 0;
 }
 
 int MTCInit(int xilinx)
 {
-  printf("*** Initializing MTCD/A+ ************** \n");
+  lprintf("*** Initializing MTCD/A+ ************** \n");
   int errors = 0;
 
   try{
@@ -53,13 +53,13 @@ int MTCInit(int xilinx)
     if (xilinx)
       errors = mtc->XilinxLoad();
     if (errors){
-      printf("Problem loading xilinx\n");
+      lprintf("Problem loading xilinx\n");
       return -1;
     }
     MTC *mtcdb = ( MTC * ) malloc( sizeof(MTC));
     if ( mtcdb == ( MTC *) NULL )
     {
-      printf("Error: malloc in mtc_init\n");
+      lprintf("Error: malloc in mtc_init\n");
       free(mtcdb);
       return -1;
     }
@@ -71,7 +71,7 @@ int MTCInit(int xilinx)
     pr_set_url(response, get_db_address);
     pr_do(response);
     if (response->httpresponse != 200){
-      printf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
+      lprintf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
       free(response);
       free(mtcdb);
       return -1;
@@ -125,12 +125,12 @@ int MTCInit(int xilinx)
 
 
     // setup PULSE_GT delays
-    printf("Setting up PULSE_GT delays...\n");
+    lprintf("Setting up PULSE_GT delays...\n");
     uint16_t coarse_delay = (uint16_t)(((~(uint16_t)(mtcdb->mtcd.coarseDelay)) & 0xff) * 10);
     result += mtc->SetCoarseDelay(coarse_delay);
     float fine_delay = (float)(mtcdb->mtcd.fineDelay)*(float)(mtcdb->mtcd.fineSlope);
     float fdelay_set = mtc->SetFineDelay(fine_delay);
-    printf( "PULSE_GET total delay has been set to %f\n",
+    lprintf( "PULSE_GET total delay has been set to %f\n",
         (float) coarse_delay+fine_delay+
         (float)(mtcdb->mtcd.minDelayOffset));
 
@@ -142,16 +142,16 @@ int MTCInit(int xilinx)
     free(mtcdb);
 
     if (result < 0) {
-      printf("errors in the MTC initialization!\n");
+      lprintf("errors in the MTC initialization!\n");
     }else{
-      printf("MTC finished initializing\n");
+      lprintf("MTC finished initializing\n");
     }
 
   }
   catch(const char* s){
-    printf("MTCInit: %s\n",s);
+    lprintf("MTCInit: %s\n",s);
   }
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 
@@ -161,12 +161,12 @@ int MTCRead(uint32_t address)
   try{
     int errors = mtc->RegRead(address,&result);
     if (errors)
-      printf("There was a bus error.\n");
+      lprintf("There was a bus error.\n");
     else
-      printf("Read from %08x, got %08x\n",address,result);
+      lprintf("Read from %08x, got %08x\n",address,result);
   }
   catch(const char* s){
-    printf("MTCRead: %s\n",s);
+    lprintf("MTCRead: %s\n",s);
   }
 
   return 0;
@@ -178,12 +178,12 @@ int MTCWrite(uint32_t address, uint32_t data)
   try{
     int errors = mtc->RegWrite(address,data);
     if (errors)
-      printf("There was a bus error.\n");
+      lprintf("There was a bus error.\n");
     else
-      printf("Wrote to %08x\n",address);
+      lprintf("Wrote to %08x\n",address);
   }
   catch(const char* s){
-    printf("MTCWrite: %s\n",s);
+    lprintf("MTCWrite: %s\n",s);
   }
 
   return 0;

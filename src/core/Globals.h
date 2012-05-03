@@ -19,12 +19,21 @@ extern struct event_base *evBase;
 extern char finalTestIDs[19][16][500];
 extern char ecalID[500];
 
+extern long int startTime, endTime, lastPrintTime, recvBytes, megaBundleCount; 
+extern int writeLog;
+extern FILE *logFile, *ecalLogFile;
+
 int LockConnections(int sbc, uint32_t xl3List);
 int UnlockConnections(int sbc, uint32_t xl3List);
 
 void SwapLongBlock(void* p, int32_t n);
 void SwapShortBlock(void* p, int32_t n);
 
+int lprintf(const char *fmt, ... );
+int PrintHelp(char *buffer);
+int StartLogging();
+int StopLogging();
+int ParseMacro(char *filename);
 int readConfigurationFile();
 uint32_t GetUInt(const char *input, char flag, uint32_t dflt);
 int GetInt(const char *input, char flag, int dflt);

@@ -45,6 +45,7 @@ class MTCModel{
 
     int CloseConnection(){fLink->CloseConnection();};
     int Connect(){fLink->Connect();};
+    int IsConnected(){return fLink->IsConnected();};
     int RegRead(uint32_t address, uint32_t *data);
     int RegWrite(uint32_t address, uint32_t data);
     int SendCommand(SBCPacket *packet, int withResponse = 1, int timeout = 2);

@@ -13,7 +13,7 @@
 
 int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB, int finalTest, int ecal)
 {
-  printf("*** Starting CGT Test ******************\n");
+  lprintf("*** Starting CGT Test ******************\n");
 
   uint32_t result;
 
@@ -47,7 +47,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
     //if (setup_pedestals(0,25,150,0,(0x1<<arg.crate_num)+MSK_TUB,(0x1<<arg.crate_num)+MSK_TUB))
     if (mtc->SetupPedestals(0,DEFAULT_PED_WIDTH,DEFAULT_GT_DELAY,DEFAULT_GT_FINE_DELAY,
           (0x1<<crateNum)+MSK_TUB,(0x1<<crateNum)+MSK_TUB)){
-      printf("Error setting up mtc. Exiting\n");
+      lprintf("Error setting up mtc. Exiting\n");
       return -1;
     }
 
@@ -63,18 +63,18 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
     }
     xl3s[crateNum]->DeselectFECs();
 
-    printf("Crate number: %d\n"
+    lprintf("Crate number: %d\n"
         "Slot and Channel mask: %08x %08x\n",crateNum,slotMask,channelMask);
 
     // select desired fecs
     if (xl3s[crateNum]->SetCratePedestals(slotMask,channelMask)){
-      printf("Error setting up crate for pedestals. Exiting\n");
+      lprintf("Error setting up crate for pedestals. Exiting\n");
       return -1;
     }
     xl3s[crateNum]->DeselectFECs();
 
     uint32_t num_peds = 0xFFFF + 10000;
-    printf("Going to fire pulser %u times.\n",num_peds);
+    lprintf("Going to fire pulser %u times.\n",num_peds);
 
     XL3Packet packet;
     int total_pulses = 0;
@@ -97,7 +97,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
           if ((result & 0x000FFFFF) != numgt*3*num_chans){
             sprintf(cur_msg,"Not enough bundles slot %d: expected %d, found %u\n",
                 i,numgt*3*num_chans,result & 0x000FFFFF);
-            printf("%s",cur_msg);
+            lprintf("%s",cur_msg);
             if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
               sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
             else
@@ -135,7 +135,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
           if ((result & 0x000FFFFF) != 3*num_chans){
             sprintf(cur_msg,"Not enough bundles slot %d: expected %d, found %u\n",
                 i,3*num_chans,result & 0x000FFFFF);
-            printf("%s",cur_msg);
+            lprintf("%s",cur_msg);
             if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
               sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
             else
@@ -163,7 +163,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
             if (crate_id != crateNum){
               sprintf(cur_msg,"Crate wrong for slot %d, chan %u: expected %d, read %u\n",
                   i,chan_id,crateNum,crate_id);
-              printf("%s",cur_msg);
+              lprintf("%s",cur_msg);
               if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                 sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
               else
@@ -173,7 +173,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
             if (slot_id != i){
               sprintf(cur_msg,"Slot wrong for slot %d chan %u: expected %d, read %u\n",
                   i,chan_id,i,slot_id);
-              printf("%s",cur_msg);
+              lprintf("%s",cur_msg);
               if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                 sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
               else
@@ -183,7 +183,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
             if (nc_id != 0x0){
               sprintf(cur_msg,"NC_CC wrong for slot %d chan %u: expected %d, read %u\n",
                   i,chan_id,0,nc_id);
-              printf("%s",cur_msg);
+              lprintf("%s",cur_msg);
               if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                 sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
               else
@@ -196,7 +196,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
                     "%08x %08x %08x\n",
                     i,chan_id,total_pulses-total_pulses%65536,(65536*gt8_id),bundles[0],
                     bundles[1],bundles[2]);
-                printf("%s",cur_msg);
+                lprintf("%s",cur_msg);
                 if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                   sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
                 else
@@ -207,7 +207,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
                     "%08x %08x %08x\n",
                     i,chan_id,total_pulses%65536,gt16_id,bundles[0],
                     bundles[1],bundles[2]);
-                printf("%s",cur_msg);
+                lprintf("%s",cur_msg);
                 if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                   sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
                 else
@@ -217,7 +217,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
                     "%08x %08x %08x\n",
                     i,chan_id,total_pulses,gt16_id+(65536*gt8_id),bundles[0],
                     bundles[1],bundles[2]);
-                printf("%s",cur_msg);
+                lprintf("%s",cur_msg);
                 if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                   sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
                 else
@@ -228,7 +228,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
             if (es16 != 0x0 && j >= 13){
               sprintf(cur_msg,"Synclear error for slot %d chan %u.\n",
                   i,chan_id);
-              printf("%s",cur_msg);
+              lprintf("%s",cur_msg);
               if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                 sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
               else
@@ -240,7 +240,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
           for (int k=0;k<32;k++){
             if ((0x1<<k) & badchanmask){
               sprintf(cur_msg,"No bundle found for slot %d chan %d\n",i,k);
-              printf("%s",cur_msg);
+              lprintf("%s",cur_msg);
               if ((strlen(error_history[i]) + strlen(cur_msg)) < sizeof(error_history[i]))
                 sprintf(error_history[i]+strlen(error_history[i]),"%s",cur_msg);
               else
@@ -256,23 +256,23 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
       // because there are too many errors
       for (int i=0;i<16;i++){
         if (((strlen(error_history[i]) > 5000) && (max_errors[i] == 0)) || (max_errors[i] == 2)){
-          printf("Too many errors slot %d. Skipping that slot\n",i);
+          lprintf("Too many errors slot %d. Skipping that slot\n",i);
           max_errors[i] = 1;
         }
       }
 
-      printf("%d pulses\n",total_pulses);
+      lprintf("%d pulses\n",total_pulses);
       for (int i=0;i<16;i++)
         sprintf(error_history[i]+strlen(error_history[i]),"%d pulses\n",total_pulses);
 
     } // end loop over gt bunches
 
     if (updateDB){
-      printf("updating the database\n");
+      lprintf("updating the database\n");
       int passflag;
       for (int slot=0;slot<16;slot++){
         if ((0x1<<slot) & slotMask){
-          printf("updating slot %d\n",slot);
+          lprintf("updating slot %d\n",slot);
           passflag = 1;
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("cgt_test"));
@@ -301,11 +301,11 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
 
   }
   catch(const char* s){
-    printf("CGTTest: %s\n",s);
+    lprintf("CGTTest: %s\n",s);
   }
 
-  printf("Ending cgt test\n");
-  printf("****************************************\n");
+  lprintf("Ending cgt test\n");
+  lprintf("****************************************\n");
   return 0;
 }
 

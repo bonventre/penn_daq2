@@ -17,12 +17,12 @@ int XL3RW(int crateNum, uint32_t address, uint32_t data)
   try{
     int errors = xl3s[crateNum]->RW(address,data,&result);
     if (errors)
-      printf("There was a bus error.\n");
+      lprintf("There was a bus error.\n");
     else
-      printf("Wrote to %08x, got %08x\n",address,result);
+      lprintf("Wrote to %08x, got %08x\n",address,result);
   }
   catch(const char* s){
-    printf("XL3RW: %s\n",s);
+    lprintf("XL3RW: %s\n",s);
   }
 
   return 0;
@@ -30,7 +30,7 @@ int XL3RW(int crateNum, uint32_t address, uint32_t data)
 
 int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
 {
-  printf("*** Starting XL3 Queue RW ********************\n");
+  lprintf("*** Starting XL3 Queue RW ********************\n");
 
   XL3Packet packet;
   packet.header.packetNum = 0;
@@ -47,31 +47,31 @@ int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
   }
   try{
     xl3s[crateNum]->SendCommand(&packet);
-    printf("Command queued\n");
+    lprintf("Command queued\n");
     uint32_t result;
     xl3s[crateNum]->GetMultiFCResults(1, xl3s[crateNum]->GetLastCommandNum(), &result);
-    printf("got %08x\n",result);
+    lprintf("got %08x\n",result);
   }
   catch(const char* s){
-    printf("XL3QueueRW: %s\n",s);
+    lprintf("XL3QueueRW: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
 
 int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int shiftRegOnly,
     int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useHw)
 {
-  printf("*** Starting Crate Init ****************\n");
+  lprintf("*** Starting Crate Init ****************\n");
   char get_db_address[500];
   char ctc_address[500];
   XL3Packet packet;
   CrateInitArgs *packetArgs = (CrateInitArgs *) packet.payload;
 
-  printf("Initializing crate %d, slots %08x, xl: %d, hv: %d\n",
+  lprintf("Initializing crate %d, slots %08x, xl: %d, hv: %d\n",
       crateNum,slotMask,xilinxLoad,hvReset);
-  printf("Now sending database to XL3\n");
+  lprintf("Now sending database to XL3\n");
 
   try{
 
@@ -86,13 +86,13 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       pr_set_url(hw_response, get_db_address);
       pr_do(hw_response);
       if (hw_response->httpresponse != 200){
-        printf("Unable to connect to database. error code %d\n",(int)hw_response->httpresponse);
+        lprintf("Unable to connect to database. error code %d\n",(int)hw_response->httpresponse);
         return -1;
       }
       JsonNode *hw_doc = json_decode(hw_response->resp.data);
       JsonNode* totalrows = json_find_member(hw_doc,"total_rows");
       if ((int)json_get_number(totalrows) != 16){
-        printf("Database error: not enough FEC entries\n");
+        lprintf("Database error: not enough FEC entries\n");
         return -1;
       }
       hw_rows = json_find_member(hw_doc,"rows");
@@ -104,7 +104,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       pr_set_url(debug_response, get_db_address);
       pr_do(debug_response);
       if (debug_response->httpresponse != 200){
-        printf("Unable to connect to database. error code %d\n",(int)debug_response->httpresponse);
+        lprintf("Unable to connect to database. error code %d\n",(int)debug_response->httpresponse);
         return -1;
       }
       debug_doc = json_decode(debug_response->resp.data);
@@ -116,13 +116,13 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       xl3s[crateNum]->UpdateCrateConfig(slotMask);
 
     if (useVBal || useAll)
-      printf("Using VBAL values from database\n");
+      lprintf("Using VBAL values from database\n");
     if (useVThr || useAll)
-      printf("Using VTHR values from database\n");
+      lprintf("Using VTHR values from database\n");
     if (useTDisc || useAll)
-      printf("Using TDISC values from database\n");
+      lprintf("Using TDISC values from database\n");
     if (useTCmos || useAll)
-      printf("Using TCMOS values from database\n");
+      lprintf("Using TCMOS values from database\n");
 
     // GET ALL FEC DATA FROM DB
     int i,j,crate,card;
@@ -151,7 +151,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       // VBAL
       if ((useVBal || useAll) && ((0x1<<i) & slotMask)){
         if (xl3s[crateNum]->GetMBID(i) == 0x0000){
-          printf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
+          lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
         }else{
           sprintf(get_db_address,"%s/%s/%s/get_crate_cbal?startkey=[%s,9999999999]&endkey=[%s,0]&descending=true",
               DB_SERVER,DB_BASE_NAME,DB_VIEWDOC,configString,configString);
@@ -160,14 +160,14 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
           pr_set_url(cbal_response, get_db_address);
           pr_do(cbal_response);
           if (cbal_response->httpresponse != 200){
-            printf("Unable to connect to database. error code %d\n",(int)cbal_response->httpresponse);
+            lprintf("Unable to connect to database. error code %d\n",(int)cbal_response->httpresponse);
             return -1;
           }
           JsonNode *viewdoc = json_decode(cbal_response->resp.data);
           JsonNode* viewrows = json_find_member(viewdoc,"rows");
           int n = json_get_num_mems(viewrows);
           if (n == 0){
-            printf("Warning: Slot %d: No crate_cbal documents for this configuration (%s). Continuing with default values.\n",i,configString);
+            lprintf("Warning: Slot %d: No crate_cbal documents for this configuration (%s). Continuing with default values.\n",i,configString);
           }else{
             // these next three JSON nodes are pointers to the structure of viewrows; no need to delete
             JsonNode* cbal_doc = json_find_member(json_find_element(viewrows,0),"value");
@@ -186,7 +186,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       // VTHR
       if ((useVThr || useAll) && ((0x1<<i) & slotMask)){
         if (xl3s[crateNum]->GetMBID(i) == 0x0000){
-          printf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
+          lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
         }else{
           sprintf(get_db_address,"%s/%s/%s/get_zdisc?startkey=[%s,9999999999]&endkey=[%s,0]&descending=true",DB_SERVER,DB_BASE_NAME,DB_VIEWDOC,configString,configString);
           pouch_request *zdisc_response = pr_init();
@@ -194,14 +194,14 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
           pr_set_url(zdisc_response, get_db_address);
           pr_do(zdisc_response);
           if (zdisc_response->httpresponse != 200){
-            printf("Unable to connect to database. error code %d\n",(int)zdisc_response->httpresponse);
+            lprintf("Unable to connect to database. error code %d\n",(int)zdisc_response->httpresponse);
             return -1;
           }
           JsonNode *viewdoc = json_decode(zdisc_response->resp.data);
           JsonNode* viewrows = json_find_member(viewdoc,"rows");
           int n = json_get_num_mems(viewrows);
           if (n == 0){
-            printf("Warning: Slot %d: No zdisc documents for this configuration (%s). Continuing with default values.\n",i,configString);
+            lprintf("Warning: Slot %d: No zdisc documents for this configuration (%s). Continuing with default values.\n",i,configString);
           }else{
             JsonNode* zdisc_doc = json_find_member(json_find_element(viewrows,0),"value");
             JsonNode* vthr = json_find_member(zdisc_doc,"zero_dac");
@@ -236,7 +236,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
     pr_set_url(ctc_response, ctc_address);
     pr_do(ctc_response);
     if (ctc_response->httpresponse != 200){
-      printf("Error getting ctc document, error code %d\n",(int)ctc_response->httpresponse);
+      lprintf("Error getting ctc document, error code %d\n",(int)ctc_response->httpresponse);
       return -1;
     }
     JsonNode *ctc_doc = json_decode(ctc_response->resp.data);
@@ -247,7 +247,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
 
     // START CRATE_INIT ON ML403
-    printf("Beginning crate_init.\n");
+    lprintf("Beginning crate_init.\n");
 
     packet.header.packetType = CRATE_INIT_ID;
     packetArgs->mbNum = 666;
@@ -269,14 +269,14 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       SwapShortBlock(results->hwareVals[i].dbID,4);
     }
 
-    printf("Crate configuration updated.\n");
+    lprintf("Crate configuration updated.\n");
     json_delete(hw_rows);
     json_delete(debug_doc);
   }
   catch(const char* s){
-    printf("CrateInit: %s\n",s);
+    lprintf("CrateInit: %s\n",s);
   }
-  printf("****************************************\n");
+  lprintf("****************************************\n");
 
   return 0;
 }
@@ -287,10 +287,10 @@ int SMReset(int crateNum)
   packet.header.packetType = STATE_MACHINE_RESET_ID;
   try{
     xl3s[crateNum]->SendCommand(&packet);
-    printf("Reset state machine.\n");
+    lprintf("Reset state machine.\n");
   }
   catch(const char* s){
-    printf("SMReset: %s\n",s);
+    lprintf("SMReset: %s\n",s);
   }
 
   return 0;
@@ -305,12 +305,12 @@ int DebuggingMode(int crateNum, int on)
   try{
     xl3s[crateNum]->SendCommand(&packet);
     if (on)
-      printf("Turned on debugging mode\n");
+      lprintf("Turned on debugging mode\n");
     else
-      printf("Turned off debugging mode\n");
+      lprintf("Turned off debugging mode\n");
   }
   catch(const char* s){
-    printf("DebuggingMode: %s\n",s);
+    lprintf("DebuggingMode: %s\n",s);
   }
 
   return 0;
@@ -330,12 +330,12 @@ int ChangeMode(int crateNum, int mode, uint32_t dataAvailMask)
   try{
     xl3s[crateNum]->SendCommand(&packet);
     if (mode)
-      printf("Changed to normal mode\n");
+      lprintf("Changed to normal mode\n");
     else
-      printf("Changed to init mode\n");
+      lprintf("Changed to init mode\n");
   }
   catch(const char* s){
-    printf("ChangeMode: %s\n",s);
+    lprintf("ChangeMode: %s\n",s);
   }
 
   return 0;
@@ -352,10 +352,10 @@ int ReadLocalVoltage(int crateNum, int voltage)
   try{
     xl3s[crateNum]->SendCommand(&packet);
     SwapLongBlock(packet.payload,sizeof(ReadLocalVoltageResults)/sizeof(uint32_t));
-    printf("Voltage #%d: %f\n",voltage,results->voltage);
+    lprintf("Voltage #%d: %f\n",voltage,results->voltage);
   }
   catch(const char* s){
-    printf("ReadLocalVoltage: %s\n",s);
+    lprintf("ReadLocalVoltage: %s\n",s);
   }
 
   return 0;
@@ -369,11 +369,11 @@ int HVReadback(int crateNum)
   try{
     xl3s[crateNum]->SendCommand(&packet);
     SwapLongBlock(packet.payload,sizeof(HVReadbackResults)/sizeof(uint32_t));
-    printf("Supply A - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageA*300.0,results->currentA*10.0);
-    printf("Supply B - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageB*300.0,results->currentB*10.0);
+    lprintf("Supply A - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageA*300.0,results->currentA*10.0);
+    lprintf("Supply B - Voltage: %6.3f volts, Current: %6.4f mA\n",results->voltageB*300.0,results->currentB*10.0);
   }
   catch(const char* s){
-    printf("HVReadback: %s\n",s);
+    lprintf("HVReadback: %s\n",s);
   }
 
   return 0;
@@ -390,10 +390,10 @@ int SetAlarmDac(int crateNum, uint32_t *dacs)
 
   try{
     xl3s[crateNum]->SendCommand(&packet);
-    printf("Dacs set\n");
+    lprintf("Dacs set\n");
   }
   catch(const char* s){
-    printf("SetAlarmDac: %s\n",s);
+    lprintf("SetAlarmDac: %s\n",s);
   }
 
   return 0;
@@ -418,10 +418,10 @@ int LoadRelays(int crateNum, uint32_t *patterns)
     }
     usleep(1000);
     xl3s[crateNum]->RW(XL_RELAY_R + WRITE_REG, 0x4,&result);
-    printf("Relays loaded\n");
+    lprintf("Relays loaded\n");
   }
   catch(const char* s){
-    printf("LoadRelays: %s\n",s);
+    lprintf("LoadRelays: %s\n",s);
   }
   return 0;
 }
@@ -438,10 +438,10 @@ int ReadBundle(int crateNum, int slotNum, int quiet)
     errors += xl3s[crateNum]->RW(READ_MEM+slotNum*FEC_SEL,0x0,pmtword+1);
     errors += xl3s[crateNum]->RW(READ_MEM+slotNum*FEC_SEL,0x0,pmtword+2);
     if (errors != 0){
-      printf("There were %d errors reading out the bundles.\n",errors);
+      lprintf("There were %d errors reading out the bundles.\n",errors);
       return -1;
     }
-    printf("%08x %08x %08x\n",pmtword[0],pmtword[1],pmtword[2]);
+    lprintf("%08x %08x %08x\n",pmtword[0],pmtword[1],pmtword[2]);
     if (!quiet){
       crate = (uint32_t) UNPK_CRATE_ID(pmtword);
       slot = (uint32_t)  UNPK_BOARD_ID(pmtword);
@@ -457,14 +457,14 @@ int ReadBundle(int crateNum, int slotNum, int quiet)
       qhs = (double) UNPK_QHS(pmtword);
       qhl = (double) UNPK_QHL(pmtword);
       tac = (double) UNPK_TAC(pmtword);
-      printf("crate %d, slot %d, chan %d, cell %d, gt8 %08x, gt16 %08x, cmos_es16 %08x,"
+      lprintf("crate %d, slot %d, chan %d, cell %d, gt8 %08x, gt16 %08x, cmos_es16 %08x,"
           " cgt_es16 %08x, cgt_es8 %08x, nc_cc %08x, qlx %6.1f, qhs %6.1f, qhl %6.1f, tac %6.1f\n",
           (int)crate,(int)slot,(int)chan,cell,gt8,
           gt16,cmos_es16,cgt_es16,cgt_es8,nc_cc,qlx,qhs,qhl,tac);
     }
   }
   catch(const char* s){
-    printf("ReadBundle: %s\n",s);
+    lprintf("ReadBundle: %s\n",s);
   }
   return 0;
 }

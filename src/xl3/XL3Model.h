@@ -38,6 +38,7 @@ class XL3Model{
     int LoadCrateAddr(uint16_t slotMask);
     int SetupChargeInjection(uint32_t slotMask, uint32_t chanMask, uint32_t dacValue);
 
+    int IsConnected(){return fLink->IsConnected();};
     int CheckLock();
     void Lock(){fLink->SetLock(1);};
     void UnLock(){fLink->SetLock(0);};

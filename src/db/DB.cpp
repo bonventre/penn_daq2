@@ -237,7 +237,7 @@ int CreateFECDBDoc(int crate, int card, JsonNode** doc_p, JsonNode *ecal_doc)
     }
   }
   if (!found_it){
-    printf("Couldn't find this crate/slot in ecal doc? exiting %d %d\n",crate,card);
+    lprintf("Couldn't find this crate/slot in ecal doc? exiting %d %d\n",crate,card);
     return 1;
   }
   JsonNode *settings = json_find_member(ecal_doc,"settings");
@@ -514,14 +514,14 @@ int PostFECDBDoc(int crate, int slot, JsonNode *doc)
   pr_do(post_response);
   int ret = 0;
   if (post_response->httpresponse != 201){
-    printf("error code %d\n",(int)post_response->httpresponse);
+    lprintf("error code %d\n",(int)post_response->httpresponse);
     ret = -1;
   }
   pr_free(post_response);
   if(*data){
     free(data);
   }
-  printf("Document posted to %s\n",put_db_address);
+  lprintf("Document posted to %s\n",put_db_address);
   return ret;
 }
 
@@ -537,7 +537,7 @@ int UpdateFECDBDoc(JsonNode *doc)
   pr_do(post_response);
   int ret = 0;
   if (post_response->httpresponse != 201){
-    printf("error code %d\n",(int)post_response->httpresponse);
+    lprintf("error code %d\n",(int)post_response->httpresponse);
     ret = -1;
   }
   pr_free(post_response);
@@ -604,7 +604,7 @@ int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
   pr_do(post_response);
   int ret = 0;
   if (post_response->httpresponse != 201){
-    printf("error code %d\n",(int)post_response->httpresponse);
+    lprintf("error code %d\n",(int)post_response->httpresponse);
     ret = -1;
   }
   pr_free(post_response);
@@ -629,7 +629,7 @@ int PostDebugDocWithID(int crate, int card, char *id, JsonNode* doc)
   pr_do(post_response);
   int ret = 0;
   if (post_response->httpresponse != 201){
-    printf("error code %d\n",(int)post_response->httpresponse);
+    lprintf("error code %d\n",(int)post_response->httpresponse);
     ret = -1;
   }
   pr_free(post_response);
@@ -651,7 +651,7 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
   pr_set_url(init_response, get_db_address);
   pr_do(init_response);
   if (init_response->httpresponse != 200){
-    printf("Unable to connect to database. error code %d\n",(int)init_response->httpresponse);
+    lprintf("Unable to connect to database. error code %d\n",(int)init_response->httpresponse);
     return -1;
   }
   JsonNode *init_doc = json_decode(init_response->resp.data);
@@ -731,7 +731,7 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
   pr_do(post_response);
   int ret = 0;
   if (post_response->httpresponse != 201){
-    printf("error code %d\n",(int)post_response->httpresponse);
+    lprintf("error code %d\n",(int)post_response->httpresponse);
     ret = -1;
   }
   pr_free(post_response);
@@ -744,9 +744,9 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
 
 int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
 {
-  printf("*** Generating FEC documents from ECAL ***\n");
+  lprintf("*** Generating FEC documents from ECAL ***\n");
 
-  printf("Using ECAL %s\n",id); 
+  lprintf("Using ECAL %s\n",id); 
 
   // get the ecal document with the configuration
   char get_db_address[500];
@@ -756,7 +756,7 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
   pr_set_url(ecaldoc_response, get_db_address);
   pr_do(ecaldoc_response);
   if (ecaldoc_response->httpresponse != 200){
-    printf("Unable to connect to database. error code %d\n",(int)ecaldoc_response->httpresponse);
+    lprintf("Unable to connect to database. error code %d\n",(int)ecaldoc_response->httpresponse);
     return -1;
   }
   JsonNode *ecalconfig_doc = json_decode(ecaldoc_response->resp.data);
@@ -792,7 +792,7 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
   pr_set_url(ecal_response, get_db_address);
   pr_do(ecal_response);
   if (ecal_response->httpresponse != 200){
-    printf("Unable to connect to database. error code %d\n",(int)ecal_response->httpresponse);
+    lprintf("Unable to connect to database. error code %d\n",(int)ecal_response->httpresponse);
     return -1;
   }
 
@@ -800,7 +800,7 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
   JsonNode *ecal_rows = json_find_member(ecalfull_doc,"rows");
   int total_rows = json_get_num_mems(ecal_rows); 
   if (total_rows == 0){
-    printf("No documents for this ECAL yet! (id %s)\n",id);
+    lprintf("No documents for this ECAL yet! (id %s)\n",id);
     return -1;
   }
 
@@ -809,7 +809,7 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
     if ((0x1<<i) & crateMask){
       for (int j=0;j<16;j++){
         if ((0x1<<j) & slotMasks[i]){
-          printf("crate %d slot %d\n",i,j);
+          lprintf("crate %d slot %d\n",i,j);
           testedMask = 0x0;
 
           // lets generate the fec document
@@ -822,7 +822,7 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
             JsonNode *config = json_find_member(test_doc,"config");
             char *testtype = json_get_string(json_find_member(test_doc,"type"));
             if ((json_get_number(json_find_member(config,"crate_id")) == i) && (json_get_number(json_find_member(config,"slot")) == j)){
-              printf("test type is %s\n",json_get_string(json_find_member(test_doc,"type")));
+              lprintf("test type is %s\n",json_get_string(json_find_member(test_doc,"type")));
               AddECALTestResults(doc,test_doc);
             }
           }
@@ -840,8 +840,8 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
   json_delete(ecalconfig_doc);
   pr_free(ecaldoc_response);
 
-  printf("Finished creating fec document!\n");
-  printf("**************************\n");
+  lprintf("Finished creating fec document!\n");
+  lprintf("**************************\n");
 
   return 0;
 }

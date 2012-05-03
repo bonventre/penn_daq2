@@ -12,7 +12,7 @@
 
 int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dacValue, float frequency, int updateDB, int finalTest)
 {
-  printf("*** Starting See Reflection ************\n");
+  lprintf("*** Starting See Reflection ************\n");
 
   char channel_results[32][100];
 
@@ -22,7 +22,7 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
     int errors = mtc->SetupPedestals(frequency, DEFAULT_PED_WIDTH, DEFAULT_GT_DELAY,0,
         (0x1<<crateNum),(0x1<<crateNum) | MSK_TUB);
     if (errors){
-      printf("Error setting up MTC for pedestals. Exiting\n");
+      lprintf("Error setting up MTC for pedestals. Exiting\n");
       mtc->UnsetPedCrateMask(MASKALL);
       mtc->UnsetGTCrateMask(MASKALL);
       return -1;
@@ -40,9 +40,9 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
             // turn on pedestals for just this one channel
             errors += xl3s[crateNum]->SetCratePedestals((0x1<<i),temp_pattern);
             if (errors){
-              printf("Error setting up pedestals, Slot %d, channel %d.\n",i,j);
+              lprintf("Error setting up pedestals, Slot %d, channel %d.\n",i,j);
               if (errors > MAX_ERRORS){
-                printf("Too many errors. Exiting\n");
+                lprintf("Too many errors. Exiting\n");
                 mtc->DisablePulser();
                 mtc->UnsetPedCrateMask(MASKALL);
                 mtc->UnsetGTCrateMask(MASKALL);
@@ -53,7 +53,7 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
             // set up charge injection for this channel
             xl3s[crateNum]->SetupChargeInjection((0x1<<i),temp_pattern,dacValue);
             // wait until something is typed
-            printf("Slot %d, channel %d. If good, hit enter. Otherwise type in a description of the problem (or just \"fail\") and hit enter.\n",i,j);
+            lprintf("Slot %d, channel %d. If good, hit enter. Otherwise type in a description of the problem (or just \"fail\") and hit enter.\n",i,j);
 
             contConnection->GetInput(channel_results[j],100);
 
@@ -62,7 +62,7 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
                 channel_results[j][k] = '\0';
 
             if (strncmp(channel_results[j],"quit",4) == 0){
-              printf("Quitting.\n");
+              lprintf("Quitting.\n");
               return 0;
             }
 
@@ -75,8 +75,8 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
 
         // update the database
         if (updateDB){
-          printf("updating the database\n");
-          printf("updating slot %d\n",i);
+          lprintf("updating the database\n");
+          lprintf("updating slot %d\n",i);
           JsonNode *newdoc = json_mkobject();
           json_append_member(newdoc,"type",json_mkstring("see_refl"));
 
@@ -107,14 +107,14 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
     xl3s[crateNum]->DeselectFECs();
 
     if (errors)
-      printf("There were %d errors.\n",errors);
+      lprintf("There were %d errors.\n",errors);
     else
-      printf("No errors.\n");
+      lprintf("No errors.\n");
   }
   catch(const char* s){
-    printf("SeeReflection: %s\n",s);
+    lprintf("SeeReflection: %s\n",s);
   }
 
-  printf("****************************************\n");
+  lprintf("****************************************\n");
   return 0;
 }
