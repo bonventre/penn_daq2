@@ -177,8 +177,10 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
       }
     case SCREWED_ID:
       {
-        //FIXME
-        lprintf("Screwed\n");
+        ScrewedPacked *screwed = (ScrewedPacked *) packet->payload;
+        lprintf("Screwed:
+        for (int i=0;i<16;i++)
+          lprintf(Slot #%d: %d\n",i,screwed->fecScrewed[i]);
         break;
       }
     default:

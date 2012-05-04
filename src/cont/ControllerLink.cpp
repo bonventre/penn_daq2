@@ -167,7 +167,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-s [slot mask (hex)] -x (load xilinx) -X (load cald xilinx)"
           "-v (reset HV dac) -B (load vbal from db) -T (load vthr from db)"
           "-D (load tdisc from db) -C (load tcmos values from db) -A (load all from db)"
-          "-H (use crate/card specific values from db)\n");
+          "-e (use crate/card specific values from ECAL db)\n");
       return NULL;
     }
     int crateNum = GetInt(input,'c',2);
@@ -181,7 +181,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     int useTDisc = GetFlag(input,'D');
     int useTCmos = GetFlag(input,'C');
     int useAll = GetFlag(input,'A');
-    int useHw = GetFlag(input,'H');
+    int useHw = GetFlag(input,'e');
     int xilinxLoad = 0;
     if (xilinxLoadNormal)
       xilinxLoad = 1;

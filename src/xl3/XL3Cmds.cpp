@@ -76,40 +76,42 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
   try{
 
     pouch_request *hw_response = pr_init();
-    JsonNode* hw_rows = NULL;
+    JsonNode* hw_rows[16];
     pouch_request *debug_response = pr_init();
     JsonNode* debug_doc = NULL;
 
     if (useHw == 1){
-      sprintf(get_db_address,"%s/%s/%s/get_fec?startkey=[%d,0]&endkey=[%d,16]",FECDB_SERVER,FECDB_BASE_NAME,FECDB_VIEWDOC,crateNum,crateNum);
-      pr_set_method(hw_response, GET);
-      pr_set_url(hw_response, get_db_address);
-      pr_do(hw_response);
-      if (hw_response->httpresponse != 200){
-        lprintf("Unable to connect to database. error code %d\n",(int)hw_response->httpresponse);
-        return -1;
+      for (int i=0;i<16;i++){
+        if ((0x1<<i) & slotMask){
+          sprintf(get_db_address,"%s/%s/%s/get_fec_by_generated?startkey=[%d,%d,{}]&endkey=[%d,%d]&descending=True",FECDB_SERVER,FECDB_BASE_NAME,FECDB_VIEWDOC,crateNum,i,crateNum,i);
+          pr_set_method(hw_response, GET);
+          pr_set_url(hw_response, get_db_address);
+          pr_do(hw_response);
+          if (hw_response->httpresponse != 200){
+            lprintf("Unable to connect to database. error code %d\n",(int)hw_response->httpresponse);
+            return -1;
+          }
+          JsonNode *hw_doc = json_decode(hw_response->resp.data);
+          JsonNode* totalrows = json_find_member(hw_doc,"total_rows");
+          if ((int)json_get_number(totalrows) == 0){
+            lprintf("Database error: No FEC entry for crate %d, card %d\n",crateNum,i);
+            return -1;
+          }
+          hw_rows[i] = json_find_member(hw_doc,"rows");
+          pr_free(hw_response);
+        }
       }
-      JsonNode *hw_doc = json_decode(hw_response->resp.data);
-      JsonNode* totalrows = json_find_member(hw_doc,"total_rows");
-      if ((int)json_get_number(totalrows) != 16){
-        lprintf("Database error: not enough FEC entries\n");
-        return -1;
-      }
-      hw_rows = json_find_member(hw_doc,"rows");
-      //json_delete(hw_doc); // only delete the head node
-      pr_free(hw_response);
-    }else{
-      sprintf(get_db_address,"%s/%s/CRATE_INIT_DOC",DB_SERVER,DB_BASE_NAME);
-      pr_set_method(debug_response, GET);
-      pr_set_url(debug_response, get_db_address);
-      pr_do(debug_response);
-      if (debug_response->httpresponse != 200){
-        lprintf("Unable to connect to database. error code %d\n",(int)debug_response->httpresponse);
-        return -1;
-      }
-      debug_doc = json_decode(debug_response->resp.data);
-      pr_free(debug_response);
     }
+    sprintf(get_db_address,"%s/%s/CRATE_INIT_DOC",DB_SERVER,DB_BASE_NAME);
+    pr_set_method(debug_response, GET);
+    pr_set_url(debug_response, get_db_address);
+    pr_do(debug_response);
+    if (debug_response->httpresponse != 200){
+      lprintf("Unable to connect to database. error code %d\n",(int)debug_response->httpresponse);
+      return -1;
+    }
+    debug_doc = json_decode(debug_response->resp.data);
+    pr_free(debug_response);
 
     // make sure crate_config is up to date
     if (useVBal || useVThr || useTDisc || useTCmos || useAll)
@@ -143,6 +145,12 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       ///////////////////////////
 
       ParseFECDebug(debug_doc,mb_consts);
+
+      if (useHw && ((0x1<<i) & slotMask)){
+        JsonNode *next_row = json_find_element(hw_rows[i],0);
+        JsonNode *value = json_find_member(next_row,"value");
+        ParseFECHw(value,mb_consts);
+      }
 
       //////////////////////////////
       // GET VALUES FROM DEBUG DB //
@@ -214,7 +222,79 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
         }
       }
 
-      //FIXME TDISC, other parts, stopped cause not necessarily most up to date penn_daq
+      // TDISC
+      if ((useTDisc || useAll) && ((0x1<<i) & slotMask)){
+        if (xl3s[crateNum]->GetMBID(i) == 0x0000){
+          lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
+        }else{
+          sprintf(get_db_address,"%s/%s/%s/get_ttot?startkey=[%s,9999999999]&endkey=[%s,0]&descending=true",DB_SERVER,DB_BASE_NAME,DB_VIEWDOC,configString,configString);
+          pouch_request *ttot_response = pr_init();
+          pr_set_method(ttot_response,GET);
+          pr_set_url(ttot_response,get_db_address);
+          pr_do(ttot_response);
+          if (ttot_response->httpresponse != 200){
+            lprintf("Unable to connect to database. error code %d\n",(int)ttot_response->httpresponse);
+            return -1;
+          }
+          JsonNode *viewdoc = json_decode(ttot_response->resp.data);
+          JsonNode *viewrows = json_find_member(viewdoc,"rows");
+          int n = json_get_num_mems(viewrows);
+          if (n == 0){
+            lprintf("Warning: Slot %d: No set_ttot documents for this configuration (%s). Continuing with default values.\n",i,configString);
+          }else{
+            JsonNode *ttot_doc = json_find_member(json_find_element(viewrows,0),"value");
+            JsonNode *chips = json_find_member(ttot_doc,"chips");
+            for (int j=0;j<8;j++){
+              JsonNode *one_chip = json_find_element(chips,j);
+              mb_consts->tDisc.rmp[j] = (int)json_get_number(json_find_member(one_chip,"rmp"));
+              mb_consts->tDisc.vsi[j] = (int)json_get_number(json_find_member(one_chip,"vsi"));
+            }
+          }
+          json_delete(viewdoc);
+          pr_free(ttot_response);
+        }
+      }
+
+      // TCMOS
+      if ((useTCmos || useAll) && ((0x1<<i) & slotMask)){
+        if (xl3s[crateNum]->GetMBID(i) == 0x0000){
+          lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
+        }else{
+          sprintf(get_db_address,"%s/%s/%s/get_cmos?startkey=[%s,9999999999]&endkey=[%s,0]&descending=true",DB_SERVER,DB_BASE_NAME,DB_VIEWDOC,configString,configString);
+          pouch_request *cmos_response = pr_init();
+          pr_set_method(cmos_response,GET);
+          pr_set_url(cmos_response,get_db_address);
+          pr_do(cmos_response);
+          if (cmos_response->httpresponse != 200){
+            lprintf("Unable to connect to database. error code %d\n",(int)cmos_response->httpresponse);
+            return -1;
+          }
+          JsonNode *viewdoc = json_decode(cmos_response->resp.data);
+          JsonNode *viewrows = json_find_member(viewdoc,"rows");
+          int n = json_get_num_mems(viewrows);
+          if (n == 0){
+            lprintf("Warning: Slot %d: No cmos_m_gtvalid documents for this configuration (%s). Continuing with default values.\n",i,configString);
+          }else{
+            JsonNode *cmos_doc = json_find_member(json_find_element(viewrows,0),"value");
+            JsonNode *channels = json_find_member(cmos_doc,"channels");
+            for (int j=0;j<32;j++){
+              JsonNode *one_chan = json_find_element(channels,j);
+              mb_consts->tCmos.tacShift[j] = (int)json_get_number(json_find_member(one_chan,"tac_shift"));
+            }
+            mb_consts->tCmos.vMax = (int)json_get_number(json_find_member(cmos_doc,"vmax"));
+            mb_consts->tCmos.tacRef = (int)json_get_number(json_find_member(cmos_doc,"tacref"));
+            JsonNode *isetm = json_find_member(cmos_doc,"isetm");
+            JsonNode *iseta = json_find_member(cmos_doc,"iseta");
+            for (int j=0;j<2;j++){
+              mb_consts->tCmos.isetm[j] = (int)json_get_number(json_find_element(isetm,j));
+              mb_consts->tCmos.iseta[j] = (int)json_get_number(json_find_element(iseta,j));
+            }
+          }
+          json_delete(viewdoc);
+          pr_free(cmos_response);
+        }
+      }
+
 
       ///////////////////////////////
       // SEND THE DATABASE TO XL3s //
@@ -270,7 +350,8 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
     }
 
     lprintf("Crate configuration updated.\n");
-    json_delete(hw_rows);
+    for (i=0;i<16;i++)
+      json_delete(hw_rows[i]);
     json_delete(debug_doc);
   }
   catch(const char* s){

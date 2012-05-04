@@ -89,6 +89,7 @@ class MTCModel{
 
   private:
     MTCLink *fLink;
+    float fAddelSlope;
 };
 
 #endif
