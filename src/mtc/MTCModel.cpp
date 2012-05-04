@@ -9,6 +9,24 @@
 MTCModel::MTCModel()
 {
   fLink = new MTCLink();
+
+  pouch_request *response = pr_init();
+  char get_db_address[500];
+  sprintf(get_db_address,"%s/%s/MTC_doc",DB_SERVER,DB_BASE_NAME);
+  pr_set_method(response, GET);
+  pr_set_url(response, get_db_address);
+  pr_do(response);
+  if (response->httpresponse != 200){
+    lprintf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
+    pr_free(response);
+    return -1.0;
+  }
+  JsonNode *doc = json_decode(response->resp.data);
+  fAddelSlope = (float) json_get_number(json_find_member(json_find_member(doc,"mtcd"),"fine_slope")); 
+  json_delete(doc);
+  pr_free(response);
+
+
 }
 
 MTCModel::~MTCModel()
@@ -461,36 +479,16 @@ int MTCModel::SetCoarseDelay(uint16_t delay)
 
 float MTCModel::SetFineDelay(float delay)
 {
-  uint32_t temp, addel_value;;
+  uint32_t temp, addel_value;
   int result;
-  float addel_slope;   /* ADDEL value per ns of delay */
   float fdelay_set;
 
-  //FIXME
-  //addel_slope = 0.1;
-  // get up to date fine slope value
-  pouch_request *response = pr_init();
-  char get_db_address[500];
-  sprintf(get_db_address,"%s/%s/MTC_doc",DB_SERVER,DB_BASE_NAME);
-  pr_set_method(response, GET);
-  pr_set_url(response, get_db_address);
-  pr_do(response);
-  if (response->httpresponse != 200){
-    lprintf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
-    pr_free(response);
-    return -1.0;
-  }
-  JsonNode *doc = json_decode(response->resp.data);
-  addel_slope = (float) json_get_number(json_find_member(json_find_member(doc,"mtcd"),"fine_slope")); 
-  addel_value = (uint32_t)(delay / addel_slope);
-  json_delete(doc);
-  pr_free(response);
+  addel_value = (uint32_t)(delay / fAddelSlope);
 
   if (addel_value > 255) {
     lprintf("Fine delay value out of range\n");
     return -1.0;
   }
-  addel_value = (uint32_t)(delay / addel_slope);
 
   RegWrite(MTCFineDelayReg,addel_value);
   RegRead(MTCControlReg,&temp);
@@ -498,7 +496,7 @@ float MTCModel::SetFineDelay(float delay)
   RegRead(MTCControlReg,&temp);
   RegWrite(MTCControlReg, temp & ~LOAD_ENPW);
 
-  fdelay_set = (float)addel_value*addel_slope;
+  fdelay_set = (float)addel_value*fAddelSlope;
   //lprintf( "Fine delay is set to %f ns\n", fdelay_set);
   return fdelay_set;
 }

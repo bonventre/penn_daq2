@@ -55,8 +55,6 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
   uint32_t slot_nums[50];
 
   int error_flags[32];
-  for (int ef=0;ef<32;ef++)
-    error_flags[ef] = 0;
 
   // malloc
   pmt_buf = (uint32_t *) malloc(0x100000*sizeof(uint32_t));
@@ -77,6 +75,10 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
     // loop over slots
     for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
+
+        for (int ef=0;ef<32;ef++)
+          error_flags[ef] = 0;
+
         uint32_t select_reg = FEC_SEL*i;
         xl3s[crateNum]->RW(GENERAL_CSR_R + select_reg + WRITE_REG,0xF,&result);
 
@@ -503,9 +505,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             json_append_member(one_chan,"vbal_low",
                 json_mknumber((double)chan_param[j].low_gain_balance));
             json_append_member(one_chan,"errors",json_mkbool(error_flags[j]));
-            if (error_flags[j] == 0)
-              json_append_member(one_chan,"error_flags",json_mkstring("none"));
-            else if (error_flags[j] == 1)
+            if (error_flags[j] == 1)
               json_append_member(one_chan,"error_flags",json_mkstring("Extreme balance set to 150"));
             else if (error_flags[j] == 2)
               json_append_member(one_chan,"error_flags",json_mkstring("Extreme balance values"));
@@ -513,6 +513,10 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
               json_append_member(one_chan,"error_flags",json_mkstring("Partially balanced"));
             else if (error_flags[j] == 4)
               json_append_member(one_chan,"error_flags",json_mkstring("Unbalanced, set to 150"));
+            else if (error_flags[j] == 5)
+              json_append_member(one_chan,"error_flags",json_mkstring("Problem setting up slot"));
+            else
+              json_append_member(one_chan,"error_flags",json_mkstring("none"));
             if (error_flags[j] != 0)
               pass_flag = 0;
             json_append_element(channels,one_chan);
