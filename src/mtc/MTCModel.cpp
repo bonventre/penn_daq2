@@ -19,7 +19,7 @@ MTCModel::MTCModel()
   if (response->httpresponse != 200){
     lprintf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
     pr_free(response);
-    return -1.0;
+    fAddelSlope = 0.1;
   }
   JsonNode *doc = json_decode(response->resp.data);
   fAddelSlope = (float) json_get_number(json_find_member(json_find_member(doc,"mtcd"),"fine_slope")); 

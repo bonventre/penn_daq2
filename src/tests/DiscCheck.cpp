@@ -1,5 +1,5 @@
 #include "XL3PacketTypes.h"
-#include "Xl3Registers.h"
+#include "XL3Registers.h"
 #include "Globals.h"
 #include "Json.h"
 

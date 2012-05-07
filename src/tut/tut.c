@@ -29,7 +29,8 @@
 
 
 #define MAXDATASIZE 1440 // max number of bytes we can get at once 
-#define CONFIG_FILE_LOC "data/config.cfg"
+#define CONFIG_FILE_LOC "config/local"
+#define CONFIG_FILE_DEFAULT_LOC "config/default"
 
 extern char *getwd ();
 int sockfd, numbytes;
@@ -141,6 +142,15 @@ int read_configuration_file()
   }
   sprintf(filename,"%s/%s",PENN_DAQ_ROOT,CONFIG_FILE_LOC);
   config_file = fopen(filename,"r");
+  if (config_file == NULL){
+    printf("Problem opening config file, using default.\n");
+    sprintf(filename,"%s/%s",PENN_DAQ_ROOT,CONFIG_FILE_DEFAULT_LOC);
+    config_file = fopen(filename,"r");
+    if (config_file == NULL){
+	printf("Problem opening default config file %s. Exiting\n",filename);
+	exit(-2);
+    }
+  }
   int i,n = 0;
   char line_in[100][100];
   while (fscanf(config_file,"%s",line_in[n]) == 1){
