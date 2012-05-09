@@ -351,7 +351,8 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
     lprintf("Crate configuration updated.\n");
     for (i=0;i<16;i++)
-      json_delete(hw_rows[i]);
+	if ((0x1<<i) & slotMask && hw_rows[i] != NULL)
+	    json_delete(hw_rows[i]);
     json_delete(debug_doc);
   }
   catch(const char* s){
