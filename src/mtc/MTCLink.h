@@ -20,9 +20,9 @@ class MTCLink : public GenericLink {
     void SentCallback(struct bufferevent *bev){};
     void EventCallback(struct bufferevent *bev, short what){};
     
-    int GetNextPacket(SBCPacket *packet,int waitSeconds=5);
+    int GetNextPacket(SBCPacket *packet,int waitSeconds=10);
     int SendPacket(SBCPacket *packet);
-    int SendXilinxPacket(SBCPacket *packet, int waitSeconds=5);
+    int SendXilinxPacket(SBCPacket *packet, int waitSeconds=10);
     int CheckQueue(int empty);
 
   private:

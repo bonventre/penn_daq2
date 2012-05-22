@@ -118,6 +118,8 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
 
         MegaBundleHeader *mega = (MegaBundleHeader *) packet->payload;
         SwapLongBlock(mega,sizeof(MegaBundleHeader)/sizeof(uint32_t));
+        int crate = (mega->info & 0x1F000000)>>24;
+        lfprintf("Mega crate %d, passmin %d, xl3clock %d\n",crate,mega->passMin,mega->xl3Clock);
         int wordsLeft = (mega->info & 0xFFFFFF);
         SwapLongBlock(mega+1,wordsLeft);
         int numBundles = 0;
@@ -127,10 +129,12 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
           int miniSize = (mini->info & 0xFFFFFF);
           if (mini->info & 0x80000000){
             uint32_t passcur = *(uint32_t *) (mini+1);
+            lfprintf("     crate %d, passcur %d\n",crate,passcur);
             //lprintf("PassCur minibundle: %d\n",passcur);
           }else{
             numBundles += miniSize/3; 
             int card = (mini->info & 0x0F000000) >> 24;
+            lfprintf("     crate %d, card %d, %d bundles\n",crate,card,numBundles);
           }
           if (miniSize > wordsLeft){
             lprintf("Corrupted minibundle! Size = %d\n",miniSize);

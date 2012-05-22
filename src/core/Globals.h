@@ -29,6 +29,7 @@ int UnlockConnections(int sbc, uint32_t xl3List);
 void SwapLongBlock(void* p, int32_t n);
 void SwapShortBlock(void* p, int32_t n);
 
+int lfprintf(const char *fmt, ... );
 int lprintf(const char *fmt, ... );
 int PrintHelp(char *buffer);
 int StartLogging();

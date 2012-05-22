@@ -610,6 +610,21 @@ int PrintHelp(char *buffer)
   return 0;
 }
 
+int lfprintf(const char *fmt, ... )
+{
+  int ret;
+  va_list arg;
+  char psb[5000];
+  va_start(arg,fmt);
+  ret = vsprintf(psb,fmt,arg);
+
+  if (writeLog && logFile)
+    fprintf(logFile,"%s",psb);
+  if (ecalID && ecalLogFile)
+    fprintf(ecalLogFile,"%s",psb);
+  return ret;
+}
+
 int lprintf(const char *fmt, ... )
 {
   int ret;

@@ -212,7 +212,10 @@ int FifoTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
           leftOver = 0xFFFFF/3;
         }
         xl3s[crateNum]->ReadOutBundles(i,readout_data,leftOver,0);
-        DumpPmtVerbose(leftOver,readout_data,error_history);
+        if (leftOver > 20)
+          DumpPmtVerbose(20,readout_data,error_history);
+        else
+          DumpPmtVerbose(leftOver,readout_data,error_history);
         CheckFifo(crateNum,i,&diff,error_history);
 
         sprintf(cur_msg,"Slot %d - Trying to read past the end... should get %d bus errors\n",i,12);
