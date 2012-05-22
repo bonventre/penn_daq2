@@ -295,7 +295,7 @@ int32_t XL3Model::ReadOutBundles(int slotNum, uint32_t *pmtBuffer, int limit, in
         lprintf("Memory level under expected (%d < %d)\n",diff,3*limit);
       }
     }else{
-      diff = diff >= 3*limit ? 3*limit : diff;
+      //diff = diff >= 3*limit ? 3*limit : diff;
     }
 
     // lets read out the bundles!

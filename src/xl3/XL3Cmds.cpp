@@ -76,6 +76,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
   try{
 
     pouch_request *hw_response = pr_init();
+    JsonNode* hw_docs[16];
     JsonNode* hw_rows[16];
     pouch_request *debug_response = pr_init();
     JsonNode* debug_doc = NULL;
@@ -91,13 +92,13 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
             lprintf("Unable to connect to database. error code %d\n",(int)hw_response->httpresponse);
             return -1;
           }
-          JsonNode *hw_doc = json_decode(hw_response->resp.data);
-          JsonNode* totalrows = json_find_member(hw_doc,"total_rows");
+          hw_docs[i] = json_decode(hw_response->resp.data);
+          JsonNode* totalrows = json_find_member(hw_docs[i],"total_rows");
           if ((int)json_get_number(totalrows) == 0){
             lprintf("Database error: No FEC entry for crate %d, card %d\n",crateNum,i);
             return -1;
           }
-          hw_rows[i] = json_find_member(hw_doc,"rows");
+          hw_rows[i] = json_find_member(hw_docs[i],"rows");
           pr_free(hw_response);
         }
       }
@@ -151,6 +152,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
         JsonNode *value = json_find_member(next_row,"value");
         ParseFECHw(value,mb_consts);
       }
+
 
       //////////////////////////////
       // GET VALUES FROM DEBUG DB //
@@ -307,7 +309,9 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
       xl3s[crateNum]->SendCommand(&packet,0);
 
+    //  json_delete(hw_docs[i]);
     }
+
 
     // GET CTC DELAY FROM CTC_DOC IN DB
     pouch_request *ctc_response = pr_init();
@@ -350,9 +354,6 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
     }
 
     lprintf("Crate configuration updated.\n");
-    for (i=0;i<16;i++)
-	if ((0x1<<i) & slotMask && hw_rows[i] != NULL)
-	    json_delete(hw_rows[i]);
     json_delete(debug_doc);
   }
   catch(const char* s){

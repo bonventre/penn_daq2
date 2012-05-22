@@ -44,30 +44,8 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
         num_channels++;
     // set up crate
     xl3s[crateNum]->ChangeMode(INIT_MODE,0x0);
-    for (int slot=0;slot<16;slot++){
-      if ((0x1<<slot) & slotMask){
-        uint32_t select_reg = FEC_SEL*slot;
-        uint32_t result;
-        xl3s[crateNum]->RW(CMOS_CHIP_DISABLE_R + select_reg + WRITE_REG,0xFFFFFFFF,&result);
-        xl3s[crateNum]->RW(GENERAL_CSR_R + select_reg + WRITE_REG,0x2,&result);
-        xl3s[crateNum]->RW(GENERAL_CSR_R + select_reg + WRITE_REG,0x0,&result);
-        xl3s[crateNum]->RW(CMOS_CHIP_DISABLE_R + select_reg + WRITE_REG,0x0,&result);
-      }
-    }
-    xl3s[crateNum]->DeselectFECs();
-
-    int errors = xl3s[crateNum]->LoadCrateAddr(slotMask);
-    errors += xl3s[crateNum]->SetCratePedestals(slotMask,channelMask);
-    xl3s[crateNum]->DeselectFECs();
-    if (errors){
-      lprintf("Error setting up crate for pedestals. Exiting\n");
-      free(pmt_buffer);
-      free(ped);
-      return -1;
-    }
-
-    // set up MTC
-    errors = mtc->SetupPedestals(frequency,pedWidth,gtDelay,DEFAULT_GT_FINE_DELAY,
+        // set up MTC
+    int errors = mtc->SetupPedestals(frequency,pedWidth,gtDelay,DEFAULT_GT_FINE_DELAY,
         (0x1<<crateNum),(0x1<<crateNum));
     if (errors){
       lprintf("Error setting up MTC for pedestals. Exiting\n");
@@ -78,7 +56,53 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
       return -1;
     }
 
+    uint32_t result;
+    xl3s[crateNum]->RW(FIFO_DIFF_PTR_R + FEC_SEL*2 + READ_REG,0x0,&result);
+    printf("before reset fifo: %08x\n",result);
+
+    // reset the fifo
+    XL3Packet packet;
+    packet.header.packetType = RESET_FIFOS_ID;
+    ResetFifosArgs *args = (ResetFifosArgs *) packet.payload;
+    args->slotMask = slotMask;
+    SwapLongBlock(args,sizeof(ResetFifosArgs)/sizeof(uint32_t));
+    xl3s[crateNum]->SendCommand(&packet);
+
+    xl3s[crateNum]->RW(FIFO_DIFF_PTR_R + FEC_SEL*2 + READ_REG,0x0,&result);
+    printf("after reset fifo: %08x\n",result);
+    /*
+    for (int slot=0;slot<16;slot++){
+      if ((0x1<<slot) & slotMask){
+        uint32_t select_reg = FEC_SEL*slot;
+        uint32_t result;
+        xl3s[crateNum]->RW(CMOS_CHIP_DISABLE_R + select_reg + WRITE_REG,0xFFFFFFFF,&result);
+        xl3s[crateNum]->RW(GENERAL_CSR_R + select_reg + WRITE_REG,0x2,&result);
+        xl3s[crateNum]->RW(GENERAL_CSR_R + select_reg + WRITE_REG,0x0,&result);
+        xl3s[crateNum]->RW(CMOS_CHIP_DISABLE_R + select_reg + WRITE_REG,0x0,&result);
+      }
+    }
+    */
+    xl3s[crateNum]->DeselectFECs();
+    errors = xl3s[crateNum]->LoadCrateAddr(slotMask);
+
+    xl3s[crateNum]->RW(FIFO_DIFF_PTR_R + FEC_SEL*2 + READ_REG,0x0,&result);
+    printf("after load address: %08x\n",result);
+
+
+    errors += xl3s[crateNum]->SetCratePedestals(slotMask,channelMask);
+    xl3s[crateNum]->RW(FIFO_DIFF_PTR_R + FEC_SEL*2 + READ_REG,0x0,&result);
+    printf("after setting up pedestals: %08x\n",result);
+    xl3s[crateNum]->DeselectFECs();
+    if (errors){
+      lprintf("Error setting up crate for pedestals. Exiting\n");
+      free(pmt_buffer);
+      free(ped);
+      return -1;
+    }
     // send pedestals
+    uint32_t totalPulses = numPedestals*16;
+    uint32_t beforeGT,afterGT;
+    mtc->RegRead(MTCOcGtReg,&beforeGT);
     if (frequency == 0){
       int num_to_send = numPedestals*16;
       while (num_to_send > 0){
@@ -96,7 +120,19 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
       float wait_time = (float) numPedestals*16.0/frequency*1E6;
       usleep((int) wait_time);
       mtc->DisablePulser();
+      /*
+         if (totalPulses%16){
+         mtc->MultiSoftGT(16-totalPulses%16);
+         totalPulses += 16-totalPulses%16;
+         }
+         numPedestals = totalPulses/16;
+       */
     }
+    mtc->RegRead(MTCOcGtReg,&afterGT);
+    totalPulses = (afterGT - beforeGT);
+    printf("Total pulses: %d (%d bundles)\n",totalPulses,totalPulses*num_channels);
+    xl3s[crateNum]->RW(FIFO_DIFF_PTR_R + FEC_SEL*2 + READ_REG,0x0,&result);
+    printf("before read out: %08x\n",result);
 
 
     // loop over slots
@@ -123,7 +159,7 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
         }
 
         // readout bundles
-        int count = xl3s[crateNum]->ReadOutBundles(slot,pmt_buffer,numPedestals*16*num_channels,1);
+        int count = xl3s[crateNum]->ReadOutBundles(slot,pmt_buffer,totalPulses*num_channels,0);
 
         if (count <= 0){
           lprintf("There was an error in the count!\n");
@@ -133,7 +169,7 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
         }
 
         lprintf("MB %d: %d bundles read out.\n",slot,count);
-        if (count < numPedestals*16*num_channels)
+        if (count < totalPulses*num_channels)
           errors++;
 
         // process data
@@ -230,7 +266,7 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
                   ped[i].thiscell[j].qhsbar, ped[i].thiscell[j].qhsrms,
                   ped[i].thiscell[j].qlxbar, ped[i].thiscell[j].qlxrms,
                   ped[i].thiscell[j].tacbar, ped[i].thiscell[j].tacrms);
-              if (ped[i].thiscell[j].per_cell < numPedestals*.8 || ped[i].thiscell[j].per_cell > numPedestals*1.2)
+              if (ped[i].thiscell[j].per_cell < totalPulses/16*.8 || ped[i].thiscell[j].per_cell > totalPulses/16*1.2)
                 error_flag[i] |= 0x1;
               if (ped[i].thiscell[j].qhlbar < lower || 
                   ped[i].thiscell[j].qhlbar > upper ||

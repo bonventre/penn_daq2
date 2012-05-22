@@ -139,10 +139,10 @@ int ParseFECHw(JsonNode* value,MB* mb)
     int j,k;
     JsonNode* hw = json_find_member(value,"hw");
     mb->mbID = strtoul(json_get_string(json_find_member(value,"board_id")),(char**)NULL,16);
-    mb->dbID[0] = strtoul(json_get_string(json_find_member(json_find_member(hw,"id"),"db0")),(char**)NULL,16);
-    mb->dbID[1] = strtoul(json_get_string(json_find_member(json_find_member(hw,"id"),"db1")),(char**)NULL,16);
-    mb->dbID[2] = strtoul(json_get_string(json_find_member(json_find_member(hw,"id"),"db2")),(char**)NULL,16);
-    mb->dbID[3] = strtoul(json_get_string(json_find_member(json_find_member(hw,"id"),"db3")),(char**)NULL,16);
+    mb->dbID[0] = strtoul(json_get_string(json_find_member(json_find_member(value,"id"),"db0")),(char**)NULL,16);
+    mb->dbID[1] = strtoul(json_get_string(json_find_member(json_find_member(value,"id"),"db1")),(char**)NULL,16);
+    mb->dbID[2] = strtoul(json_get_string(json_find_member(json_find_member(value,"id"),"db2")),(char**)NULL,16);
+    mb->dbID[3] = strtoul(json_get_string(json_find_member(json_find_member(value,"id"),"db3")),(char**)NULL,16);
     //printsend("%04x,%04x,%04x,%04x\n",mb->mb_id,mb_consts->db_id[0],mb_consts->db_id[1],mb_consts->db_id[2],mb_consts->db_id[3]);
     for (j=0;j<2;j++){
         for (k=0;k<32;k++){
