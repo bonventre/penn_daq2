@@ -193,13 +193,13 @@ int MTCModel::SetupPedestals(float pulser_freq, uint32_t ped_width, uint32_t coa
     lprintf("setup pedestals failed\n");
     return -1;
   }
+  EnablePulser();
+  EnablePedestal();
   UnsetPedCrateMask(MASKALL);
   UnsetGTCrateMask(MASKALL);
   SetPedCrateMask(ped_crate_mask);
   SetGTCrateMask(gt_crate_mask);
   SetGTMask(DEFAULT_GT_MASK);
-  EnablePulser();
-  EnablePedestal();
   //lprintf("new_daq: setup_pedestals complete\n");
   return 0;
 }
