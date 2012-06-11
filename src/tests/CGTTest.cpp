@@ -34,6 +34,8 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
     if ((0x1<<i) & channelMask)
       num_chans++;
   for (int i=0;i<16;i++){
+    for (int j=0;j<32;j++)
+      chan_errors[j] = 0;
     missing_bundles[i] = 0;
     max_errors[i] = 0;
     memset(error_history[i],'\0',5000);
