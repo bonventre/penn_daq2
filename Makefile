@@ -5,7 +5,7 @@ BDIR = bin
 CC = g++
 #CFLAGS = -I$(IDIR)
 CFLAGS = $(patsubst %,-I%,$(CDIRS))
-LIBS = -levent -lcurl -levent_pthreads
+LIBS = -L/usr/local/lib -levent -lcurl -levent_pthreads
 
 _CDIRS = db core cont net xl3 mtc tests
 CDIRS = $(patsubst %,$(CDIR)/%,$(_CDIRS))
@@ -40,7 +40,7 @@ penn_daq: $(OBJ)
 
 tut:
 	python $(CDIR)/tut/tut_gen.py
-	gcc -lreadline -lncurses -o $(BDIR)/tut $(CDIR)/tut/tut.c $(CFLAGS)
+	gcc -L/usr/local/lib -lreadline -lncurses -o $(BDIR)/tut $(CDIR)/tut/tut.c /usr/local/lib/libreadline.so /usr/lib/libncurses.a $(CFLAGS)
     
 clean: 
 	rm -f $(ODIR)/* $(BDIR)/*
