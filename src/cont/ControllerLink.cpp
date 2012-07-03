@@ -1,6 +1,7 @@
 #include <cstring>
 #include <csignal>
 #include <pthread.h>
+#include <stdlib.h>
 
 #include "Globals.h"
 #include "XL3Registers.h"
@@ -558,7 +559,19 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     MTCWrite(address,data);
     UnlockConnections(1,0x0);
-
+  }else if (strncmp(input,"mtc_delay",9) == 0){
+   if (GetFlag(input,'h')){
+     lprintf("Usage: mtc_delay -t [delay time in ns (float)]\n");
+     return NULL;
+   }
+   float delaytime = GetFloat(input,'t',200);
+   int busy = LockConnections(1,0x0);
+   if (busy){
+      lprintf("Those connections are currently in use.\n");
+      return NULL;
+   }
+   MTCDelay(delaytime);
+   UnlockConnections(1,0x0);
   }else if (strncmp(input,"set_mtca_thresholds",19) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_mtca_thresholds -(00-13) [voltage in volts (float)] -v [set all voltages (float)]\n");

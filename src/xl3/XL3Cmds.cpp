@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <stdlib.h>
 
 #include "Globals.h"
 #include "DB.h"

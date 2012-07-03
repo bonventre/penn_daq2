@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <unistd.h>
+
 #include "Globals.h"
 #include "DBTypes.h"
 #include "Pouch.h"
@@ -189,4 +192,8 @@ int MTCWrite(uint32_t address, uint32_t data)
   return 0;
 }
 
-
+int MTCDelay(float time){
+	float real_delay = mtc->SetGTDelay(time);
+	printf("Delay set to %f\n",real_delay);
+	return 0;
+}
