@@ -22,7 +22,7 @@ class MTCLink : public GenericLink {
     
     int GetNextPacket(SBCPacket *packet,int waitSeconds=10);
     int SendPacket(SBCPacket *packet);
-    int SendXilinxPacket(SBCPacket *packet, int waitSeconds=10);
+    int SendXilinxPacket(SBCPacket *packet, int waitSeconds=30);
     int CheckQueue(int empty);
 
   private:
