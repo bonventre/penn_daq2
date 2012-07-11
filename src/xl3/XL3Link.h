@@ -25,6 +25,8 @@ class XL3Link : public GenericLink {
     int SendPacket(XL3Packet *packet);
     int CheckQueue(int empty);
 
+    void SetPrintOut(int printout){fPrintOut = printout;};
+
   private:
     int fCrateNum;
     std::queue<XL3Packet> fRecvQueue;
@@ -33,6 +35,7 @@ class XL3Link : public GenericLink {
     pthread_cond_t fRecvQueueCond;
     int fBytesLeft;
     int fTempBytes;
+    int fPrintOut;
     char fTempPacket[XL3_PACKET_SIZE];
 
 };

@@ -198,30 +198,18 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
             done = 0;
             gt_temp = gmax[wt];
 
-            while (!done){
+            for (int k=0;k<50;k++){
+              int isetm_testing = k*5;
               // load a new dac value
-              error = xl3s[crateNum]->LoadsDac(d_isetm[wt],isetm_new[wt],i);
+              error = xl3s[crateNum]->LoadsDac(d_isetm[wt],isetm_testing,i);
+              error = xl3s[crateNum]->LoadsDac(d_isetm[wt],isetm_testing,i);
               if (error){
                 lprintf("Error loading Dacs. Exiting\n");
                 return -1;
               }
               // get a new measure of gtvalid
               xl3s[crateNum]->RW(PED_ENABLE_R + select_reg + WRITE_REG,0x1<<cmax[wt],&result);
-              error = GetGTDelay(crateNum,i,wt,&gt_temp,isetm_new[0],isetm_new[1]);
-              if (error != 0){
-                lprintf("Error getting gtdelay at slot %d, channel %d\n",i,cmax[wt]);
-                return -1;
-              }
-              if (gt_temp <= gtCutoff){
-                done = 1;
-              }else{
-                if (isetm_new[wt] == 255){
-                  lprintf("warning - ISETM set to max!\n");
-                  done = 1;
-                }else{
-                  isetm_new[wt]++;
-                }
-              }
+              error = GetGTDelay(crateNum,i,wt,&gt_temp,isetm_testing,isetm_testing);
 
             } // end while gt_temp > gt_cutoff 
 
@@ -558,6 +546,7 @@ int GetGTDelay(int crateNum, int slotNum, int wt, float *get_gtchan, uint16_t is
   // set TACs back to original time
   error = xl3s[crateNum]->LoadsDac(d_isetm[0],isetm0,slotNum);
   error = xl3s[crateNum]->LoadsDac(d_isetm[1],isetm1,slotNum);
+  printf("%d %d, %f\n",isetm0,isetm1,upper_limit);
 
   return 0;
 }

@@ -135,9 +135,9 @@ int read_configuration_file()
 {
   FILE *config_file;
   char filename[500];
-  char *PENN_DAQ_ROOT = getenv("PENN_DAQ_ROOT");
+  char *PENN_DAQ_ROOT = getenv("PENN_DAQ_ROOT2");
   if (PENN_DAQ_ROOT == NULL){
-    printf("You need to set the environment variable PENN_DAQ_ROOT to the penn_daq directory\n");
+    printf("You need to set the environment variable PENN_DAQ_ROOT2 to the penn_daq directory\n");
     exit(-1);
   }
   sprintf(filename,"%s/%s",PENN_DAQ_ROOT,CONFIG_FILE_LOC);

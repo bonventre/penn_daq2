@@ -12,6 +12,7 @@ XL3Link::XL3Link(int crateNum) : GenericLink(XL3_PORT + crateNum)
 {
   fBytesLeft = 0;
   fTempBytes = 0;
+  fPrintOut = 0;
   memset(fTempPacket,0,sizeof(fTempPacket));
   fCrateNum = crateNum; 
   pthread_mutex_init(&fRecvQueueLock,NULL);
@@ -106,6 +107,8 @@ void XL3Link::ProcessPacket(XL3Packet *packet)
       }
     case MEGA_BUNDLE_ID:
       {
+        if (fPrintOut == 0)
+          break;
         struct timeval start,end;
         if (megaBundleCount == 0){
           gettimeofday(&start,0);

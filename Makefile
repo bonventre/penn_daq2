@@ -4,8 +4,8 @@ CDIR = src
 BDIR = bin
 CC = g++
 #CFLAGS = -I$(IDIR)
-CFLAGS = $(patsubst %,-I%,$(CDIRS))
-LIBS = -levent -lcurl -levent_pthreads
+CFLAGS = $(patsubst %,-I%,$(CDIRS)) -I/Users/snotdaq/penn_daq2/libevent/include
+LIBS = -L/Users/snotdaq/penn_daq2/libevent/lib -levent -lcurl -levent_pthreads
 
 _CDIRS = db core cont net xl3 mtc tests
 CDIRS = $(patsubst %,$(CDIR)/%,$(_CDIRS))

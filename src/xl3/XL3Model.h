@@ -42,6 +42,7 @@ class XL3Model{
     int CheckLock();
     void Lock(){fLink->SetLock(1);};
     void UnLock(){fLink->SetLock(0);};
+    void SetPrintOut(int printout){fLink->SetPrintOut(printout);};
     uint16_t GetMBID(int slot){return fFECs[slot].mbID;};
     uint16_t GetDBID(int slot, int card){return fFECs[slot].dbID[card];};
     int ConfigureCrate(FECConfiguration *fecs);

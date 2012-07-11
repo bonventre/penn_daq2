@@ -163,10 +163,11 @@ void *ControllerLink::ProcessCommand(void *arg)
 
   }else if (strncmp(input,"crate_init",10) == 0){
     if (GetFlag(input,'h')){
-      lprintf("Usage: crate_init -c [crate num (int)]"
-          "-s [slot mask (hex)] -x (load xilinx) -X (load cald xilinx)"
-          "-v (reset HV dac) -B (load vbal from db) -T (load vthr from db)"
-          "-D (load tdisc from db) -C (load tcmos values from db) -A (load all from db)"
+      lprintf("Usage: crate_init -c [crate num (int)] "
+          "-s [slot mask (hex)] -x (load xilinx) -X (load cald xilinx) "
+          "-v (reset HV dac) -B (load vbal from db) -T (load vthr from find_noise db) "
+          "-D (load tdisc from db) -C (load tcmos values from db) -A (load all from db) "
+          "-N (load vthr from zdisc db) "
           "-e (use crate/card specific values from ECAL db)\n");
       return NULL;
     }
@@ -181,6 +182,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     int useTDisc = GetFlag(input,'D');
     int useTCmos = GetFlag(input,'C');
     int useAll = GetFlag(input,'A');
+    int useNoise = GetFlag(input,'N');
     int useHw = GetFlag(input,'e');
     int xilinxLoad = 0;
     if (xilinxLoadNormal)
@@ -193,7 +195,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     CrateInit(crateNum,slotMask,xilinxLoad,hvReset,shiftRegOnly,
-        useVBal,useVThr,useTDisc,useTCmos,useAll,useHw);
+        useVBal,useVThr,useTDisc,useTCmos,useAll,useNoise,useHw);
     UnlockConnections(0,0x1<<crateNum);
 
   }else if (strncmp(input,"xr",2) == 0){

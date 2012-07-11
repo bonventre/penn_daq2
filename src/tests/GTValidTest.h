@@ -8,8 +8,9 @@
 #define ISETM_START 147
 //#define ISETM 138
 //#define ISETM 110
-#define ISETM 110
-#define ISETM_LONG 100
+//#define ISETM 110
+#define ISETM 0
+#define ISETM_LONG 85 
 #define ISETA 70
 #define ISETA_NO_TWIDDLE 0
 

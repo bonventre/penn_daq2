@@ -61,7 +61,7 @@ int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
 }
 
 int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int shiftRegOnly,
-    int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useHw)
+    int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useNoise, int useHw)
 {
   lprintf("*** Starting Crate Init ****************\n");
   char get_db_address[500];
@@ -120,7 +120,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
     if (useVBal || useAll)
       lprintf("Using VBAL values from database\n");
-    if (useVThr || useAll)
+    if (useVThr || useNoise || useAll)
       lprintf("Using VTHR values from database\n");
     if (useTDisc || useAll)
       lprintf("Using TDISC values from database\n");
@@ -160,6 +160,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
       // VBAL
       if ((useVBal || useAll) && ((0x1<<i) & slotMask)){
+        printf("%d %d %04x\n",crateNum,i,xl3s[crateNum]->GetMBID(i));
         if (xl3s[crateNum]->GetMBID(i) == 0x0000){
           lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
         }else{
@@ -194,7 +195,9 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       }
 
       // VTHR
-      if ((useVThr || useAll) && ((0x1<<i) & slotMask)){
+      if ((useNoise || (useAll && !useVThr)) && ((0x1<<i) & slotMask)){
+        printf("using zdisc of VTHR\n");
+        printf("%d %d %04x\n",crateNum,i,xl3s[crateNum]->GetMBID(i));
         if (xl3s[crateNum]->GetMBID(i) == 0x0000){
           lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
         }else{
@@ -214,9 +217,45 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
             lprintf("Warning: Slot %d: No zdisc documents for this configuration (%s). Continuing with default values.\n",i,configString);
           }else{
             JsonNode* zdisc_doc = json_find_member(json_find_element(viewrows,0),"value");
-            JsonNode* vthr = json_find_member(zdisc_doc,"zero_dac");
+            JsonNode* vthr = json_find_member(zdisc_doc,"upper_dac");
             for (j=0;j<32;j++){
               mb_consts->vThr[j] = (int)json_get_number(json_find_element(vthr,j));
+            }
+          }
+          json_delete(viewdoc); // only delete the head
+          pr_free(zdisc_response);
+        }
+      }else if ((useVThr || (useAll && !useNoise)) && ((0x1<<i) & slotMask)){
+        printf("Using find_noise values of vthr\n");
+        if (xl3s[crateNum]->GetMBID(i) == 0x0000){
+          lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
+        }else{
+          sprintf(get_db_address,"%s/%s/%s/get_noise?startkey=[%s,9999999999]&endkey=[%s,0]&descending=true",DB_SERVER,DB_BASE_NAME,DB_VIEWDOC,configString,configString);
+          pouch_request *zdisc_response = pr_init();
+          pr_set_method(zdisc_response, GET);
+          pr_set_url(zdisc_response, get_db_address);
+          pr_do(zdisc_response);
+          if (zdisc_response->httpresponse != 200){
+            lprintf("Unable to connect to database. error code %d\n",(int)zdisc_response->httpresponse);
+            return -1;
+          }
+          JsonNode *viewdoc = json_decode(zdisc_response->resp.data);
+          JsonNode* viewrows = json_find_member(viewdoc,"rows");
+          int n = json_get_num_mems(viewrows);
+          if (n == 0){
+            lprintf("Warning: Slot %d: No zdisc documents for this configuration (%s). Continuing with default values.\n",i,configString);
+          }else{
+            JsonNode* zdisc_doc = json_find_member(json_find_element(viewrows,0),"value");
+
+            JsonNode *channels = json_find_member(zdisc_doc,"channels");
+            for (j=0;j<32;j++){
+              JsonNode *one_chan = json_find_element(channels,j);
+              uint32_t zero_used = json_get_number(json_find_member(one_chan,"zero_used"));
+              JsonNode *points = json_find_member(one_chan,"points");
+              int total_rows = json_get_num_mems(points); 
+              JsonNode *final_point = json_find_element(points,total_rows-1);
+              uint32_t readout_dac = json_get_number(json_find_member(final_point,"thresh_above_zero"));
+              mb_consts->vThr[j] = readout_dac+zero_used;
             }
           }
           json_delete(viewdoc); // only delete the head
@@ -309,7 +348,11 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
       xl3s[crateNum]->SendCommand(&packet,0);
 
-    //  json_delete(hw_docs[i]);
+            for (j=0;j<32;j++){
+             printf("%d %d: %d\n",i,j,mb_consts->vThr[j]);
+            }
+
+      //  json_delete(hw_docs[i]);
     }
 
 
@@ -343,7 +386,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
     SwapLongBlock(packet.payload,sizeof(CrateInitArgs)/sizeof(uint32_t));
 
-    xl3s[crateNum]->SendCommand(&packet);
+    xl3s[crateNum]->SendCommand(&packet,1,30);
 
     CrateInitResults *results = (CrateInitResults *) packet.payload;
 
