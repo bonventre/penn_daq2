@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "XL3PacketTypes.h"
 #include "Globals.h"
 #include "Json.h"
@@ -40,7 +42,7 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
   SwapLongBlock(args,sizeof(CaldTestArgs)/sizeof(uint32_t));
 
   try{
-    xl3s[crateNum]->SendCommand(&packet,0);
+    xl3s[crateNum]->SendCommand(&packet,0,20);
     int total_points = xl3s[crateNum]->GetCaldTestResults(point_buf,adc_buf);
 
     lprintf("Got results of cald test. %d points received.\n",total_points);

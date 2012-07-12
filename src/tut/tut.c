@@ -80,6 +80,7 @@ COMMAND commands[] = {
     { "mw", (Function *)NULL, (char *)NULL },
     { "mtc_read", (Function *)NULL, (char *)NULL },
     { "mtc_write", (Function *)NULL, (char *)NULL },
+    { "mtc_delay", (Function *)NULL, (char *)NULL },
     { "set_mtca_thresholds", (Function *)NULL, (char *)NULL },
     { "set_gt_mask", (Function *)NULL, (char *)NULL },
     { "set_gt_crate_mask", (Function *)NULL, (char *)NULL },

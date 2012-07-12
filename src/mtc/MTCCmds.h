@@ -6,5 +6,6 @@ int MTCInit(int xilinx);
 int MTCRead(uint32_t address);
 int MTCWrite(uint32_t address, uint32_t data);
   
+int MTCDelay(float time);
 #endif
 

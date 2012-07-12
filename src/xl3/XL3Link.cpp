@@ -208,6 +208,10 @@ void XL3Link::AcceptCallback(struct evconnlistener *listener, evutil_socket_t fd
 
 int XL3Link::SendPacket(XL3Packet *packet)
 {
+  if (!fConnected){
+    printf("send packet: not connected\n");
+    return 0;
+  }
   SwapShortBlock(&packet->header.packetNum,1);
   bufferevent_lock(fBev);
   pthread_mutex_lock(&fRecvQueueLock);
@@ -223,6 +227,10 @@ int XL3Link::SendPacket(XL3Packet *packet)
 
 int XL3Link::GetNextPacket(XL3Packet *packet,int waitSeconds)
 {
+  if (!fConnected){
+    printf("Get next packet: not connected\n");
+    return 1;
+  }
   pthread_mutex_lock(&fRecvQueueLock);
   if (waitSeconds){
     struct timeval tp;
@@ -253,6 +261,10 @@ int XL3Link::GetNextPacket(XL3Packet *packet,int waitSeconds)
 
 int XL3Link::GetNextCmdAck(Command *command,int waitSeconds)
 {
+  if (!fConnected){
+    printf("get next cmd ack: not connected\n");
+    return 1;
+  }
   pthread_mutex_lock(&fRecvQueueLock);
   if (waitSeconds){
     struct timeval tp;

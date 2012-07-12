@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "XL3PacketTypes.h"
 #include "XL3Registers.h"
 #include "UnpackBundles.h"
