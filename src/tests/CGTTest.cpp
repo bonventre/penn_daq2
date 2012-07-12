@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "XL3PacketTypes.h"
 #include "MTCPacketTypes.h"
 #include "XL3Registers.h"

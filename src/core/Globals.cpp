@@ -1,3 +1,5 @@
+#include <stdlib.h>
+
 #include "Globals.h"
 #include "XL3Registers.h"
 #include "MTCRegisters.h"
@@ -578,6 +580,7 @@ int PrintHelp(char *buffer)
     lprintf("set_pulser_freq\n");
     lprintf("send_softgt\n");
     lprintf("multi_softgt\n");
+    lprintf("mtc_delay\n");
   }
   if (which == 8 || which == 9){
     lprintf("run_pedestals\t\tEnable pedestals on mtc and readout on crates\n");

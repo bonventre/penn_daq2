@@ -1,3 +1,6 @@
+#include <stdlib.h>
+#include <math.h>
+
 #include "XL3PacketTypes.h"
 #include "XL3Registers.h"
 #include "DacNumber.h"

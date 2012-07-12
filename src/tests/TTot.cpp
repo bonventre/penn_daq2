@@ -323,7 +323,7 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
 
 int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_times)
 {
-  int increment = 1;
+  int increment = 10;
   int time;
   uint32_t chan_done_mask;
   float real_delay;
@@ -395,11 +395,24 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
         result = xl3s[crate]->GetCmosTotalCount(0x1<<i,temp);
         fin[j] = temp[0][j];
         fin[j] -= init[j];
+        /*
         if (fin[j] < 2*NUM_PEDS){
           // we didn't get the peds without the other channels enabled
-          lprintf("Error channel %d - pedestals went away after other channels turned off!\n",j);
+          uint32_t pedresult;
+          xl3s[crate]->RW(READ_REG + FEC_SEL*i+PED_ENABLE_R,0x0,&pedresult);
+          lprintf("Error channel %d - pedestals went away after other channels turned off! (%d %d)\n",j,fin[j],2*NUM_PEDS);
+          printf("%08x %f\n",pedresult,real_delay);
+          mtc->SetGTDelay((float) 800);
+          result = xl3s[crate]->GetCmosTotalCount(0x1<<i,temp);
+          init[j] = temp[0][j];
+          mtc->MultiSoftGT(NUM_PEDS);
+          result = xl3s[crate]->GetCmosTotalCount(0x1<<i,temp);
+          fin[j] = temp[0][j];
+          fin[j] -= init[j];
+          printf("%d\n",fin[j]);
           disc_times[i*32+j] = 9999;
         }
+        */
       }
 
     } // end if slot mask
@@ -407,6 +420,7 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
   return 0;
 }
 
+// set diff=1 if ttot > goal time, otherwise diff=0
 int CheckTTot(int crate, int slot_num, uint32_t chan_mask, int goal_time, int *diff)
 {
   float real_delay;

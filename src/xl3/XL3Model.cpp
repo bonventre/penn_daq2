@@ -125,7 +125,7 @@ int XL3Model::GetCaldTestResults(uint16_t *point_buf, uint16_t *adc_buf)
   XL3Packet packet;
 
   while (1){
-    int err = fLink->GetNextPacket(&packet,5);
+    int err = fLink->GetNextPacket(&packet,20);
     if (err)
       throw "GetCaldTestResults: GetNextPacket timed out";
     if (packet.header.packetNum > (fCommandNum-1))
