@@ -161,7 +161,6 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
       // VBAL
       if ((useVBal || useAll) && ((0x1<<i) & slotMask)){
-        printf("%d %d %04x\n",crateNum,i,xl3s[crateNum]->GetMBID(i));
         if (xl3s[crateNum]->GetMBID(i) == 0x0000){
           lprintf("Warning: Slot %d: mb_id unknown. Using default values. Make sure to load xilinx before attempting to use debug db values.\n",i);
         }else{
@@ -244,19 +243,15 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
           JsonNode* viewrows = json_find_member(viewdoc,"rows");
           int n = json_get_num_mems(viewrows);
           if (n == 0){
-            lprintf("Warning: Slot %d: No zdisc documents for this configuration (%s). Continuing with default values.\n",i,configString);
+            lprintf("Warning: Slot %d: No find_noise documents for this configuration (%s). Continuing with default values.\n",i,configString);
           }else{
             JsonNode* zdisc_doc = json_find_member(json_find_element(viewrows,0),"value");
 
             JsonNode *channels = json_find_member(zdisc_doc,"channels");
             for (j=0;j<32;j++){
               JsonNode *one_chan = json_find_element(channels,j);
-              uint32_t zero_used = json_get_number(json_find_member(one_chan,"zero_used"));
-              JsonNode *points = json_find_member(one_chan,"points");
-              int total_rows = json_get_num_mems(points); 
-              JsonNode *final_point = json_find_element(points,total_rows-1);
-              uint32_t readout_dac = json_get_number(json_find_member(final_point,"thresh_above_zero"));
-              mb_consts->vThr[j] = readout_dac+zero_used;
+              int chan_num = json_get_number(json_find_member(one_chan,"id"));
+              mb_consts->vThr[chan_num] = json_get_number(json_find_member(one_chan,"noiseless"));
             }
           }
           json_delete(viewdoc); // only delete the head

@@ -1216,7 +1216,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     uint32_t crateMask = GetUInt(input,'c',0x4);
     uint32_t slotMasks[19];
     GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
-    uint32_t testMask = GetUInt(input,'t',0x0);
+    uint32_t testMask = GetUInt(input,'t',0xFFFFFFFF);
     char loadECAL[500];
     memset(loadECAL,'\0',sizeof(loadECAL));
     GetString(input,loadECAL,'l',"");
