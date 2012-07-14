@@ -5,9 +5,7 @@
 
 #define VMAX 203
 #define TACREF 72
-#define ISETM_FIND_MAX 147
-//#define ISETM 138
-#define ISETM 110
+#define ISETM_MIN 110
 #define ISETM_MAX_GTVALID 80 
 #define ISETA 70
 #define ISETA_NO_TWIDDLE 0
