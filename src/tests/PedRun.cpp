@@ -235,10 +235,22 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
                       - pow( ped[i].thiscell[j].tacbar, 2.0));
 
                 // finally x_rms = sqrt(x_rms^2)
-                ped[i].thiscell[j].qlxrms = sqrt(ped[i].thiscell[j].qlxrms);
-                ped[i].thiscell[j].qhsrms = sqrt(ped[i].thiscell[j].qhsrms);
-                ped[i].thiscell[j].qhlrms = sqrt(ped[i].thiscell[j].qhlrms);
-                ped[i].thiscell[j].tacrms = sqrt(ped[i].thiscell[j].tacrms);
+                if (ped[i].thiscell[j].qlxrms > 0 || ped[i].thiscell[j].qlxrms == 0)
+                  ped[i].thiscell[j].qlxrms = sqrt(ped[i].thiscell[j].qlxrms);
+                else
+                  ped[i].thiscell[j].qlxrms = -1;
+                if (ped[i].thiscell[j].qhsrms > 0 || ped[i].thiscell[j].qhsrms == 0)
+                  ped[i].thiscell[j].qhsrms = sqrt(ped[i].thiscell[j].qhsrms);
+                else
+                  ped[i].thiscell[j].qhsrms = -1;
+                if (ped[i].thiscell[j].qhlrms > 0 || ped[i].thiscell[j].qhlrms == 0)
+                  ped[i].thiscell[j].qhlrms = sqrt(ped[i].thiscell[j].qhlrms);
+                else
+                  ped[i].thiscell[j].qhlrms = -1;
+                if (ped[i].thiscell[j].tacrms > 0 || ped[i].thiscell[j].tacrms == 0)
+                  ped[i].thiscell[j].tacrms = sqrt(ped[i].thiscell[j].tacrms);
+                else
+                  ped[i].thiscell[j].tacrms = -1;
               }else{
                 ped[i].thiscell[j].qlxrms = 0;
                 ped[i].thiscell[j].qhsrms = 0;

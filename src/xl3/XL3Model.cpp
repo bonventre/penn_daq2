@@ -397,3 +397,21 @@ int XL3Model::SetupChargeInjection(uint32_t slotMask, uint32_t chanMask, uint32_
   DeselectFECs();
   return 0;
 }
+
+int XL3Model::LoadTacbits(uint32_t slotNum, uint16_t *tacbits)
+{
+  XL3Packet packet;
+  packet.header.packetType = LOAD_TACBITS_ID;
+  LoadTacBitsArgs *args = (LoadTacBitsArgs *) packet.payload;
+  args->crateNum = fCrateNum;
+  args->selectReg = FEC_SEL*slotNum;
+  for (int j=0;j<32;j++){
+    args->tacBits[j] = tacbits[j];
+  }
+  SwapLongBlock(packet.payload,2);
+  SwapShortBlock(packet.payload+8,32);
+  SendCommand(&packet);
+  lprintf("TAC bits loaded\n");
+
+  return 0;
+}

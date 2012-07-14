@@ -37,6 +37,7 @@ class XL3Model{
     int SetCratePedestals(uint16_t slotMask, uint32_t pattern);
     int LoadCrateAddr(uint16_t slotMask);
     int SetupChargeInjection(uint32_t slotMask, uint32_t chanMask, uint32_t dacValue);
+    int LoadTacbits(uint32_t slotNum, uint16_t *tacbits);
 
     int IsConnected(){return fLink->IsConnected();};
     int CheckLock();
@@ -64,8 +65,8 @@ struct channel_params{
 };
 
 struct cell {
-  int16_t per_cell;
-  int cellno;
+  uint16_t per_cell;
+  uint8_t cellno;
   double qlxbar, qlxrms;
   double qhlbar, qhlrms;
   double qhsbar, qhsrms;
@@ -73,8 +74,8 @@ struct cell {
 };
 
 struct pedestal {
-  int16_t channelnumber;
-  int16_t per_channel;
+  uint16_t channelnumber;
+  uint16_t per_channel;
   struct cell thiscell[16];
 };
 

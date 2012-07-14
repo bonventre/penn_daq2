@@ -349,10 +349,6 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
       xl3s[crateNum]->SendCommand(&packet,0);
 
-            for (j=0;j<32;j++){
-             printf("%d %d: %d\n",i,j,mb_consts->vThr[j]);
-            }
-
       //  json_delete(hw_docs[i]);
     }
 
