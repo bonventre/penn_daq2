@@ -47,13 +47,13 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
 
     // set up mtc
     mtc->ResetMemory();
-    mtc->SetGTCounter(0);
     //if (setup_pedestals(0,25,150,0,(0x1<<arg.crate_num)+MSK_TUB,(0x1<<arg.crate_num)+MSK_TUB))
     if (mtc->SetupPedestals(0,DEFAULT_PED_WIDTH,DEFAULT_GT_DELAY,DEFAULT_GT_FINE_DELAY,
           (0x1<<crateNum)+MSK_TUB,(0x1<<crateNum)+MSK_TUB)){
       lprintf("Error setting up mtc. Exiting\n");
       return -1;
     }
+    mtc->SetGTCounter(0);
 
     // set up crate
     for (int i=0;i<16;i++){

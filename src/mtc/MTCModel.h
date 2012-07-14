@@ -10,6 +10,7 @@
 
 /* Default setup parameters */
 
+#define MIN_GT_DELAY 18.35
 #define DEFAULT_GT_DELAY 150
 #define DEFAULT_GT_FINE_DELAY 0
 #define DEFAULT_PED_WIDTH 25

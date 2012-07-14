@@ -207,6 +207,10 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
               free(readout_noise);
               free(vthr_zeros);
               free(current_vthr);
+
+              for (int c=0;c<19;c++)
+                if ((0x1<<c) & crateMask)
+                  xl3s[c]->ChangeMode(NORMAL_MODE,slotMasks[c]);
               return -1;
             }
           }
@@ -392,7 +396,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){
             JsonNode *newdoc = json_mkobject();
-            json_append_member(newdoc,"type",json_mkstring("find_noise2"));
+            json_append_member(newdoc,"type",json_mkstring("find_noise_2"));
             JsonNode *channels = json_mkarray();
             for (int k=0;k<32;k++){
               JsonNode *one_chan = json_mkobject();
@@ -414,6 +418,10 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
       }
     }
   }
+
+  for (int c=0;c<19;c++)
+    if ((0x1<<c) & crateMask)
+      xl3s[c]->ChangeMode(NORMAL_MODE,slotMasks[c]);
 
   mtc->DisablePulser();
   free(readout_noise);

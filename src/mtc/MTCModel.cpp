@@ -127,17 +127,21 @@ int MTCModel::GetGTCount(uint32_t *count)
 
 float MTCModel::SetGTDelay(float gtdel)
 {
+  if (gtdel < MIN_GT_DELAY){
+    printf("minimum gtdelay is %f\n",MIN_GT_DELAY);
+    gtdel = MIN_GT_DELAY;
+  }
   int result;
   float offset_res, fine_delay, total_delay, fdelay_set;
   uint16_t cdticks, coarse_delay;
 
-  offset_res = gtdel - (float)(18.35); //FIXME there is delay_offset in db?? check old code
+  offset_res = gtdel - MIN_GT_DELAY; //FIXME there is delay_offset in db?? check old code
   cdticks = (uint16_t) (offset_res/10.0);
   coarse_delay = cdticks*10;
   fine_delay = offset_res - ((float) cdticks*10.0);
   result = SetCoarseDelay(coarse_delay);
   fdelay_set = SetFineDelay(fine_delay);
-  total_delay = ((float) coarse_delay + fdelay_set + (float)(18.35));
+  total_delay = ((float) coarse_delay + fdelay_set + MIN_GT_DELAY);
   if (((total_delay - gtdel) > 2) || ((total_delay - gtdel) < -2))
     lprintf("wanted %f, cdticks is %u, finedelay is %f, set to coarse_delay %u + fdelay_set %f + 18.35 = %f\n",gtdel,cdticks,fine_delay,coarse_delay,fdelay_set,total_delay);
   return total_delay;

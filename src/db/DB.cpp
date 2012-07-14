@@ -846,3 +846,31 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
   return 0;
 }
 
+int UpdateLocation(const char* mb, const char* db0, const char* db1, const char* db2, const char* db3)
+{
+  char get_db_address[500];
+  sprintf(get_db_address,"%s/%s/%s",DB_SERVER,DB_BASE_NAME,mb);
+  pouch_request *response = pr_init();
+  pr_set_method(response, GET);
+  pr_set_url(response, get_db_address);
+  pr_do(response);
+  if (response->httpresponse != 200){
+    lprintf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
+    return -1;
+  }
+  JsonNode *doc = json_decode(response->resp.data);
+
+  JsonNode *location = json_find_member(doc,"location");
+  json_remove_from_parent(location);
+  if (CURRENT_LOCATION == PENN_TESTSTAND)
+    json_append_member(doc,"location",json_mkstring("penn"));
+  else if (CURRENT_LOCATION == ABOVE_GROUND_TESTSTAND)
+    json_append_member(doc,"location",json_mkstring("surface"));
+  else if (CURRENT_LOCATION == UNDERGROUND)
+    json_append_member(doc,"location",json_mkstring("underground"));
+  else
+    json_append_member(doc,"location",json_mkstring("unknown"));
+
+
+
+}

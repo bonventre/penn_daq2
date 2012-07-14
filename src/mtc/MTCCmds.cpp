@@ -28,7 +28,7 @@ int SBCControl(int connect, int kill, int manual, const char *idFile)
       system(kill_cmd);
     }
 
-    usleep(50000);
+    usleep(500000);
 
     if (connect){
       if (!manual){
@@ -37,6 +37,7 @@ int SBCControl(int connect, int kill, int manual, const char *idFile)
         lprintf("sbc_control: Starting remote OrcaReadout process\n");
         system(start_cmd);
       }
+      usleep(500000);
       mtc->Connect();
     }
   }
