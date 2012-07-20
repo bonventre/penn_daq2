@@ -169,7 +169,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-v (reset HV dac) -B (load vbal from db) -T (load vthr from find_noise db) "
           "-D (load tdisc from db) -C (load tcmos values from db) -A (load all from db) "
           "-N (load vthr from zdisc db) "
-          "-e (use crate/card specific values from ECAL db)\n");
+          "-e (use crate/card specific values from ECAL db) -t (enable nhit 100 and nhit 20 triggers)\n");
       return NULL;
     }
     int crateNum = GetInt(input,'c',2);
@@ -185,6 +185,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     int useAll = GetFlag(input,'A');
     int useNoise = GetFlag(input,'N');
     int useHw = GetFlag(input,'e');
+    int enableTriggers = GetFlag(input,'t');
     int xilinxLoad = 0;
     if (xilinxLoadNormal)
       xilinxLoad = 1;
@@ -196,7 +197,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     CrateInit(crateNum,slotMask,xilinxLoad,hvReset,shiftRegOnly,
-        useVBal,useVThr,useTDisc,useTCmos,useAll,useNoise,useHw);
+        useVBal,useVThr,useTDisc,useTCmos,useAll,useNoise,useHw,enableTriggers);
     UnlockConnections(0,0x1<<crateNum);
 
   }else if (strncmp(input,"xr",2) == 0){
@@ -760,17 +761,18 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"board_id",8) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: board_id -c [crate_num (int)] "
-          "-s [slot mask (hex)]\n");
+          "-s [slot mask (hex)] -l (update location in database)\n");
       return NULL;
     }
     int crateNum = GetInt(input,'c',2);
     int slotMask = GetUInt(input,'s',0xFFFF);
+    int updateLocation = GetFlag(input,'l');
     int busy = LockConnections(0,0x1<<crateNum);
     if (busy){
       lprintf("Those connections are currently in use.\n");
       return NULL;
     }
-    BoardID(crateNum,slotMask);
+    BoardID(crateNum,slotMask,updateLocation);
     UnlockConnections(0,0x1<<crateNum);
 
   }else if (strncmp(input,"cald_test",9) == 0){

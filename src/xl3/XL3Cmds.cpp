@@ -62,7 +62,7 @@ int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
 }
 
 int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int shiftRegOnly,
-    int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useNoise, int useHw)
+    int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useNoise, int useHw, int enableTriggers)
 {
   lprintf("*** Starting Crate Init ****************\n");
   char get_db_address[500];
@@ -76,7 +76,6 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
   try{
 
-    pouch_request *hw_response = pr_init();
     JsonNode* hw_docs[16];
     JsonNode* hw_rows[16];
     pouch_request *debug_response = pr_init();
@@ -85,6 +84,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
     if (useHw == 1){
       for (int i=0;i<16;i++){
         if ((0x1<<i) & slotMask){
+          pouch_request *hw_response = pr_init();
           sprintf(get_db_address,"%s/%s/%s/get_fec_by_generated?startkey=[%d,%d,{}]&endkey=[%d,%d]&descending=True",FECDB_SERVER,FECDB_BASE_NAME,FECDB_VIEWDOC,crateNum,i,crateNum,i);
           pr_set_method(hw_response, GET);
           pr_set_url(hw_response, get_db_address);
@@ -341,7 +341,17 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
       SwapLongBlock(packet.payload,1);	
       SwapFECDB(mb_consts);
+        //mb_consts->vThr[17] = 255; 
 
+      if (!enableTriggers){
+        for (int k=0;k<32;k++){
+          mb_consts->tr100.mask[k] = 0;
+          mb_consts->tr100.tDelay[k] = 0;
+          mb_consts->tr20.mask[k] = 0;
+          mb_consts->tr20.tDelay[k] = 0;
+          mb_consts->tr20.tWidth[k] = 0;
+        }
+      }
       xl3s[crateNum]->SendCommand(&packet,0);
 
       //  json_delete(hw_docs[i]);

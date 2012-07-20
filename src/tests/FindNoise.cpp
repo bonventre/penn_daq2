@@ -126,8 +126,11 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     if ((0x1<<i) & crateMask){
       for (int j=0;j<16;j++){
         if ((0x1<<j) & slotMasks[i]){
-          for (int k=0;k<32;k++)
+          for (int k=0;k<32;k++){
             slot_nums[k] = j;
+            dac_nums[k] = d_vthr[k];
+            dac_values[k] = 255;
+          }
           if (xl3s[i]->MultiLoadsDac(32,dac_nums,dac_values,slot_nums)){
             lprintf("Error loading dacs. Exiting\n");
             free(vthr_zeros);
@@ -178,7 +181,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
         if (vthr_zeros[i*16*32+j*32+k] >= 255){
           error_channel[i][j] |= 0x1<<k;
           done_channel[i][j] |= 0x1<<k;
-          current_vthr[i*16*32+j*32+k] = vthr_zeros[i*16*32+j*32+k];
+          current_vthr[i*16*32+j*32+k] = 255;
         }else{
           current_vthr[i*16*32+j*32+k] = vthr_zeros[i*16*32+j*32+k]+50;
         }
@@ -210,7 +213,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
               for (int c=0;c<19;c++)
                 if ((0x1<<c) & crateMask)
-                  xl3s[c]->ChangeMode(NORMAL_MODE,slotMasks[c]);
+                  xl3s[c]->ChangeMode(INIT_MODE,slotMasks[c]);
               return -1;
             }
           }
@@ -421,7 +424,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
   for (int c=0;c<19;c++)
     if ((0x1<<c) & crateMask)
-      xl3s[c]->ChangeMode(NORMAL_MODE,slotMasks[c]);
+      xl3s[c]->ChangeMode(INIT_MODE,slotMasks[c]);
 
   mtc->DisablePulser();
   free(readout_noise);

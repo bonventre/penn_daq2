@@ -98,7 +98,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     testMask = 0xFFFFFFFF;
   }else if (testMask != 0x0){
     lprintf("Doing ");
-    for (int i=0;i<10;i++)
+    for (int i=0;i<11;i++)
       if ((0x1<<i) & testMask)
         lprintf("%s ",testList[i]);
     lprintf("\n");
@@ -235,9 +235,10 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
       for (int i=0;i<19;i++)
         if ((0x1<<i) & crateMask)
           ZDisc(i,slotMasks[i],10000,0,1,0,1);
+    testCounter++;
 
     if ((0x1<<testCounter) & testMask)
-      FindNoise(crateMask,slotMasks,20,0,1,1);
+      FindNoise(crateMask,slotMasks,20,1,1,1);
 
     lprintf("ECAL finished!\n");
 

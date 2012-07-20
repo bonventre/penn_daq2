@@ -3,7 +3,7 @@
 
 #include <unistd.h>
 
-int BoardID(int crateNum, uint32_t slotMask);
+int BoardID(int crateNum, uint32_t slotMask, int updateLocation=0);
 
 #endif
 
