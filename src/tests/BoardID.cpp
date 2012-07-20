@@ -1,10 +1,11 @@
 #include "XL3PacketTypes.h"
 #include "Globals.h"
+#include "DB.h"
 
 #include "XL3Model.h"
 #include "BoardID.h"
 
-int BoardID(int crateNum, uint32_t slotMask)
+int BoardID(int crateNum, uint32_t slotMask, int updateLocation)
 {
   lprintf("*** Starting Board ID ******************\n");
   XL3Packet packet;
@@ -26,6 +27,20 @@ int BoardID(int crateNum, uint32_t slotMask)
           xl3s[crateNum]->SendCommand(&packet);
           SwapLongBlock(packet.payload,sizeof(BoardIDReadResults)/sizeof(uint32_t));
           lprintf("0x%04x ",results->id);
+          int pass = 1;
+          if (j==1){ //fec
+            if (((results->id & 0xF000) != 0xF000) || results->id == 0xFFFF)
+              pass = 0;
+          }else if (j<6){//db
+            if ( (results->id & 0xF000) != 0xD000)
+              pass = 0;
+          }else{//pmtic
+            if ((results->id & 0xF000) != 0xE000)
+              pass = 0;
+          }
+          if (pass && updateLocation){
+            UpdateLocation(results->id,crateNum,i,j-1);
+          }
         }
         lprintf("\n");
       }

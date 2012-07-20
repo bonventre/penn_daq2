@@ -92,7 +92,6 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
               max_gtvalid[j] = GTMAX;
               max_isetm[j] = ISETM_MAX_GTVALID;
             }else{
-              printf("no\n");
               // scan to see if any ISETM value puts this channel over GTMAX
               int done = 0;
               for (int k=0;k<8;k++){

@@ -138,6 +138,7 @@ int ParseFECHw(JsonNode* value,MB* mb)
 {
     int j,k;
     JsonNode* hw = json_find_member(value,"hw");
+    printf("%s\n",json_get_string(json_find_member(value,"_id")));
     mb->mbID = strtoul(json_get_string(json_find_member(value,"board_id")),(char**)NULL,16);
     mb->dbID[0] = strtoul(json_get_string(json_find_member(json_find_member(value,"id"),"db0")),(char**)NULL,16);
     mb->dbID[1] = strtoul(json_get_string(json_find_member(json_find_member(value,"id"),"db1")),(char**)NULL,16);
@@ -152,7 +153,7 @@ int ParseFECHw(JsonNode* value,MB* mb)
     }
     for (k=0;k<32;k++){
         mb->vThr[k] = (int)json_get_number(json_find_element(json_find_member(hw,"vthr"),k)); 
-        //printsend("[%d] - %d\n",k,mb->vthr[k]);
+        //lprintf("[%d] - %d\n",k,mb->vThr[k]);
     }
     for (j=0;j<8;j++){
         mb->tDisc.rmp[j] = (int)json_get_number(json_find_element(json_find_member(json_find_member(hw,"tdisc"),"rmp"),j));	
@@ -162,7 +163,7 @@ int ParseFECHw(JsonNode* value,MB* mb)
         //printsend("[%d] - %d %d %d %d\n",j,mb->tdisc.rmp[j],mb_consts->tdisc.rmpup[j],mb_consts->tdisc.vsi[j],mb_consts->tdisc.vli[j]);
     }
     mb->tCmos.vMax = (int)json_get_number(json_find_member(json_find_member(hw,"tcmos"),"vmax"));
-    mb->tCmos.tacRef = (int)json_get_number(json_find_member(json_find_member(hw,"tcmos"),"tacref"));
+    mb->tCmos.tacRef = (int)json_get_number(json_find_member(json_find_member(hw,"tcmos"),"vtacref"));
     //printsend("%d %d\n",mb->tcmos.vmax,mb_consts->tcmos.tacref);
     for (j=0;j<2;j++){
         mb->tCmos.isetm[j] = (int)json_get_number(json_find_element(json_find_member(json_find_member(hw,"tcmos"),"isetm"),j));
@@ -170,8 +171,8 @@ int ParseFECHw(JsonNode* value,MB* mb)
         //printsend("[%d] - %d %d\n",j,mb->tcmos.isetm[j],mb_consts->tcmos.iseta[j]);
     }
     for (j=0;j<32;j++){
-        mb->tCmos.tacShift[j] = (int)json_get_number(json_find_element(json_find_member(json_find_member(hw,"tcmos"),"tac_shift"),j));
-        //printsend("[%d] - %d\n",j,mb->tcmos.tac_shift[j]);
+        mb->tCmos.tacShift[j] = (int)json_get_number(json_find_element(json_find_member(json_find_member(hw,"tcmos"),"tac_trim"),j));
+        //printf("[%d] - %d\n",j,mb->tCmos.tacShift[j]);
     }
     mb->vInt = (int)json_get_number(json_find_member(hw,"vint"));
     mb->hvRef = (int)json_get_number(json_find_member(hw,"hvref"));
@@ -635,6 +636,7 @@ int PostDebugDocWithID(int crate, int card, char *id, JsonNode* doc)
   return 0;
 }
 
+
 int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id)
 {
   JsonNode *doc = json_mkobject();
@@ -842,31 +844,209 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
   return 0;
 }
 
-int UpdateLocation(const char* mb, const char* db0, const char* db1, const char* db2, const char* db3)
+int UpdateLocation(uint16_t id, int crate, int slot, int position)
 {
   char get_db_address[500];
-  sprintf(get_db_address,"%s/%s/%s",DB_SERVER,DB_BASE_NAME,mb);
+  sprintf(get_db_address,"%s/%s/%04x",DB_SERVER,DB_BASE_NAME,id);
   pouch_request *response = pr_init();
-  pr_set_method(response, GET);
-  pr_set_url(response, get_db_address);
+  pr_set_method(response,GET);
+  pr_set_url(response,get_db_address);
   pr_do(response);
   if (response->httpresponse != 200){
     lprintf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
     return -1;
   }
   JsonNode *doc = json_decode(response->resp.data);
-
   JsonNode *location = json_find_member(doc,"location");
   json_remove_from_parent(location);
   if (CURRENT_LOCATION == PENN_TESTSTAND)
     json_append_member(doc,"location",json_mkstring("penn"));
   else if (CURRENT_LOCATION == ABOVE_GROUND_TESTSTAND)
     json_append_member(doc,"location",json_mkstring("surface"));
-  else if (CURRENT_LOCATION == UNDERGROUND)
-    json_append_member(doc,"location",json_mkstring("underground"));
   else
-    json_append_member(doc,"location",json_mkstring("unknown"));
+    json_append_member(doc,"location",json_mkstring("underground"));
 
+  char put_db_address[500];
+  pouch_request *post_response = pr_init();
+  pr_set_method(post_response, PUT);
+  pr_set_url(post_response,get_db_address);
+  char *data = json_encode(doc);
+  pr_set_data(post_response, data);
+  pr_do(post_response);
+  int ret = 0;
+  if (post_response->httpresponse != 201){
+    lprintf("error code %d\n",(int)post_response->httpresponse);
+    ret = -1;
+  }
+  pr_free(post_response);
+  pr_free(response);
+  json_delete(doc);
+  if(*data){
+    free(data);
+  }
 
+  // now update crate/card/position
+  if (CURRENT_LOCATION == UNDERGROUND){
+    sprintf(get_db_address,"%s/%s/configuration_snoplus",DB_SERVER,DB_BASE_NAME);
+    response = pr_init();
+    pr_set_method(response,GET);
+    pr_set_url(response,get_db_address);
+    pr_do(response);
+    if (response->httpresponse != 200){
+      lprintf("Unable to connect to database. error code %d\n",(int)response->httpresponse);
+      return -1;
+    }
+    doc = json_decode(response->resp.data);
 
+    char idstring[4];
+    char oldidstring[4];
+    int oldboard = 1;
+    sprintf(idstring,"%04x",id);
+
+    // first remove this board from any other position
+    RemoveFromConfig(doc,idstring);
+    // now replace the one we want
+    JsonNode *crates = json_find_member(doc,"crates");
+    JsonNode *thiscrate;
+    for (int i=0;i<json_get_num_mems(crates);i++){
+      JsonNode *one_crate = json_find_element(crates,i);
+      if (json_get_number(json_find_member(one_crate,"id")) == crate){
+            thiscrate = one_crate;
+            break;
+      }
+    }
+
+    if (position == 0){ //fec
+      JsonNode *fecs = json_find_member(thiscrate,"fecs");
+      JsonNode *one_fec = json_find_element(fecs,slot);
+      JsonNode *fec_id = json_find_member(one_fec,"id");
+      json_remove_from_parent(fec_id);
+      if (json_get_string(fec_id) == NULL)
+        oldboard = 0;
+      else
+        sprintf(oldidstring,"%s",json_get_string(fec_id));
+      json_append_member(one_fec,"id",json_mkstring(idstring));
+    }else if (position < 5){ //db
+      JsonNode *fecs = json_find_member(thiscrate,"fecs");
+      JsonNode *one_fec = json_find_element(fecs,slot);
+      JsonNode *dbs = json_find_member(one_fec,"dbs");
+      JsonNode *db_ids[10];
+      for (int j=0;j<4;j++)
+        db_ids[j] = json_find_element(dbs,j);
+      for (int j=0;j<4;j++)
+        json_remove_from_parent(db_ids[j]);
+      for (int j=0;j<4;j++){
+        if (j==(position-1)){
+          if (json_get_string(db_ids[j]) == NULL)
+            oldboard = 0;
+          else
+            sprintf(oldidstring,"%s",json_get_string(db_ids[j]));
+          json_append_element(dbs,json_mkstring(idstring));
+        }else{
+          json_append_element(dbs,db_ids[j]);
+        }
+      }
+    }else if (position == 5){ //pmtic
+      JsonNode *pmtics = json_find_member(thiscrate,"pmtics");
+      JsonNode *pmtic_ids[20];
+      for (int j=0;j<16;j++)
+        pmtic_ids[j] = json_find_element(pmtics,j);
+      for (int j=0;j<16;j++)
+        json_remove_from_parent(pmtic_ids[j]);
+      for (int j=0;j<16;j++){
+        if (j==slot){
+          if (json_get_string(pmtic_ids[j]) == NULL)
+            oldboard = 0;
+          else
+            sprintf(oldidstring,"%s",json_get_string(pmtic_ids[j]));
+          json_append_element(pmtics,json_mkstring(idstring));
+        }else{
+          json_append_element(pmtics,pmtic_ids[j]);
+        }
+      }
+    }
+
+    if (oldboard)
+      RemoveFromConfig(doc,oldidstring);
+
+    post_response = pr_init();
+    pr_set_method(post_response, PUT);
+    pr_set_url(post_response,get_db_address);
+    data = json_encode(doc);
+    pr_set_data(post_response, data);
+    pr_do(post_response);
+    int ret = 0;
+    if (post_response->httpresponse != 201){
+      lprintf("error code %d\n",(int)post_response->httpresponse);
+      ret = -1;
+    }
+
+    pr_free(response);
+    pr_free(post_response);
+    json_delete(doc);
+    if(*data){
+      free(data);
+    }
+
+  }
+
+  return 0;
+}
+
+int RemoveFromConfig(JsonNode *config_doc, char*  idstring)
+{
+  JsonNode *crates = json_find_member(config_doc,"crates");
+  for (int i=0;i<json_get_num_mems(crates);i++){
+    JsonNode *one_crate = json_find_element(crates,i);
+    JsonNode *fecs = json_find_member(one_crate,"fecs");
+    for (int j=0;j<16;j++){
+      JsonNode *one_fec = json_find_element(fecs,j);
+      JsonNode *fec_id = json_find_member(one_fec,"id");
+      if (json_get_string(fec_id) != NULL){
+        if (strncmp(idstring,json_get_string(fec_id),4) == 0){
+          json_remove_from_parent(fec_id);
+          json_append_member(one_fec,"id",json_mknull());
+        }
+      }
+      JsonNode *dbs = json_find_member(one_fec,"dbs");
+      for (int k=0;k<4;k++){
+        JsonNode *db_id = json_find_element(dbs,k);
+        if (json_get_string(db_id) != NULL){
+          if (strncmp(idstring,json_get_string(db_id),4) == 0){
+            JsonNode *db_ids[10];
+            for (int l=0;l<4;l++)
+              db_ids[l] = json_find_element(dbs,l);
+            for (int l=0;l<4;l++)
+              json_remove_from_parent(db_ids[l]);
+            for (int l=0;l<4;l++){
+              if (l==k)
+                json_append_element(dbs,json_mknull());
+              else
+                json_append_element(dbs,db_ids[l]);
+            }
+          }
+        }
+      }
+    }
+    JsonNode *pmtics = json_find_member(one_crate,"pmtics");
+    for (int j=0;j<16;j++){
+      JsonNode *pmtic_id = json_find_element(pmtics,j);
+      if (json_get_string(pmtic_id) != NULL){
+        if (strncmp(idstring,json_get_string(pmtic_id),4) == 0){
+          JsonNode *pmtic_ids[20];
+          for (int k=0;k<16;k++)
+            pmtic_ids[k] = json_find_element(pmtics,k);
+          for (int k=0;k<16;k++)
+            json_remove_from_parent(pmtic_ids[k]);
+          for (int k=0;k<16;k++){
+            if (j==k)
+              json_append_element(pmtics,json_mknull());
+            else
+              json_append_element(pmtics,pmtic_ids[k]);
+          }
+        }
+      }
+    }
+  }
+  return 0;
 }

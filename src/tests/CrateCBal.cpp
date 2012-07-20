@@ -79,6 +79,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
 
         for (int ef=0;ef<32;ef++)
           error_flags[ef] = 0;
+        return_value = 0;
 
         uint32_t select_reg = FEC_SEL*i;
         xl3s[crateNum]->RW(GENERAL_CSR_R + select_reg + WRITE_REG,0xF,&result);
