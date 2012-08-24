@@ -40,7 +40,7 @@ penn_daq: $(OBJ)
 
 tut:
 	python $(CDIR)/tut/tut_gen.py
-	gcc -L/usr/local/lib -lreadline -lncurses -o $(BDIR)/tut $(CDIR)/tut/tut.c $(CFLAGS)
+	gcc -L/usr/local/lib -lreadline -lncurses -o $(BDIR)/tut $(CDIR)/tut/tut.c /usr/local/lib/libreadline.so /usr/lib/libncurses.a $(CFLAGS)
     
 clean: 
 	rm -f $(ODIR)/* $(BDIR)/*
