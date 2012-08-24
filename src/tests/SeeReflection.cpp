@@ -13,6 +13,7 @@
 int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dacValue, float frequency, int updateDB, int finalTest)
 {
   lprintf("*** Starting See Reflection ************\n");
+  lprintf("MAKE SURE YOU HAVE REINITIALIZED WITH TRIGGERS ENABLED FIRST! (-t OPTION IN CRATE_INIT\n");
 
   char channel_results[32][100];
 
