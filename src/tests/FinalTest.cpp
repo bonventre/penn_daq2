@@ -241,9 +241,13 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0); 
 
   if ((0x1<<testCounter) & testMask){
-    lprintf("Ready for see_refl test. Hit enter to begin or type quit to end the final test\n");
+    lprintf("Ready for see_refl test. You should check if the xilinx loaded correctly. If it did, hit enter to continue. Otherwise, power cycle the crate and then type 'init' to crate_init again, or type 'quit' to skip see_refl and end the final test\n");
+
     contConnection->GetInput(comments);
-    if (strncmp("quit",comments,4) != 0){
+    if (strncmp("init",comments,4) == 0){
+      CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0); 
+      SeeReflection(crateNum,slotMask,0xFFFFFFFF,255,1000,updateDB,1);
+    }else if (strncmp("quit",comments,4) != 0){
       SeeReflection(crateNum,slotMask,0xFFFFFFFF,255,1000,updateDB,1);
     }
   }

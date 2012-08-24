@@ -63,7 +63,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
             JsonNode *zdisc_doc = json_find_member(json_find_element(viewrows,0),"value");
             JsonNode *zero_dac = json_find_member(zdisc_doc,"zero_dac");
             for (int k=0;k<32;k++){
-              vthr_zeros[i*32*16+j*32+k] = json_get_number(json_find_element(zero_dac,k));
+              vthr_zeros[i*32*16+j*32+k] = (uint32_t) json_get_number(json_find_element(zero_dac,k));
             }
             json_delete(viewdoc);
             pr_free(zdisc_response);
@@ -102,7 +102,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
             JsonNode *hw = json_find_member(zdisc_doc,"hw");
             JsonNode *zero_dac = json_find_member(zdisc_doc,"zero_dac");
             for (int k=0;k<32;k++){
-              vthr_zeros[i*32*16+j*32+k] = json_get_number(json_find_element(zero_dac,k));
+              vthr_zeros[i*32*16+j*32+k] = (uint32_t) json_get_number(json_find_element(zero_dac,k));
             }
             json_delete(viewdoc);
             pr_free(zdisc_response);

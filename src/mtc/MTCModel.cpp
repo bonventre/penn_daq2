@@ -295,7 +295,7 @@ int MTCModel::LoadMTCADacs(float *voltages)
      raw_dacs array */
   for (i = 0; i < 14; i++) {
     //raw_dacs[i] = ((2048 * rdbuf)/5000) + 2048;
-    raw_dacs[i] = MTCA_DAC_SLOPE * voltages[i] + MTCA_DAC_OFFSET;
+    raw_dacs[i] = (uint16_t) (MTCA_DAC_SLOPE * voltages[i] + MTCA_DAC_OFFSET);
   }
 
   LoadMTCADacsByCounts(raw_dacs);

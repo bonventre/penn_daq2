@@ -68,13 +68,13 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     int num_crates = json_get_num_mems(crates);
     for (int i=0;i<num_crates;i++){
       JsonNode *one_crate = json_find_element(crates,i);
-      int crate_num = json_get_number(json_find_member(one_crate,"crate_id"));
+      int crate_num = (int) json_get_number(json_find_member(one_crate,"crate_id"));
       crateMask |= (0x1<<crate_num);
       JsonNode *slots = json_find_member(one_crate,"slots");
       int num_slots = json_get_num_mems(slots);
       for (int j=0;j<num_slots;j++){
         JsonNode *one_slot = json_find_element(slots,j);
-        int slot_num = json_get_number(json_find_member(one_slot,"slot_id"));
+        int slot_num = (int) json_get_number(json_find_member(one_slot,"slot_id"));
         slotMasks[crate_num] |= (0x1<<slot_num);
       }
     }

@@ -356,7 +356,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                       break;
                     }
                     // pick new points to test
-                    tmp_bal[j] = x1_bal[j] + (x2_bal[j]-x1_bal[j])*(f1[j]/(f1[j]-f2[j]));
+                    tmp_bal[j] = x1_bal[j] + (int) ((x2_bal[j]-x1_bal[j])*(f1[j]/(f1[j]-f2[j])));
 
                     // keep track of best guess
                     if (fabs(f1[j] < fabs(f2[j])))
