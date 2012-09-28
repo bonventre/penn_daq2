@@ -590,9 +590,12 @@ int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
 
   SetupDebugDoc(crateNum,slotNum,doc);
 
+  char new_id[500];
+  GetNewID(new_id);
+
   // TODO: this might be leaking a lot...
   char put_db_address[500];
-  sprintf(put_db_address,"%s/%s",DB_SERVER,DB_BASE_NAME);
+  sprintf(put_db_address,"%s/%s/%s",DB_SERVER,DB_BASE_NAME,new_id);
   pouch_request *post_response = pr_init();
   pr_set_method(post_response, PUT);
   pr_set_url(post_response, put_db_address);
