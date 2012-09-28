@@ -594,7 +594,7 @@ int PostDebugDoc(int crateNum, int slotNum, JsonNode* doc, int updateConfig)
   char put_db_address[500];
   sprintf(put_db_address,"%s/%s",DB_SERVER,DB_BASE_NAME);
   pouch_request *post_response = pr_init();
-  pr_set_method(post_response, POST);
+  pr_set_method(post_response, PUT);
   pr_set_url(post_response, put_db_address);
   char *data = json_encode(doc);
   pr_set_data(post_response, data);
