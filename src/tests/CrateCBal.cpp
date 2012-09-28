@@ -273,23 +273,40 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                 if (((0x1<<j) & active_chans) && (is_balanced == 0)){
                   fmean1 = 0;
                   fmean2 = 0;
+                  int zero1flag = 0;
+                  int zero2flag = 0;
                   if (wg == 0){
                     // find the average difference between qhl and qhs
                     for (int k=0;k<16;k++){
                       fmean1 += x1[j].thiscell[k].qhlbar-x1[j].thiscell[k].qhsbar;
                       fmean2 += x2[j].thiscell[k].qhlbar-x2[j].thiscell[k].qhsbar;
+                      if (x1[j].thiscell[k].qhlbar == 0 || x1[j].thiscell[k].qhsbar == 0){
+                        zero1flag = 1;
+                      }
+                      if (x2[j].thiscell[k].qhlbar == 0 || x2[j].thiscell[k].qhsbar == 0){
+                        zero2flag = 1;
+                      }
                     }
                   }else{
                     // find the average difference between qhl and qhs
                     for (int k=0;k<16;k++){
                       fmean1 += x1[j].thiscell[k].qlxbar-x1l[j].thiscell[k].qlxbar;
                       fmean2 += x2[j].thiscell[k].qlxbar-x2l[j].thiscell[k].qlxbar;
+                      if (x1[j].thiscell[k].qlxbar == 0 || x1l[j].thiscell[k].qlxbar == 0){
+                        zero1flag = 1;
+                      }
+                      if (x2[j].thiscell[k].qlxbar == 0 || x2l[j].thiscell[k].qlxbar == 0){
+                        zero2flag = 1;
+                      }
                     }
                   }
                   f1[j] = fmean1/16;
                   f2[j] = fmean2/16;
                   // check if either high or low was balanced
-                  if (fabs(f2[j]) < acceptable_diff){
+                  if (fabs(f2[j]) < acceptable_diff && !zero2flag){
+                    if (x2_bal[j] == 225){
+                      printf("acceptable at 225, %d\n",zero2flag);
+                    }
                     balanced_chans |= 0x1<<j;
                     if (wg == 0){
                       chan_param[j].hi_balanced = 1;
@@ -299,7 +316,10 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                       chan_param[j].low_gain_balance = x2_bal[j];
                     }
                     active_chans &= ~(0x1<<j);
-                  }else if (fabs(f1[j]) < acceptable_diff){
+                  }else if (fabs(f1[j]) < acceptable_diff && !zero1flag){
+                    if (x2_bal[j] == 225){
+                      printf("acceptable at 225, %d\n",zero1flag);
+                    }
                     balanced_chans |= 0x1<<j;
                     if (wg == 0){
                       chan_param[j].hi_balanced = 1;
@@ -356,7 +376,11 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                       break;
                     }
                     // pick new points to test
-                    tmp_bal[j] = x1_bal[j] + (int) ((x2_bal[j]-x1_bal[j])*(f1[j]/(f1[j]-f2[j])));
+                    if (zero1flag || zero2flag){
+                      tmp_bal[j] = x1_bal[j] + (int) ((x2_bal[j]-x1_bal[j])/2.0);
+                    }else{
+                      tmp_bal[j] = x1_bal[j] + (int) ((x2_bal[j]-x1_bal[j])*(f1[j]/(f1[j]-f2[j])));
+                    }
 
                     // keep track of best guess
                     if (fabs(f1[j] < fabs(f2[j])))

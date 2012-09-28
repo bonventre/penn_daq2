@@ -475,6 +475,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     xl3s[crateNum]->LoadsDac(dacNum,dacValue,slotNum);
+    printf("loaded dac %d\n",dacNum);
     UnlockConnections(0,0x1<<crateNum);
 
   }else if (strncmp(input,"sbc_control",11) == 0){
