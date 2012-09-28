@@ -44,6 +44,7 @@
 #define READ_LOCAL_VOLTAGE_ID		  (0x2D) //!< read a single voltage on XL3 
 #define CHECK_TOTAL_COUNT_ID	    (0x2E) //!< readout cmos total count register	
 #define SET_ALARM_DAC_ID          (0x2F) //!< Set one or many of the voltage alarm dacs
+#define SET_ALARM_LEVELS_ID          (0x30) //!< Set one or many of the voltage alarm dacs
 // HV Tasks
 #define SET_HV_RELAYS_ID          (0x40) //!< turns on/off hv relays
 #define HV_READBACK_ID			      (0x42) //!< reads voltage and current	
@@ -311,6 +312,12 @@ typedef struct{
 typedef struct{
   uint32_t dacs[3];
 } SetAlarmDacArgs;
+
+typedef struct{
+  uint32_t alarm;
+  float highLevel;
+  float lowLevel;
+} SetAlarmLevelsArgs;
 
 typedef struct{
   uint32_t mask1;

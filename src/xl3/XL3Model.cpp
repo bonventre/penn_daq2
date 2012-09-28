@@ -415,3 +415,17 @@ int XL3Model::LoadTacbits(uint32_t slotNum, uint16_t *tacbits)
 
   return 0;
 }
+
+int XL3Model::SetAlarmDacs(uint32_t *dacs)
+{
+  XL3Packet packet;
+  packet.header.packetType = SET_ALARM_DAC_ID;
+  SetAlarmDacArgs *args = (SetAlarmDacArgs *) packet.payload;
+  for (int i=0;i<3;i++)
+    args->dacs[i] = dacs[i];
+  SwapLongBlock(packet.payload,sizeof(SetAlarmDacArgs)/sizeof(uint32_t));
+  SendCommand(&packet);
+  return 0;
+}
+
+

@@ -10,6 +10,7 @@ int ChangeMode(int crateNum, int mode, uint32_t dataAvailMask);
 int ReadLocalVoltage(int crateNum, int voltage);
 int HVReadback(int crateNum);
 int SetAlarmDac(int crateNum, uint32_t *dacs);
+int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, int alarm);
 int LoadRelays(int crateNum, uint32_t *patterns);
 int ReadBundle(int crateNum, int slotNum, int quiet);
 

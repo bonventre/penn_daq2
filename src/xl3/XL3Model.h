@@ -38,6 +38,7 @@ class XL3Model{
     int LoadCrateAddr(uint16_t slotMask);
     int SetupChargeInjection(uint32_t slotMask, uint32_t chanMask, uint32_t dacValue);
     int LoadTacbits(uint32_t slotNum, uint16_t *tacbits);
+    int SetAlarmDacs(uint32_t *dacs);
 
     int IsConnected(){return fLink->IsConnected();};
     int CheckLock();

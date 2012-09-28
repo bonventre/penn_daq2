@@ -338,6 +338,24 @@ void *ControllerLink::ProcessCommand(void *arg)
     HVReadback(crateNum);
     UnlockConnections(0,0x1<<crateNum);
 
+  }else if (strncmp(input,"set_alarm_level",15) == 0){
+    if (GetFlag(input,'h')){
+      lprintf("Usage: set_alarm_level -c [crate num (int)] -l [lower limit] -u [upper limit] -a [select alarm]\n"
+          "0: Vcc\n1:Vee\n2:Vp24\n3:Vm24\n4:Vp8\n5:Temp\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    float lowAlarm = GetFloat(input,'l',-9999.0);
+    float highAlarm = GetFloat(input,'u',-9999.0);
+    int alarm = GetInt(input,'a',0);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      lprintf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    SetAlarmLevel(crateNum,lowAlarm,highAlarm,alarm);
+    UnlockConnections(0,0x1<<crateNum);
+
   }else if (strncmp(input,"set_alarm_dac",13) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_alarm_dac -c [crate num (int)] -0 [dac 0 setting (hex)] -1 [dac 1] -2 [dac 2]\n");

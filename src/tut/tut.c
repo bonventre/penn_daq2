@@ -67,6 +67,7 @@ COMMAND commands[] = {
     { "change_mode", (Function *)NULL, (char *)NULL },
     { "read_local_voltage", (Function *)NULL, (char *)NULL },
     { "hv_readback", (Function *)NULL, (char *)NULL },
+    { "set_alarm_level", (Function *)NULL, (char *)NULL },
     { "set_alarm_dac", (Function *)NULL, (char *)NULL },
     { "fr", (Function *)NULL, (char *)NULL },
     { "fw", (Function *)NULL, (char *)NULL },

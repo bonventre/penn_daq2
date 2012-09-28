@@ -351,6 +351,8 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
           mb_consts->tr20.tDelay[k] = 0;
           mb_consts->tr20.tWidth[k] = 0;
         }
+      }else{
+        lprintf("ENABLING TRIGGERS!\n");
       }
       xl3s[crateNum]->SendCommand(&packet,0);
 
@@ -509,15 +511,8 @@ int HVReadback(int crateNum)
 
 int SetAlarmDac(int crateNum, uint32_t *dacs)
 {
-  XL3Packet packet;
-  packet.header.packetType = SET_ALARM_DAC_ID;
-  SetAlarmDacArgs *args = (SetAlarmDacArgs *) packet.payload;
-  for (int i=0;i<3;i++)
-    args->dacs[i] = dacs[i];
-  SwapLongBlock(packet.payload,sizeof(SetAlarmDacArgs)/sizeof(uint32_t));
-
   try{
-    xl3s[crateNum]->SendCommand(&packet);
+    xl3s[crateNum]->SetAlarmDacs(dacs);
     lprintf("Dacs set\n");
   }
   catch(const char* s){
@@ -526,6 +521,88 @@ int SetAlarmDac(int crateNum, uint32_t *dacs)
 
   return 0;
 }
+
+int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, int alarm)
+{
+  XL3Packet packet;
+  packet.header.packetType = SET_ALARM_LEVELS_ID;
+  SetAlarmLevelsArgs *args = (SetAlarmLevelsArgs *) packet.payload;
+  args->alarm = alarm;
+  args->lowLevel = lowVoltage;
+  args->highLevel = highVoltage;
+  SwapLongBlock(packet.payload,sizeof(SetAlarmLevelsArgs)/sizeof(uint32_t));
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    lprintf("Alarm levels updated.\n");
+  }
+  catch(const char* s){
+    lprintf("SetAlarmLevel: %s\n",s);
+  }
+  return 0;
+}
+/*
+
+  uint32_t dacs[3];
+  for (int i=0;i<3;i++)
+    dacs[i] = 0xFFFFFFFF;
+  int chipnum = 0;
+  uint32_t dacnum = 0;
+  float scale = 1.0;
+  if (alarm == 0){ //vcc
+    chipnum = 2;
+    dacnum = 0; 
+    scale = 0.5;
+  }else if (alarm == 1){ //vee
+    chipnum = 0;
+    dacnum = 0;
+    scale = 0.5;
+  }else if (alarm == 2){ //vp24
+    chipnum = 1;
+    dacnum = 0;
+    scale = 0.1754;
+  }else if (alarm == 3){ //vm24
+    chipnum = 0;
+    dacnum = 2;
+    scale = 0.1754;
+  }else if (alarm == 4){ //vp8
+    chipnum = 2;
+    dacnum = 2;
+    scale = 0.5;
+  }else if (alarm == 5){ //temp
+    chipnum = 1;
+    dacnum = 2;
+    scale = 1.0;
+  }
+  dacnum += level;
+
+  dacs[chipnum] = 0x0;
+  dacs[chipnum] |= (dacnum << 16);
+  
+  uint32_t dacsetting = 0;
+  if ((voltage*scale) >= 0){
+    dacsetting = (uint32_t) (((voltage*scale)/(2.5*4.0))*2048.0);
+    if (dacsetting > 2047)
+      dacsetting = 2047;
+  }else{
+    dacsetting = (uint32_t) ((voltage*scale)/(2.5*4)*2048+4096);
+    if (dacsetting < 2048)
+      dacsetting = 2048;
+  }
+
+  dacs[chipnum] |= (dacsetting << 4);
+  lprintf("writing: %08x %08x %08x\n",dacs[0],dacs[1],dacs[2]);
+
+  try{
+    xl3s[crateNum]->SetAlarmDacs(dacs);
+    lprintf("Dacs set\n");
+  }
+  catch(const char* s){
+    lprintf("SetAlarmLevel: %s\n",s);
+  }
+
+  return 0;
+}
+*/
 
 int LoadRelays(int crateNum, uint32_t *patterns)
 {
