@@ -263,8 +263,8 @@ pouch_request *pr_do(pouch_request *pr){
         } // THIS FIXED HEAD REQUESTS
 
         // add the custom headers
-        pr_add_header(pr, "Transfer-Encoding: chunked");
-        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, pr->headers);
+        //pr_add_header(pr, "Transfer-Encoding: chunked");
+        //curl_easy_setopt(curl, CURLOPT_HTTPHEADER, pr->headers);
 
         // make the request and store the response
         pr->curlcode = curl_easy_perform(curl);
