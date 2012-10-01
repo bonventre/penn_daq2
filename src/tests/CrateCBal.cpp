@@ -302,6 +302,13 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                   }
                   f1[j] = fmean1/16;
                   f2[j] = fmean2/16;
+                  if (wg == 0){
+                  //printf("\nch%d H 1: %d, %f. QHL: %f, QHS: %f\n",j,x1_bal[j],f1[j],x1[j].thiscell[0].qhlbar,x1[j].thiscell[0].qhsbar);
+                  //printf("ch%d H 2: %d, %f. QHL: %f, QHS: %f\n",j,x2_bal[j],f2[j],x2[j].thiscell[0].qhlbar,x2[j].thiscell[0].qhsbar);
+                  }else{
+                  //printf("\nch%d L 1: %d, %f. QLS: %f, QLL: %f\n",j,x1_bal[j],f1[j],x1[j].thiscell[0].qlxbar,x1l[j].thiscell[0].qlxbar);
+                  //printf("ch%d L 2: %d, %f. QLS: %f, QLL: %f\n",j,x2_bal[j],f2[j],x2[j].thiscell[0].qlxbar,x2l[j].thiscell[0].qlxbar);
+                  }
                   // check if either high or low was balanced
                   if (fabs(f2[j]) < acceptable_diff && !zero2flag){
                     if (x2_bal[j] == 225){
@@ -389,7 +396,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
                       bestguess_bal[j] = x2_bal[j];
 
                     // make sure we arent stuck
-                    if (tmp_bal[j] == x2_bal[j]){
+                    if (tmp_bal[j] == x2_bal[j] || tmp_bal[j] == x1_bal[j]){
                       lprintf("channel %d in local trap. Nudging\n",j);
                       int kick = (int) (rand()%35) + 150;
                       tmp_bal[j] = (tmp_bal[j] >= 45) ? (tmp_bal[j]-kick) : (tmp_bal[j] + kick);
