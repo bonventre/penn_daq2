@@ -527,9 +527,12 @@ int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, int alarm)
   XL3Packet packet;
   packet.header.packetType = SET_ALARM_LEVELS_ID;
   SetAlarmLevelsArgs *args = (SetAlarmLevelsArgs *) packet.payload;
-  args->alarm = alarm;
-  args->lowLevel = lowVoltage;
-  args->highLevel = highVoltage;
+  for (int i=0;i<6;i++){
+    args->lowLevels[i] = -999;
+    args->highLevels[i] = -999;
+  }
+  args->lowLevels[alarm] = lowVoltage;
+  args->highLevels[alarm] = highVoltage;
   SwapLongBlock(packet.payload,sizeof(SetAlarmLevelsArgs)/sizeof(uint32_t));
   try{
     xl3s[crateNum]->SendCommand(&packet);

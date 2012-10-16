@@ -11,6 +11,12 @@ int BoardID(int crateNum, uint32_t slotMask, int updateLocation)
   XL3Packet packet;
   BoardIDReadArgs *args = (BoardIDReadArgs *) packet.payload;
   BoardIDReadResults *results = (BoardIDReadResults *) packet.payload;
+  uint16_t ids[16*6];
+  int crates[16*6];
+  int slots[16*6];
+  int positions[16*6];
+  int boardcount = 0;
+  
   try{
 
     lprintf("SLOT ID: MB     DB1     DB2     DB3     DB4     HVC\n");
@@ -39,13 +45,21 @@ int BoardID(int crateNum, uint32_t slotMask, int updateLocation)
               pass = 0;
           }
           if (pass && updateLocation){
-            UpdateLocation(results->id,crateNum,i,j-1);
+            ids[boardcount] = results->id;
+            crates[boardcount] = crateNum;
+            slots[boardcount] = i;
+            positions[boardcount] = j-1;
+            boardcount++;
           }
         }
         lprintf("\n");
       }
     }
 
+    if (updateLocation){
+      lprintf("Updating location...\n");
+      UpdateLocation(ids,crates,slots,positions,boardcount);
+    }
 
   }
   catch(const char* s){

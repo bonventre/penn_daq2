@@ -26,7 +26,14 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
   uint32_t *vthr_zeros = (uint32_t *) malloc(sizeof(uint32_t) * 10000);
   uint32_t *current_vthr = (uint32_t *) malloc(sizeof(uint32_t) * 10000);
+
+  // malloc some room to store the total counts in between measurements
+  uint32_t *readout_noise = (uint32_t *) malloc(sizeof(uint32_t) * 10000);
+
   char get_db_address[500];
+
+  try {
+
   if (useDebug){
     // use zdisc debug values
     for (int i=0;i<19;i++){
@@ -160,10 +167,8 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   // still firing at the same rate as the pulser, we will step down each
   // channel one at a time, to see if without the others going crazy we can
   // lower it further. 
-
-  // malloc some room to store the total counts in between measurements
-  uint32_t *readout_noise = (uint32_t *) malloc(sizeof(uint32_t) * 10000);
   // set up masks of which channels we've found the right threshold
+
   uint32_t found_above[19][16];
   uint32_t found_below[19][16];
   uint32_t done_channel[19][16];
@@ -427,6 +432,12 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
       xl3s[c]->ChangeMode(INIT_MODE,slotMasks[c]);
 
   mtc->DisablePulser();
+
+  }
+  catch(const char* s){
+    lprintf("FindNoise: %s\n",s);
+  }
+
   free(readout_noise);
   free(vthr_zeros);
   free(current_vthr);

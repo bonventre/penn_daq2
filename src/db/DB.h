@@ -31,8 +31,8 @@ int PostDebugDoc(int crate, int card, JsonNode* doc, int updateConfig=1);
 int PostDebugDocWithID(int crate, int card, char *id, JsonNode* doc);
 int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id);
 
-int UpdateLocation(uint16_t id, int crate, int slot, int position);
-int RemoveFromConfig(JsonNode *config_doc, char*  idstring);
+int UpdateLocation(uint16_t *ids, int *crates, int *slots, int *positions, int boardcount);
+int RemoveFromConfig(JsonNode *config_doc, char ids[][5], int boardcount);
 
 #endif
 

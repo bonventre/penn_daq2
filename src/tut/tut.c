@@ -110,6 +110,7 @@ COMMAND commands[] = {
     { "get_ttot", (Function *)NULL, (char *)NULL },
     { "set_ttot", (Function *)NULL, (char *)NULL },
     { "vmon", (Function *)NULL, (char *)NULL },
+    { "local_vmon", (Function *)NULL, (char *)NULL },
     { "zdisc", (Function *)NULL, (char *)NULL },
     { "run_pedestals_end", (Function *)NULL, (char *)NULL },
     { "run_pedestals_end_mtc", (Function *)NULL, (char *)NULL },

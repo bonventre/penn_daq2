@@ -23,6 +23,7 @@
 #include "TriggerScan.h"
 #include "TTot.h"
 #include "VMon.h"
+#include "LocalVMon.h"
 #include "ZDisc.h"
 #include "RunPedestals.h"
 #include "FinalTest.h"
@@ -596,7 +597,7 @@ void *ControllerLink::ProcessCommand(void *arg)
    UnlockConnections(1,0x0);
   }else if (strncmp(input,"set_mtca_thresholds",19) == 0){
     if (GetFlag(input,'h')){
-      lprintf("Usage: set_mtca_thresholds -(00-13) [voltage in volts (float)] -v [set all voltages (float)]\n");
+      lprintf("Usage: set_mtca_thresholds -(00-13) [voltage in millivolts (float)] -v [set all voltages (float)]\n");
       return NULL;
     }
 
@@ -1118,6 +1119,21 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     VMon(crateNum,slotMask,update);
     UnlockConnections(0,0x1<<crateNum);
+
+  }else if (strncmp(input,"local_vmon",10) == 0){
+    if (GetFlag(input,'h')){
+      lprintf("Usage: local_vmon -c [crate num (int)]\n");
+      return NULL;
+    }
+    int crateNum = GetInt(input,'c',2);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      lprintf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    LocalVMon(crateNum);
+    UnlockConnections(0,0x1<<crateNum);
+
 
   }else if (strncmp(input,"zdisc",5) == 0){
     if (GetFlag(input,'h')){
