@@ -85,7 +85,8 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       for (int i=0;i<16;i++){
         if ((0x1<<i) & slotMask){
           pouch_request *hw_response = pr_init();
-          sprintf(get_db_address,"%s/%s/%s/get_fec_by_generated?startkey=[%d,%d,{}]&endkey=[%d,%d]&descending=True",FECDB_SERVER,FECDB_BASE_NAME,FECDB_VIEWDOC,crateNum,i,crateNum,i);
+          sprintf(get_db_address,"%s/%s/%s/get_fec_by_generated?startkey=[%d,%d,{}]&endkey=[%d,%d]&descending=true",FECDB_SERVER,FECDB_BASE_NAME,FECDB_VIEWDOC,crateNum,i,crateNum,i);
+          printf(".%s.\n",get_db_address);
           pr_set_method(hw_response, GET);
           pr_set_url(hw_response, get_db_address);
           pr_do(hw_response);
@@ -531,8 +532,23 @@ int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, int alarm)
     args->lowLevels[i] = -999;
     args->highLevels[i] = -999;
   }
-  args->lowLevels[alarm] = lowVoltage;
-  args->highLevels[alarm] = highVoltage;
+  if (alarm < 6 && alarm >= 0){
+    args->lowLevels[alarm] = lowVoltage;
+    args->highLevels[alarm] = highVoltage;
+  }else{
+    args->lowLevels[0] = 2;
+    args->highLevels[0] = 7;
+    args->lowLevels[1] = -7;
+    args->highLevels[1] = -2;
+    args->lowLevels[2] = 20;
+    args->highLevels[2] = 28;
+    args->lowLevels[3] = -28;
+    args->highLevels[3] = -20;
+    args->lowLevels[4] = -5;
+    args->highLevels[4] = 5;
+    args->lowLevels[5] = 0;
+    args->highLevels[5] = 60;
+  }
   SwapLongBlock(packet.payload,sizeof(SetAlarmLevelsArgs)/sizeof(uint32_t));
   try{
     xl3s[crateNum]->SendCommand(&packet);
@@ -545,18 +561,18 @@ int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, int alarm)
 }
 /*
 
-  uint32_t dacs[3];
-  for (int i=0;i<3;i++)
-    dacs[i] = 0xFFFFFFFF;
-  int chipnum = 0;
-  uint32_t dacnum = 0;
-  float scale = 1.0;
-  if (alarm == 0){ //vcc
-    chipnum = 2;
-    dacnum = 0; 
-    scale = 0.5;
-  }else if (alarm == 1){ //vee
-    chipnum = 0;
+   uint32_t dacs[3];
+   for (int i=0;i<3;i++)
+   dacs[i] = 0xFFFFFFFF;
+   int chipnum = 0;
+   uint32_t dacnum = 0;
+   float scale = 1.0;
+   if (alarm == 0){ //vcc
+   chipnum = 2;
+   dacnum = 0; 
+   scale = 0.5;
+   }else if (alarm == 1){ //vee
+   chipnum = 0;
     dacnum = 0;
     scale = 0.5;
   }else if (alarm == 2){ //vp24

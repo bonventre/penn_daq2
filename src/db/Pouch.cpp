@@ -57,6 +57,10 @@ pouch_request *pr_init(void){
        object.
      */
     pouch_request *pr = new pouch_request;
+    pr->method = NULL;
+    pr->url = NULL;
+    pr->usrpwd = NULL;
+    pr->headers = NULL;
 
     // initializes the request buffer
     pr->req.offset = pr->req.data = NULL;
