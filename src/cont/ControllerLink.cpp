@@ -341,20 +341,22 @@ void *ControllerLink::ProcessCommand(void *arg)
 
   }else if (strncmp(input,"set_alarm_level",15) == 0){
     if (GetFlag(input,'h')){
-      lprintf("Usage: set_alarm_level -c [crate num (int)] -l [lower limit] -u [upper limit] -a [select alarm]\n"
+      lprintf("Usage: set_alarm_level -c [crate num (int)] -l/L [lower limit (float/int dac value)] -u/U [upper limit (float/int dac value)]  -a [select alarm]\n"
           "0: Vcc\n1:Vee\n2:Vp24\n3:Vm24\n4:Vp8\n5:Temp\n");
       return NULL;
     }
     int crateNum = GetInt(input,'c',2);
-    float lowAlarm = GetFloat(input,'l',-9999.0);
-    float highAlarm = GetFloat(input,'u',-9999.0);
+    float lowAlarm = GetFloat(input,'l',-999.0);
+    float highAlarm = GetFloat(input,'u',-999.0);
+    uint32_t lowDac = (uint32_t) GetInt(input,'L',0xFFFFFFFF);
+    uint32_t highDac = (uint32_t) GetInt(input,'U',0xFFFFFFFF);
     int alarm = GetInt(input,'a',0);
     int busy = LockConnections(0,0x1<<crateNum);
     if (busy){
       lprintf("Those connections are currently in use.\n");
       return NULL;
     }
-    SetAlarmLevel(crateNum,lowAlarm,highAlarm,alarm);
+    SetAlarmLevel(crateNum,lowAlarm,highAlarm,lowDac,highDac,alarm);
     UnlockConnections(0,0x1<<crateNum);
 
   }else if (strncmp(input,"set_alarm_dac",13) == 0){

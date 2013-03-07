@@ -316,6 +316,8 @@ typedef struct{
 typedef struct{
   float highLevels[6];
   float lowLevels[6];
+  uint32_t highDacs[6];
+  uint32_t lowDacs[6];
 } SetAlarmLevelsArgs;
 
 typedef struct{
