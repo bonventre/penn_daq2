@@ -46,6 +46,7 @@ char ORCA_READOUT_PATH[100];
 char DB_SERVER[100];
 char FECDB_SERVER[100];
 
+char *PENN_DAQ_ROOT;
 
 
 struct event_base *evBase;
@@ -131,6 +132,12 @@ void SwapShortBlock(void* p, int32_t n)
 
 int readConfigurationFile()
 {
+
+  PENN_DAQ_ROOT = getenv("PENN_DAQ_ROOT2");
+  if (PENN_DAQ_ROOT == NULL){
+    printf("You need to set the environment variable PENN_DAQ_ROOT2 to the penn_daq directory\n");
+    exit(-1);
+  }
   FILE *config_file;
   char filename[1000];
   sprintf(filename,"%s/%s",PENN_DAQ_ROOT,CONFIG_FILE_LOC);
@@ -156,7 +163,7 @@ int readConfigurationFile()
     char *var_name,*var_value;
     var_name = strtok(line_in[i],"=");
     if (var_name != NULL){
-      var_value = strtok(NULL,"=");
+      var_value = strtok(NULL,"\n");
       if (var_name[0] != '#' && var_value != NULL){
         if (strcmp(var_name,"NEED_TO_SWAP")==0){
           NEED_TO_SWAP = atoi(var_value);
