@@ -43,10 +43,12 @@ int XL3Model::RW(uint32_t address, uint32_t data, uint32_t *result)
 
 int XL3Model::CheckLock()
 {
-  if (fLink->IsConnected() && !fLink->IsLocked())
-    return 0;
-  else
-    return 1;
+  if (!fLink->IsConnected())
+    return NO_CONNECTION_FLAG;
+  if (fLink->IsLocked())
+    return BUSY_CONNECTION_FLAG;
+
+  return 0;
 }
 
 int XL3Model::SendCommand(XL3Packet *packet,int withResponse, int timeout)

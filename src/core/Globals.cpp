@@ -53,25 +53,32 @@ struct event_base *evBase;
 
 int LockConnections(int sbc, uint32_t xl3List)
 {
-  int failFlag = 0;
+  int busyFlag = 0;
+  int ncFlag = 0;
   pthread_mutex_lock(&startTestLock);
   if (sbc == 1){
-    if (mtc->CheckLock())
-      failFlag = 1;
+    int check = mtc->CheckLock();
+    if (check == BUSY_CONNECTION_FLAG)
+      busyFlag = 1;
+    if (check == NO_CONNECTION_FLAG)
+      ncFlag = 1;
   }
   if (sbc == 2){
-    if (mtc->CheckLock() == 2)
-      failFlag = 1;
+    if (mtc->CheckLock() == BUSY_CONNECTION_FLAG)
+      busyFlag = 1;
   }
   for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & xl3List){
-      if (xl3s[i]->CheckLock()){
-        failFlag = 1;
+      int check = xl3s[i]->CheckLock();
+      if (check == BUSY_CONNECTION_FLAG)
+        busyFlag = 1;
+      if (check == NO_CONNECTION_FLAG){
+        ncFlag = 1;
       }
     }
   }
 
-  if (!failFlag){
+  if (!busyFlag && !ncFlag){
     if (sbc){
       mtc->Lock();
     }
@@ -82,7 +89,7 @@ int LockConnections(int sbc, uint32_t xl3List)
     }
   }
   pthread_mutex_unlock(&startTestLock);
-  return failFlag;
+  return busyFlag+10*ncFlag;
 }
 
 int UnlockConnections(int sbc, uint32_t xl3List)

@@ -1,6 +1,9 @@
 #ifndef _GENERIC_LINK_H
 #define _GENERIC_LINK_H
 
+#define BUSY_CONNECTION_FLAG 2
+#define NO_CONNECTION_FLAG 1
+
 #include "NetUtils.h"
 
 class GenericLink{
