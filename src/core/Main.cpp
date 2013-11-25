@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
   ignore_sigpipe();
   readConfigurationFile();
 
-  /*
+  printf("Trying to connect to %s\n",DB_SERVER);
   pouch_request *pr = pr_init();
   pr = db_get(pr, DB_SERVER, DB_BASE_NAME);
   pr_do(pr);
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     lprintf("Connected to database: http response code %d\n",(int)pr->httpresponse);
   }
   pr_free(pr);
-  */
+  
   lprintf("current location is %d\n",CURRENT_LOCATION);
 
   int err = setupListeners();

@@ -561,6 +561,7 @@ float WordToVoltage(int alarm, uint32_t word)
 
 int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, uint32_t lowDac, uint32_t highDac, int alarm)
 {
+  printf("%f %f %u %u\n",lowVoltage,highVoltage,lowDac,highDac);
   XL3Packet packet;
   packet.header.packetType = SET_ALARM_LEVELS_ID;
   SetAlarmLevelsArgs *args = (SetAlarmLevelsArgs *) packet.payload;
@@ -571,17 +572,17 @@ int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, uint32_t lo
     args->highDacs[i] = 0xFFFFFFFF;
   }
   if (alarm < 6 && alarm >= 0){
-    if (lowVoltage == -999.0){
+    if (lowVoltage == -999.0 && lowDac != 0xFFFFFFFF){
       args->lowDacs[alarm] = lowDac;
       printf("Set %d low to %f (%u)\n",alarm,WordToVoltage(alarm,lowDac),lowDac);
-    }else{
+    }else if (lowVoltage != -999.0){
       args->lowLevels[alarm] = lowVoltage;
       printf("Set %d low to %f (%u)\n",alarm,lowVoltage,VoltageToWord(alarm,lowVoltage));
     }
-    if (highVoltage == -999.0){
+    if (highVoltage == -999.0 && highDac != 0xFFFFFFFF){
       args->highDacs[alarm] = highDac;
       printf("Set %d high to %f (%u)\n",alarm,WordToVoltage(alarm,highDac),highDac);
-    }else{
+    }else if (highVoltage != -999.0){
       args->highLevels[alarm] = highVoltage;
       printf("Set %d high to %f (%u)\n",alarm,highVoltage,VoltageToWord(alarm,highVoltage));
     }
