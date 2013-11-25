@@ -98,10 +98,10 @@ int MTCModel::RegRead(uint32_t address, uint32_t *data)
 
 int MTCModel::CheckLock()
 {
-  if (fLink->IsLocked())
-    return 2;
   if (!fLink->IsConnected())
-    return 1;
+    return NO_CONNECTION_FLAG;
+  if (fLink->IsLocked())
+    return BUSY_CONNECTION_FLAG;
   return 0;
 }
 

@@ -46,31 +46,39 @@ char ORCA_READOUT_PATH[100];
 char DB_SERVER[100];
 char FECDB_SERVER[100];
 
+char *PENN_DAQ_ROOT;
 
 
 struct event_base *evBase;
 
 int LockConnections(int sbc, uint32_t xl3List)
 {
-  int failFlag = 0;
+  int busyFlag = 0;
+  int ncFlag = 0;
   pthread_mutex_lock(&startTestLock);
   if (sbc == 1){
-    if (mtc->CheckLock())
-      failFlag = 1;
+    int check = mtc->CheckLock();
+    if (check == BUSY_CONNECTION_FLAG)
+      busyFlag = 1;
+    if (check == NO_CONNECTION_FLAG)
+      ncFlag = 1;
   }
   if (sbc == 2){
-    if (mtc->CheckLock() == 2)
-      failFlag = 1;
+    if (mtc->CheckLock() == BUSY_CONNECTION_FLAG)
+      busyFlag = 1;
   }
   for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & xl3List){
-      if (xl3s[i]->CheckLock()){
-        failFlag = 1;
+      int check = xl3s[i]->CheckLock();
+      if (check == BUSY_CONNECTION_FLAG)
+        busyFlag = 1;
+      if (check == NO_CONNECTION_FLAG){
+        ncFlag = 1;
       }
     }
   }
 
-  if (!failFlag){
+  if (!busyFlag && !ncFlag){
     if (sbc){
       mtc->Lock();
     }
@@ -81,7 +89,7 @@ int LockConnections(int sbc, uint32_t xl3List)
     }
   }
   pthread_mutex_unlock(&startTestLock);
-  return failFlag;
+  return busyFlag+10*ncFlag;
 }
 
 int UnlockConnections(int sbc, uint32_t xl3List)
@@ -131,6 +139,12 @@ void SwapShortBlock(void* p, int32_t n)
 
 int readConfigurationFile()
 {
+
+  PENN_DAQ_ROOT = getenv("PENN_DAQ_ROOT2");
+  if (PENN_DAQ_ROOT == NULL){
+    printf("You need to set the environment variable PENN_DAQ_ROOT2 to the penn_daq directory\n");
+    exit(-1);
+  }
   FILE *config_file;
   char filename[1000];
   sprintf(filename,"%s/%s",PENN_DAQ_ROOT,CONFIG_FILE_LOC);
@@ -156,7 +170,7 @@ int readConfigurationFile()
     char *var_name,*var_value;
     var_name = strtok(line_in[i],"=");
     if (var_name != NULL){
-      var_value = strtok(NULL,"=");
+      var_value = strtok(NULL,"\n");
       if (var_name[0] != '#' && var_value != NULL){
         if (strcmp(var_name,"NEED_TO_SWAP")==0){
           NEED_TO_SWAP = atoi(var_value);

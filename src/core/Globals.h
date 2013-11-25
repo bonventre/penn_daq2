@@ -78,10 +78,12 @@ extern char ORCA_READOUT_PATH[100];
 extern char DB_SERVER[100];
 extern char FECDB_SERVER[100];
 
+extern char *PENN_DAQ_ROOT;
+
 #define CONFIG_FILE_LOC "config/local"
 #define DEFAULT_CONFIG_FILE_LOC "config/default"
 
-#define PENN_DAQ_ROOT "."
+//#define PENN_DAQ_ROOT "."
 
 
 #define ABOVE_GROUND_TESTSTAND 0
