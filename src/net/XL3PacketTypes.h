@@ -121,23 +121,23 @@ typedef struct
 
 typedef struct
 {
-  uint32_t fecMemLevel[16];
-  uint32_t mbqLevel;
+  uint32_t fecMemLevel[16]; // FEC fifo level in number of longwords (out of 0xFFFFF, with 3 per pmt bundle)
+  uint32_t mbqLevel; // XL3 fifo level in number of "megabundles" (out of 800, each can hold variable number of pmt bundles)
 } PingPacket;
 
 typedef struct
 {
-  uint32_t cmdRejected;
-  uint32_t transferError;
-  uint32_t xl3DataAvailUnknown;
-  uint32_t fecBundleReadError[16];
-  uint32_t fecBundleResyncError[16];
-  uint32_t fecMemLevelUnknown[16];
+  uint32_t cmdRejected; // XL3 input fifo overflow, latest request from Orca is ignored
+  uint32_t transferError; // there was an LWIP error reading / writing a packet etc.
+  uint32_t xl3DataAvailUnknown; // bus error reading XL3's local data available register, XL3 does not know which FECs to read
+  uint32_t fecBundleReadError[16]; // bus error reading a pmt bundle from a FEC, data possibly lost
+  uint32_t fecBundleResyncError[16]; // XL3 was unable to get the FIFO to a state where it knows what the start of a bundle is
+  uint32_t fecMemLevelUnknown[16]; // bus error reading FEC fifo level, XL3 does not know how many bundles to read from that FEC
 } ErrorPacket;
 
 typedef struct
 {
-  uint32_t fecScrewed[16];
+  uint32_t fecScrewed[16]; // FEC fifo level greater than max - number read out per loop, so definitely overflowed and lost data last loop
 } ScrewedPacket;
 
 typedef struct{
