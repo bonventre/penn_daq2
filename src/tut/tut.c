@@ -65,6 +65,7 @@ COMMAND commands[] = {
     { "debugging_on", (Function *)NULL, (char *)NULL },
     { "debugging_off", (Function *)NULL, (char *)NULL },
     { "change_mode", (Function *)NULL, (char *)NULL },
+    { "check_xl3_status", (Function *)NULL, (char *)NULL },
     { "read_local_voltage", (Function *)NULL, (char *)NULL },
     { "hv_readback", (Function *)NULL, (char *)NULL },
     { "set_alarm_level", (Function *)NULL, (char *)NULL },

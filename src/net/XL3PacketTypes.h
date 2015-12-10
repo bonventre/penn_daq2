@@ -27,6 +27,7 @@
 #define STATE_MACHINE_RESET_ID    (0x03) //!< reset the state machine
 #define DEBUGGING_MODE_ID         (0x04) //!< turn on verbose printout
 #define CHECK_STATE_MACHINE_ID    (0x05) //!< Read the state machine status regs
+#define CHECK_XL3_STATE_ID        (0x06) //!< Get the mode, slot mask, clock
 // XL3/FEC Level Tasks
 #define FAST_CMD_ID               (0x20) //!< do one command in recv callback, immediately respond with same packet (daq numbered)
 #define MULTI_FAST_CMD_ID         (0x21) //!< do multiple commands in recv callback, immediately respond with same packet (daq numbered)
@@ -441,6 +442,14 @@ typedef struct{
 typedef struct{
   float voltages[8];
 } LocalVMonResults;
+
+typedef struct{
+  uint32_t mode;
+  uint32_t debuggingMode;
+  uint32_t dataAvailMask;
+  uint64_t xl3Clock; 
+  uint32_t initialized;
+} CheckXL3StateResults;
 
 
 

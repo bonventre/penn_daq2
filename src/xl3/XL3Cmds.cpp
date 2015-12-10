@@ -745,3 +745,22 @@ int ReadBundle(int crateNum, int slotNum, int quiet)
   return 0;
 }
 
+int CheckXL3Status(int crateNum)
+{
+  XL3Packet packet;
+  packet.header.packetType = CHECK_XL3_STATE_ID;
+  try{
+    xl3s[crateNum]->SendCommand(&packet);
+    CheckXL3StateResults *results = (CheckXL3StateResults *) packet.payload;
+    lprintf("Mode is %d, debugging mode is %d, dataavailmask is %04x, clock is %ul, initialized is %d\n",
+        results->mode,results->debuggingMode,results->dataAvailMask,results->xl3Clock,results->initialized);
+  }
+  catch(const char* s){
+    lprintf("CheckXL3Status: %s\n",s);
+  }
+
+  return 0;
+}
+
+
+

@@ -336,6 +336,19 @@ void *ControllerLink::ProcessCommand(void *arg)
     ChangeMode(crateNum,mode,dataAvailMask);
     UnlockConnections(0,0x1<<crateNum);
 
+  }else if (strncmp(input,"check_xl3_status",16) == 0){
+    int crateNum = GetInt(input,'c',2);
+    int busy = LockConnections(0,0x1<<crateNum);
+    if (busy){
+      if (busy > 9)
+        lprintf("Trying to access a board that has not been connected\n");
+      else
+        lprintf("Those connections are currently in use.\n");
+      return NULL;
+    }
+    CheckXL3Status(crateNum);
+    UnlockConnections(0,0x1<<crateNum);
+
   }else if (strncmp(input,"read_local_voltage",18) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: read_local_voltage -c [crate num (int)] -v [voltage select]\n"

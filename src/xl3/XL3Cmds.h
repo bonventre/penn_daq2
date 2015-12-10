@@ -13,4 +13,4 @@ int SetAlarmDac(int crateNum, uint32_t *dacs);
 int SetAlarmLevel(int crateNum, float lowVoltage, float highVoltage, uint32_t lowDac, uint32_t highDac, int alarm);
 int LoadRelays(int crateNum, uint32_t *patterns);
 int ReadBundle(int crateNum, int slotNum, int quiet);
-
+int CheckXL3Status(int crateNum);
