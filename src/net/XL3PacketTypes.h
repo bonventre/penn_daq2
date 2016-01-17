@@ -72,6 +72,8 @@
 #define ERROR_ID 0xFE
 #define SCREWED_ID 0xFF
 
+#pragma pack(1)
+
 typedef struct
 {
   uint16_t packetNum;
@@ -451,6 +453,6 @@ typedef struct{
   uint32_t initialized;
 } CheckXL3StateResults;
 
-
+#pragma pack()
 
 #endif
