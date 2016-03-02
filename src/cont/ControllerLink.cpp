@@ -436,7 +436,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     int crateNum = GetInt(input,'c',2);
     int slotNum = GetInt(input,'s',13);
-    int reg = GetInt(input,'c',2);
+    int reg = GetInt(input,'r',2);
     int busy = LockConnections(0,0x1<<crateNum);
     if (busy){
       if (busy > 9)
