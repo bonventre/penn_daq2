@@ -140,7 +140,7 @@
 #define MSK_CRATE24 0x00800000UL
 #define MSK_CRATE25 0x01000000UL
 #define MSK_TUB     MSK_CRATE21         // everyone's favorite board!  
-
+#define MSK_TUBII   MSK_CRATE24         // Eric's favorite board!!
 /* Threshold Monitoring */
 
 #define TMON_NHIT100LO  0x00020000UL
