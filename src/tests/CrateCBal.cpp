@@ -254,7 +254,7 @@ int CrateCBal(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateD
             do{
               // make sure we arent stuck forever
               if (iterations++ > max_iterations){
-                lprintf("Too many interations, exiting with some channels unbalanced.\n");
+                lprintf("Too many iterations, exiting with some channels unbalanced.\n");
                 //lprintf("Making best guess for unbalanced channels\n");
                 for (int j=0;j<32;j++)
                   if (wg == 0){
