@@ -1215,8 +1215,8 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
-    uint32_t slotMasks[19];
-    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    uint32_t slotMasks[MAX_XL3_CON];
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0xFFFF);
     int nhitMax = GetInt(input,'n',0);
     int threshMin = GetInt(input,'m',0);
     int triggerSelect = GetInt(input,'t',0);
@@ -1388,8 +1388,8 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
-    uint32_t slotMasks[19];
-    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    uint32_t slotMasks[MAX_XL3_CON];
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
     float frequency = GetFloat(input,'f',1000.0);
     int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
@@ -1443,8 +1443,8 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
-    uint32_t slotMasks[19];
-    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    uint32_t slotMasks[MAX_XL3_CON];
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0xFFFF);
     uint32_t testMask = GetUInt(input,'t',0xFFFFFFFF);
     char loadECAL[500];
     memset(loadECAL,'\0',sizeof(loadECAL));
@@ -1467,8 +1467,8 @@ void *ControllerLink::ProcessCommand(void *arg)
       return NULL;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
-    uint32_t slotMasks[19];
-    GetMultiUInt(input,19,'s',slotMasks,0xFFFF);
+    uint32_t slotMasks[MAX_XL3_CON];
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0xFFFF);
     int updateDB = GetFlag(input,'d');
     int busy = LockConnections(1,crateMask);
     if (busy){
@@ -1512,7 +1512,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("MTC queue not empty!\n");
       UnlockConnections(1,0x0);
     }
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if (LockConnections(0,(0x1<<i))){
         int result = xl3s[i]->CheckQueue(empty);
         if (result == -1)
@@ -1555,7 +1555,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("Controller\n");
     if (mtc->IsConnected())
       lprintf("SBC\n");
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if (xl3s[i]->IsConnected())
         lprintf("XL3 #%d\n",i);
     }
