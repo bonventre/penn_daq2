@@ -46,6 +46,16 @@
 #define CHECK_TOTAL_COUNT_ID	    (0x2E) //!< readout cmos total count register	
 #define SET_ALARM_DAC_ID          (0x2F) //!< Set one or many of the voltage alarm dacs
 #define SET_ALARM_LEVELS_ID          (0x30) //!< Set one or many of the voltage alarm dacs
+#define MULTI_SET_CRATE_PEDS_ID   (0x31) //!< Unlike set_crate_pedestals_id, allows different mask per slot, and doesn't change slots not in the mask
+#define BOARD_ID_WRITE_ID         (0x32)
+#define SET_SEQUENCER_ID          (0x33) //!< Set the sequencer
+/* RESET_CRATE_ID resets the crate, loads XL3 clocks and dacs, tries to load
+ * Xilinx in all the FEC slots, and loads the default values for the FEC dacs,
+ * shift registers, and sequencers (not HV or data safe). It then returns a list
+ * of which slots are present and the IDs of all MBs, DBs, and PMTICs. So you
+ * would first run RESET_CRATE_ID and then you would do a CRATE_INIT without
+ * Xilinx to load the non-default values into the FEC. */
+#define RESET_CRATE_ID            (0x34) 
 // HV Tasks
 #define SET_HV_RELAYS_ID          (0x40) //!< turns on/off hv relays
 #define HV_READBACK_ID			      (0x42) //!< reads voltage and current	
@@ -216,6 +226,7 @@ typedef struct{
 
 typedef struct{
   uint32_t errorFlags;
+  uint32_t fecPresent; // each bit is 1 if that slot as a FEC, 0 if not
   FECConfiguration hwareVals[16];
 } CrateInitResults;
 
@@ -243,6 +254,7 @@ typedef struct{
 
 typedef struct{
   uint32_t errorFlags;
+  uint32_t fecPresent; // each bit is 1 if that slot as a FEC, 0 if not
   FECConfiguration hwareVals[16];
 } BuildCrateConfigResults;
 
@@ -400,6 +412,36 @@ typedef struct{
   uint32_t id;
   uint32_t busErrors;
 } BoardIDReadResults;
+
+typedef struct{
+    uint32_t slot;
+    uint32_t channelMask;
+} SetSequencerArgs;
+
+typedef struct{
+    uint32_t errors;
+} SetSequencerResults;
+
+typedef struct{
+  uint32_t id;
+  uint32_t slot;
+  uint32_t chip;
+  uint32_t reg;
+} BoardIDWriteArgs;
+
+typedef struct{
+  uint32_t busErrors;
+} BoardIDWriteResults;
+
+typedef struct {
+  uint32_t xilFile; // 1 to load normal Xilinx, anything else to load charge injection xilinx
+} ResetCrateArgs;
+
+typedef struct {
+  uint32_t errors;
+  uint32_t fecPresent; // each bit is 1 if that slot as a FEC, 0 if not
+  FECConfiguration hwareVals[16];
+} ResetCrateResults;
 
 typedef struct{
   uint32_t slotNum;

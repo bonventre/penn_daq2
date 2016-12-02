@@ -179,8 +179,6 @@ void *ControllerLink::ProcessCommand(void *arg)
     int crateNum = GetInt(input,'c',2);
     int xilinxLoadNormal = GetFlag(input,'x');
     int xilinxLoadCald = GetFlag(input,'X');
-    int hvReset = GetFlag(input,'v');
-    int shiftRegOnly = GetInt(input,'S',0);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     int useVBal = GetFlag(input,'B');
     int useVThr = GetFlag(input,'T');
@@ -203,7 +201,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Those connections are currently in use.\n");
       return NULL;
     }
-    CrateInit(crateNum,slotMask,xilinxLoad,hvReset,shiftRegOnly,
+    CrateInit(crateNum,slotMask,xilinxLoad,
         useVBal,useVThr,useTDisc,useTCmos,useAll,useNoise,useHw,enableTriggers);
     UnlockConnections(0,0x1<<crateNum);
 

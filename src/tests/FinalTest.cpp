@@ -37,7 +37,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   memset(comments,'\0',1000);
   int errors;
   // initialize the crate
-  errors = CrateInit(crateNum,slotMask,1,1,0,0,0,0,0,0,0,0);
+  errors = CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0);
   if (errors){
     lprintf("Problem initializing the crate, exiting final test\n");
     return -1;
@@ -170,11 +170,11 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   if ((0x1<<testCounter) & testMask)
     CGTTest(crateNum,slotMask,0xFFFFFFFF,updateDB,1);
   testCounter++;
-  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0);
+  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0);
   if ((0x1<<testCounter) & testMask)
     PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,updateDB,0,1);
   testCounter++;
-  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0);
+  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0);
   MTCInit(1);
   if ((0x1<<testCounter) & testMask)
     CrateCBal(crateNum,slotMask,0xFFFFFFFF,updateDB,1);
@@ -183,7 +183,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   lprintf("----------------------------------------\n");
 
   // load cbal values now
-  CrateInit(crateNum,slotMask,0,0,0,1,0,0,0,0,0,0);
+  CrateInit(crateNum,slotMask,0,1,0,0,0,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
     PedRun(crateNum,slotMask,0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,updateDB,1,1);
@@ -197,7 +197,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   testCounter++;
 
   // load cbal and ttot values now
-  CrateInit(crateNum,slotMask,0,0,0,1,0,1,0,0,0,0);
+  CrateInit(crateNum,slotMask,0,1,0,1,0,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
     GetTTot(crateNum,slotMask,390,updateDB,1);
@@ -213,7 +213,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   testCounter++;
 
   MTCInit(0);
-  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0);
+  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
     MbStabilityTest(crateNum,slotMask,50,updateDB,1);
@@ -223,7 +223,7 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   testCounter++;
 
   // load alternate xilinx
-  CrateInit(crateNum,slotMask,2,0,0,0,0,0,0,0,0,0);
+  CrateInit(crateNum,slotMask,2,0,0,0,0,0,0,0);
 
   if ((0x1<<testCounter) & testMask)
     CaldTest(crateNum,slotMask,3500,750,200,1,updateDB,1);
@@ -231,21 +231,21 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
 
   for (int i=0;i<16;i++){
     if ((0x1<<i) & slotMask){
-      CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0); 
+      CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0); 
       if ((0x1<<testCounter) & testMask)
         MemTest(crateNum,i,updateDB,1);
     }
   }
   testCounter++;
 
-  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0,1); 
+  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,1); 
 
   if ((0x1<<testCounter) & testMask){
     lprintf("Ready for see_refl test. You should check if the xilinx loaded correctly. If it did, hit enter to continue. Otherwise, power cycle the crate and then type 'init' to crate_init again, or type 'quit' to skip see_refl and end the final test\n\a");
 
     contConnection->GetInput(comments);
     if (strncmp("init",comments,4) == 0){
-      CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,0,0,1); 
+      CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0,1); 
       SeeReflection(crateNum,slotMask,0xFFFFFFFF,255,1000,updateDB,1);
     }else if (strncmp("quit",comments,4) != 0){
       SeeReflection(crateNum,slotMask,0xFFFFFFFF,255,1000,updateDB,1);

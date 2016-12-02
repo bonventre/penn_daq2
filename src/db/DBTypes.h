@@ -9,6 +9,7 @@ typedef struct
 {
   uint16_t mbID;
   uint16_t dbID[4];
+  uint16_t pmticID;
 } FECConfiguration;
 
 typedef struct {
