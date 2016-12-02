@@ -347,13 +347,13 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       if (enableTriggers){
         lprintf("ENABLING TRIGGERS!\n");
         for (int k=0;k<32;k++){
-          mb_consts->tr100.tDelay[k] |= 0x40;
-          mb_consts->tr20.tWidth[k] |= 0x20;
+          mb_consts->tr100.mask[k] = 1;
+          mb_consts->tr20.mask[k] = 1;
         }
       }else{
         for (int k=0;k<32;k++){
-          mb_consts->tr100.tDelay[k] &= ~(0x40);
-          mb_consts->tr20.tWidth[k] &= ~(0x20);
+          mb_consts->tr100.mask[k] = 0;
+          mb_consts->tr20.mask[k] = 0;
         }
       }
       xl3s[crateNum]->SendCommand(&packet,0);
