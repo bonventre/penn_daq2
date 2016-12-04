@@ -120,7 +120,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
 
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],1,1,0,0,0,0,0,0,0,0);
+        CrateInit(i,slotMasks[i],1,0,0,0,0,0,0,0);
     MTCInit(1);
 
     lprintf("------------------------------------------\n");
@@ -163,7 +163,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
 
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],0,0,0,0,0,0,0,0,0,0);
+        CrateInit(i,slotMasks[i],0,0,0,0,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
       for (int i=0;i<19;i++)
@@ -174,7 +174,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     // load cbal values
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],0,0,0,1,0,0,0,0,0,0);
+        CrateInit(i,slotMasks[i],0,1,0,0,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
       for (int i=0;i<19;i++)
@@ -185,7 +185,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     MTCInit(1);
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],0,0,0,1,0,0,0,0,0,0);
+        CrateInit(i,slotMasks[i],0,1,0,0,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
       for (int i=0;i<19;i++)
@@ -196,7 +196,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     // load cbal and tdisc values
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],0,0,0,1,0,1,0,0,0,0);
+        CrateInit(i,slotMasks[i],0,1,0,1,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
       for (int i=0;i<19;i++)
@@ -206,7 +206,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
 
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],0,0,0,1,0,1,0,0,0,0);
+        CrateInit(i,slotMasks[i],0,1,0,1,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
       for (int i=0;i<19;i++)
@@ -217,7 +217,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     MTCInit(1);
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],0,0,0,1,0,1,0,0,0,0);
+        CrateInit(i,slotMasks[i],0,1,0,1,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
       for (int i=0;i<19;i++)
@@ -229,7 +229,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     // load cbal, tdisc, tcmos values
     for (int i=0;i<19;i++)
       if ((0x1<<i) & crateMask)
-        CrateInit(i,slotMasks[i],0,0,0,1,0,1,1,0,0,0);
+        CrateInit(i,slotMasks[i],0,1,0,1,1,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
       for (int i=0;i<19;i++)
