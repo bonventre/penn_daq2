@@ -76,7 +76,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad,
   if (xilinxLoad) {
     lprintf("sending crate reset to load xilinx\n");
 
-    memset(&packet, 0 sizeof(XL3Packet));
+    memset(&packet, 0, sizeof(XL3Packet));
 
     packet.header.packetNum = htons(0);
     packet.header.packetType = RESET_CRATE_ID;
@@ -97,7 +97,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad,
 
   lprintf("Now sending database to XL3\n");
 
-  memset(&packet, 0 sizeof(XL3Packet));
+  memset(&packet, 0, sizeof(XL3Packet));
 
   try{
 
