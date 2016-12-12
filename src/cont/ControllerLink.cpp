@@ -1189,7 +1189,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
     int dacValue = GetInt(input,'v',255);
-    float frequency = GetFloat(input,'f',0);
+    float frequency = GetFloat(input,'f',10);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
