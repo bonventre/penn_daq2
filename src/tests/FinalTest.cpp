@@ -208,6 +208,9 @@ int FinalTest(int crateNum, uint32_t slotMask, uint32_t testMask, int skip)
   if ((0x1<<testCounter) & testMask)
     GTValidTest(crateNum,slotMask,0xFFFFFFFF,400,0,updateDB,1);
   testCounter++;
+
+  CrateInit(crateNum,slotMask,1,0,0,0,0,0,0,0);
+  
   if ((0x1<<testCounter) & testMask)
     ZDisc(crateNum,slotMask,10000,0,updateDB,1);
   testCounter++;
