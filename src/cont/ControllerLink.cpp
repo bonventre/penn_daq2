@@ -1159,8 +1159,8 @@ void *ControllerLink::ProcessCommand(void *arg)
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
-    int lower = GetInt(input,'l',400);
-    int upper = GetInt(input,'u',700);
+    int lower = GetInt(input,'l',300);
+    int upper = GetInt(input,'u',1000);
     float frequency = GetFloat(input,'f',0);
     int numPeds = GetInt(input,'n',50);
     int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
