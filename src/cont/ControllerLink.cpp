@@ -1094,7 +1094,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
-    float gtCutoff = GetFloat(input,'g',0);
+    float gtCutoff = GetFloat(input,'g',410);
     int twiddleOn = GetFlag(input,'t');
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
