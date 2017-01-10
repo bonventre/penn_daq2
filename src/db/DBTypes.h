@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#pragma pack(1)
+
 typedef struct
 {
   uint16_t mbID;
@@ -99,5 +101,6 @@ typedef struct {
     uint32_t tubBits;
 }MTC;
 
+#pragma pack()
 
 #endif
