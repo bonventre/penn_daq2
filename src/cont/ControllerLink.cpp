@@ -930,9 +930,9 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
-    int upper = GetInt(input,'u',3550);
-    int lower = GetInt(input,'l',3000);
-    int num = GetInt(input,'n',550);
+    int upper = GetInt(input,'u',3500);
+    int lower = GetInt(input,'l',750);
+    int num = GetInt(input,'n',200);
     int samples = GetInt(input,'p',1);
     int update = GetFlag(input,'d');
     int busy = LockConnections(0,0x1<<crateNum);
@@ -1092,7 +1092,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
-    float gtCutoff = GetFloat(input,'g',0);
+    float gtCutoff = GetFloat(input,'g',410);
     int twiddleOn = GetFlag(input,'t');
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
@@ -1262,7 +1262,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
-    int targetTime = GetInt(input,'t',400);
+    int targetTime = GetInt(input,'t',420);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
