@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include "math.h"
+
 #include "XL3PacketTypes.h"
 #include "Globals.h"
 #include "Json.h"
@@ -6,14 +9,27 @@
 #include "XL3Model.h"
 #include "VMon.h"
 
+#define RED "\x1b[31m"
+#define RESET "\x1b[0m"
+
 int VMon(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
 {
   lprintf("*** Starting VMon **********************\n");
 
+  int count_bad_voltages = 0;
+  float threshold = 0.1; // 10% threshold to warn on bad voltages
+  float const_voltage[18] = {-24.0,-15.0,-5.0,-3.3,-2.0,3.3,4.0,
+                             5.0,6.5,8.0,15.0,24.0,-2.0,-1.0,0.8,
+                             1.0,4.0,5.0};
+  float bad_voltage[18];
   float voltages[16][21];
-  for (int i=0;i<16;i++)
-    for (int j=0;j<21;j++)
+  for (int i=0;i<16;i++){
+    for (int j=0;j<21;j++){
       voltages[i][j] = 0;
+      if(j < 19)
+        bad_voltage[j] = fabs(const_voltage[j]*threshold);
+    }
+  }
 
   try {
 
@@ -39,7 +55,18 @@ int VMon(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
       for (int i=0;i<21;i++){
         lprintf("%10s   ",voltages_name[i]);
         for (int j=0;j<8;j++){
-          lprintf("%6.2f ",voltages[j+k*8][i]);
+          if(voltages[j+k*8][i] != 0.00 && i < 18 &&
+             voltages[j+k*8][i] > const_voltage[i] + bad_voltage[i]){
+            lprintf(RED "%6.2f " RESET,voltages[j+k*8][i]);
+            count_bad_voltages++;
+          }
+          else if(voltages[j+k*8][i] != 0.00 && i < 18 &&
+             voltages[j+k*8][i] < const_voltage[i] - bad_voltage[i]){
+            lprintf(RED "%6.2f " RESET,voltages[j+k*8][i]);
+            count_bad_voltages++;
+          }
+          else
+            lprintf("%6.2f ",voltages[j+k*8][i]);
         }
         lprintf("\n");
       }
@@ -86,7 +113,9 @@ int VMon(int crateNum, uint32_t slotMask, int updateDB, int finalTest)
   catch(const char* s){
     lprintf("VMon: %s\n",s);
   }
-
+  
+  float vth = threshold*100; 
+  lprintf("%d bad voltage(s) (%.1f%% of nominal) \n", count_bad_voltages,vth);
   lprintf("****************************************\n");
   return 0;
 }

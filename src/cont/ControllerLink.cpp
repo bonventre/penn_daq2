@@ -1092,7 +1092,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
-    float gtCutoff = GetFloat(input,'g',0);
+    float gtCutoff = GetFloat(input,'g',410);
     int twiddleOn = GetFlag(input,'t');
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
@@ -1159,8 +1159,8 @@ void *ControllerLink::ProcessCommand(void *arg)
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
-    int lower = GetInt(input,'l',400);
-    int upper = GetInt(input,'u',700);
+    int lower = GetInt(input,'l',300);
+    int upper = GetInt(input,'u',1000);
     float frequency = GetFloat(input,'f',0);
     int numPeds = GetInt(input,'n',50);
     int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
@@ -1189,7 +1189,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
     int dacValue = GetInt(input,'v',255);
-    float frequency = GetFloat(input,'f',0);
+    float frequency = GetFloat(input,'f',10);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
