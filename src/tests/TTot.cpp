@@ -20,7 +20,7 @@ int GetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
   try {
 
     // setup the mtc with the triggers going to the TUB
-    int errors = mtc->SetupPedestals(0,60,100,0,(0x1<<crateNum) | MSK_CRATE21,MSK_CRATE21);
+    int errors = mtc->SetupPedestals(0,60,100,0,(0x1<<crateNum) | MSK_CRATE21,MSK_CRATE21 | MSK_TUBII);
 
     int result = MeasureTTot(crateNum,slotMask,150,times);
 
@@ -106,7 +106,7 @@ int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
   try {
 
     // setup the mtc with the triggers going to the TUB
-    int errors = mtc->SetupPedestals(0,60,100,0,(0x1<<crateNum) | MSK_CRATE21,MSK_CRATE21);
+    int errors = mtc->SetupPedestals(0,60,100,0,(0x1<<crateNum) | MSK_CRATE21,MSK_CRATE21 | MSK_TUBII);
 
     for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
