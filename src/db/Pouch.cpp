@@ -156,7 +156,8 @@ void pr_free(pouch_request *pr){
     }if (pr->usrpwd){
         free(pr->usrpwd);
     }
-    free(pr);				// free structure
+
+    delete pr;				// free structure
 }
 
 pouch_request *pr_clear_data(pouch_request *pr){
