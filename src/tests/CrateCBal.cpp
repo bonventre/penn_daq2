@@ -670,10 +670,14 @@ int GetPedestal(int crateNum, int slotNum, uint32_t channelMask, struct pedestal
 
   // if there are less bundles than there are supposed to be
   // then read out whats there minus a fudge factor ??
-  if (result <= 32*3*num_pulses)
+  if (result < 32*3*num_pulses) {
     words_in_mem = result > 100 ? result-100 : result;
-  else
+
+    /* Make sure words_in_mem is a multiple of 3. */
+    words_in_mem = words_in_mem - words_in_mem % 3;
+  } else {
     words_in_mem = 32*3*num_pulses;
+  }
 
   // if it is too low, abort
   if (words_in_mem < min_num_words){
