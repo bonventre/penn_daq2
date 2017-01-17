@@ -10,6 +10,7 @@ int FECTest(int crateNum, uint32_t slotMask, int updateDB, int finalTest, int ec
 {
   lprintf("*** Starting FEC Test ******************\n");
   XL3Packet packet;
+  memset(&packet, 0, sizeof(XL3Packet));
   packet.header.packetType = FEC_TEST_ID;
   FECTestArgs *args = (FECTestArgs *) packet.payload;
   FECTestResults *results = (FECTestResults *) packet.payload;

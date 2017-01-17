@@ -42,15 +42,27 @@
 #define READ_PEDESTALS_ID         (0x2A) //!< queue any number of memory reads into cmd queue
 #define LOAD_TACBITS_ID           (0x2B) //!< loads tac bits on fecs
 #define RESET_FIFOS_ID            (0x2C) //!< resets all the fec fifos
-#define READ_LOCAL_VOLTAGE_ID		  (0x2D) //!< read a single voltage on XL3 
-#define CHECK_TOTAL_COUNT_ID	    (0x2E) //!< readout cmos total count register	
+#define READ_LOCAL_VOLTAGE_ID     (0x2D) //!< read a single voltage on XL3
+#define CHECK_TOTAL_COUNT_ID      (0x2E) //!< readout cmos total count register
 #define SET_ALARM_DAC_ID          (0x2F) //!< Set one or many of the voltage alarm dacs
-#define SET_ALARM_LEVELS_ID          (0x30) //!< Set one or many of the voltage alarm dacs
+#define SET_ALARM_LEVELS_ID       (0x30) //!< Set one or many of the voltage alarm dacs
+#define MULTI_SET_CRATE_PEDS_ID   (0x31) //!< Unlike set_crate_pedestals_id, allows different mask per slot, and doesn't change slots not in the mask
+#define BOARD_ID_WRITE_ID         (0x32)
+#define SET_SEQUENCER_ID          (0x33) //!< Set the sequencer
+/* RESET_CRATE_ID resets the crate, loads XL3 clocks and dacs, tries to load
+ * Xilinx in all the FEC slots, and loads the default values for the FEC dacs,
+ * shift registers, and sequencers (not HV or data safe). It then returns a list
+ * of which slots are present and the IDs of all MBs, DBs, and PMTICs. So you
+ * would first run RESET_CRATE_ID and then you would do a CRATE_INIT without
+ * Xilinx to load the non-default values into the FEC. */
+#define RESET_CRATE_ID            (0x34) 
 // HV Tasks
 #define SET_HV_RELAYS_ID          (0x40) //!< turns on/off hv relays
-#define HV_READBACK_ID			      (0x42) //!< reads voltage and current	
-#define READ_PMT_CURRENT_ID	      (0x43) //!< reads pmt current from FEC hv csr	
-#define SETUP_CHARGE_INJ_ID		    (0x44) //!< setup charge injection in FEC hv csr
+#define HV_READBACK_ID            (0x42) //!< reads voltage and current
+#define READ_PMT_CURRENT_ID       (0x43) //!< reads pmt current from FEC hv csr
+#define SETUP_CHARGE_INJ_ID       (0x44) //!< setup charge injection in FEC hv csr
+#define MULTI_SETUP_CHARGE_INJ_ID (0x45) //!< setup charge injection for multiple fecs and set dac level
+#define DO_PANIC_DOWN             (0x46) //!< setup charge injection in FEC hv csr
 // Tests
 #define FEC_TEST_ID               (0x60) //!< check read/write to FEC registers
 #define MEM_TEST_ID               (0x61) //!< check read/write to FEC ram, address lines
@@ -58,7 +70,7 @@
 #define BOARD_ID_READ_ID          (0x63) //!< reads id of fec,dbs,hvc
 #define ZDISC_ID                  (0x64) //!< zeroes discriminators
 #define CALD_TEST_ID              (0x65) //!< checks adcs with calibration dac
-#define CRATE_NOISE_RATE_ID       (0x66) //!< check the noise rate in a slot			
+#define CRATE_NOISE_RATE_ID       (0x66) //!< check the noise rate in a slot
 #define LOCAL_VMON_ID             (0x68)
 //@}
 
@@ -207,15 +219,13 @@ typedef struct{
 
 typedef struct{
   uint32_t mbNum;
-  uint32_t xilinxLoad;
-  uint32_t hvReset;
   uint32_t slotMask;
   uint32_t ctcDelay;
-  uint32_t shiftRegOnly;
 } CrateInitArgs;
 
 typedef struct{
   uint32_t errorFlags;
+  uint32_t fecPresent; // each bit is 1 if that slot as a FEC, 0 if not
   FECConfiguration hwareVals[16];
 } CrateInitResults;
 
@@ -243,6 +253,7 @@ typedef struct{
 
 typedef struct{
   uint32_t errorFlags;
+  uint32_t fecPresent; // each bit is 1 if that slot as a FEC, 0 if not
   FECConfiguration hwareVals[16];
 } BuildCrateConfigResults;
 
@@ -360,6 +371,10 @@ typedef struct{
   uint32_t errorFlags;
 } SetUpChargeInjResults;
 
+typedef struct {
+  uint32_t errorFlags;
+} DoPanicDownResults;
+
 typedef struct{
   uint32_t slotMask;
 } FECTestArgs;
@@ -400,6 +415,36 @@ typedef struct{
   uint32_t id;
   uint32_t busErrors;
 } BoardIDReadResults;
+
+typedef struct{
+    uint32_t slot;
+    uint32_t channelMask;
+} SetSequencerArgs;
+
+typedef struct{
+    uint32_t errors;
+} SetSequencerResults;
+
+typedef struct{
+  uint32_t id;
+  uint32_t slot;
+  uint32_t chip;
+  uint32_t reg;
+} BoardIDWriteArgs;
+
+typedef struct{
+  uint32_t busErrors;
+} BoardIDWriteResults;
+
+typedef struct {
+  uint32_t xilFile; // 1 to load normal Xilinx, anything else to load charge injection xilinx
+} ResetCrateArgs;
+
+typedef struct {
+  uint32_t errors;
+  uint32_t fecPresent; // each bit is 1 if that slot as a FEC, 0 if not
+  FECConfiguration hwareVals[16];
+} ResetCrateResults;
 
 typedef struct{
   uint32_t slotNum;
@@ -449,9 +494,28 @@ typedef struct{
   uint32_t mode;
   uint32_t debuggingMode;
   uint32_t dataAvailMask;
-  uint64_t xl3Clock; 
+  uint64_t xl3Clock;
   uint32_t initialized;
 } CheckXL3StateResults;
+
+typedef struct{
+  uint32_t slotMask;
+  uint32_t channelMasks[16];
+} MultiSetCratePedsArgs;
+
+typedef struct{
+  uint32_t errorMask;
+} MultiSetCratePedsResults;
+
+typedef struct{
+  uint32_t slotMask;
+  uint32_t channelMasks[16];
+  uint32_t dacValues[16];
+} MultiSetUpChargeInjArgs;
+
+typedef struct{
+  uint32_t errorFlags;
+} MultiSetUpChargeInjResults;
 
 #pragma pack()
 

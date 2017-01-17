@@ -31,6 +31,7 @@ int CaldTest(int crateNum, uint32_t slotMask, int upper, int lower, int numPoint
 
 
   XL3Packet packet;
+  memset(&packet, 0, sizeof(XL3Packet));
   packet.header.packetType = CALD_TEST_ID;
   CaldTestArgs *args = (CaldTestArgs *) packet.payload;
 

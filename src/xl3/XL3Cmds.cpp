@@ -61,7 +61,7 @@ int XL3QueueRW(int crateNum, uint32_t address, uint32_t data)
   return 0;
 }
 
-int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int shiftRegOnly,
+int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad,
     int useVBal, int useVThr, int useTDisc, int useTCmos, int useAll, int useNoise, int useHw, int enableTriggers)
 {
   lprintf("*** Starting Crate Init ****************\n");
@@ -70,9 +70,34 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
   XL3Packet packet;
   CrateInitArgs *packetArgs = (CrateInitArgs *) packet.payload;
 
-  lprintf("Initializing crate %d, slots %08x, xl: %d, hv: %d\n",
-      crateNum,slotMask,xilinxLoad,hvReset);
+  lprintf("Initializing crate %d, slots %08x, xl: %d\n",
+      crateNum,slotMask,xilinxLoad);
+
+  if (xilinxLoad) {
+    lprintf("sending crate reset to load xilinx\n");
+
+    memset(&packet, 0, sizeof(XL3Packet));
+
+    packet.header.packetNum = htons(0);
+    packet.header.packetType = RESET_CRATE_ID;
+    packet.header.numBundles = 0;
+
+    ResetCrateArgs *args = (ResetCrateArgs *) packet.payload;
+    args->xilFile = htonl(xilinxLoad);
+
+    xl3s[crateNum]->SendCommand(&packet, 1, 30);
+
+    ResetCrateResults *results = (ResetCrateResults *) packet.payload;
+
+    if (results->errors) {
+      lprintf("errors during crate reset: 0x%x\n", ntohl(results->errors));
+      return -1;
+    }
+  }
+
   lprintf("Now sending database to XL3\n");
+
+  memset(&packet, 0, sizeof(XL3Packet));
 
   try{
 
@@ -347,13 +372,13 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
       if (enableTriggers){
         lprintf("ENABLING TRIGGERS!\n");
         for (int k=0;k<32;k++){
-          mb_consts->tr100.tDelay[k] |= 0x40;
-          mb_consts->tr20.tWidth[k] |= 0x20;
+          mb_consts->tr100.mask[k] = 1;
+          mb_consts->tr20.mask[k] = 1;
         }
       }else{
         for (int k=0;k<32;k++){
-          mb_consts->tr100.tDelay[k] &= ~(0x40);
-          mb_consts->tr20.tWidth[k] &= ~(0x20);
+          mb_consts->tr100.mask[k] = 0;
+          mb_consts->tr20.mask[k] = 0;
         }
       }
       xl3s[crateNum]->SendCommand(&packet,0);
@@ -384,11 +409,8 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad, int hvReset, int s
 
     packet.header.packetType = CRATE_INIT_ID;
     packetArgs->mbNum = 666;
-    packetArgs->xilinxLoad = xilinxLoad;
-    packetArgs->hvReset = hvReset;
     packetArgs->slotMask = slotMask;
     packetArgs->ctcDelay = ctc_delay;
-    packetArgs->shiftRegOnly = shiftRegOnly;
 
     SwapLongBlock(packet.payload,sizeof(CrateInitArgs)/sizeof(uint32_t));
 

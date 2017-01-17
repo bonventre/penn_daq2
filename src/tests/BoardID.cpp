@@ -9,6 +9,7 @@ int BoardID(int crateNum, uint32_t slotMask, int updateLocation)
 {
   lprintf("*** Starting Board ID ******************\n");
   XL3Packet packet;
+  memset(&packet, 0, sizeof(XL3Packet));
   BoardIDReadArgs *args = (BoardIDReadArgs *) packet.payload;
   BoardIDReadResults *results = (BoardIDReadResults *) packet.payload;
   uint16_t ids[16*6];
