@@ -81,6 +81,7 @@ int CGTTest(int crateNum, uint32_t slotMask, uint32_t channelMask, int updateDB,
     lprintf("Going to fire pulser %u times.\n",num_peds);
 
     XL3Packet packet;
+    memset(&packet, 0, sizeof(XL3Packet));
     int total_pulses = 0;
     int numgt = 0;
     // we now send out gts in bunches, checking periodically

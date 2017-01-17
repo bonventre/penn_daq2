@@ -684,6 +684,7 @@ int GetPedestal(int crateNum, int slotNum, uint32_t channelMask, struct pedestal
 
   // now read out memory
   XL3Packet packet;
+  memset(&packet, 0, sizeof(XL3Packet));
   ReadPedestalsArgs *args = (ReadPedestalsArgs *) packet.payload;
   ReadPedestalsResults *results = (ReadPedestalsResults *) packet.payload;
   int reads_left = words_in_mem;
