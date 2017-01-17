@@ -66,7 +66,7 @@ void ControllerLink::RecvCallback(struct bufferevent *bev)
 {
   int totalLength = 0;
   int n;
-  char input[1000];
+  char *input = (char *) malloc(1000);
   memset(input,'\0',1000);
   while (1){
     n = bufferevent_read(bev, input+strlen(input), sizeof(input));
@@ -150,7 +150,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("Usage: xl3_rw -c [crate_num (int)] "
           "-a [address (hex)] -d [data (hex)]\n"
           "Please check xl3/xl3_registers.h for the address mapping\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t address = GetUInt(input,'a',0x12000007);
@@ -161,7 +161,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     XL3RW(crateNum,address,data);
     UnlockConnections(0,0x1<<crateNum);
@@ -174,7 +174,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-D (load tdisc from db) -C (load tcmos values from db) -A (load all from db) "
           "-N (load vthr from zdisc db) "
           "-e (use crate/card specific values from ECAL db) -t (enable nhit 100 and nhit 20 triggers)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int xilinxLoadNormal = GetFlag(input,'x');
@@ -199,7 +199,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     CrateInit(crateNum,slotMask,xilinxLoad,
         useVBal,useVThr,useTDisc,useTCmos,useAll,useNoise,useHw,enableTriggers);
@@ -208,7 +208,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"xr",2) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: xr -c [crate num (int)] -r [register number (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int reg = GetInt(input,'c',2);
@@ -218,7 +218,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     uint32_t address = xl3RegAddresses[reg] + READ_REG;
     XL3RW(crateNum,address,0x0);
@@ -227,7 +227,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"xw",2) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: xw -c [crate num (int)] -r [register number (int)] -d [data (hex)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int reg = GetInt(input,'r',0);
@@ -238,7 +238,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     uint32_t address = xl3RegAddresses[reg] + WRITE_REG;
     XL3RW(crateNum,address,data);
@@ -247,7 +247,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"xl3_queue_rw",12) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: xl3_queue_rw -c [crate num (int)] -a [address (hex)] -d [data (hex)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t address = GetUInt(input,'a',0x0);
@@ -258,7 +258,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     XL3QueueRW(crateNum, address, data);
     UnlockConnections(0,0x1<<crateNum);
@@ -266,7 +266,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"sm_reset",8) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: sm_reset -c [crate num (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int busy = LockConnections(0,0x1<<crateNum);
@@ -275,7 +275,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     SMReset(crateNum);
     UnlockConnections(0,0x1<<crateNum);
@@ -283,7 +283,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"debugging_on",12) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: debugging_on -c [crate num (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int busy = LockConnections(0,0x1<<crateNum);
@@ -292,7 +292,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     DebuggingMode(crateNum,1);
     UnlockConnections(0,0x1<<crateNum);
@@ -300,7 +300,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"debugging_off",13) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: debugging_off -c [crate num (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int busy = LockConnections(0,0x1<<crateNum);
@@ -309,7 +309,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     DebuggingMode(crateNum,0);
     UnlockConnections(0,0x1<<crateNum);
@@ -318,7 +318,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: change_mode -c [crate num (int)] -n (normal mode)"
           "-s [slot mask (hex)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int mode = GetFlag(input,'n');
@@ -329,7 +329,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     ChangeMode(crateNum,mode,dataAvailMask);
     UnlockConnections(0,0x1<<crateNum);
@@ -342,7 +342,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     CheckXL3Status(crateNum);
     UnlockConnections(0,0x1<<crateNum);
@@ -351,7 +351,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: read_local_voltage -c [crate num (int)] -v [voltage select]\n"
           "0 - VCC\n1 - VEE\n2 - VP8\n3 - V24P\n4 - V24M\n5,6,7 - temperature monitors\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int voltage = GetInt(input,'v',0);
@@ -361,7 +361,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     ReadLocalVoltage(crateNum,voltage);
     UnlockConnections(0,0x1<<crateNum);
@@ -369,7 +369,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"hv_readback",11) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: hv_readback -c [crate num (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int busy = LockConnections(0,0x1<<crateNum);
@@ -378,7 +378,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     HVReadback(crateNum);
     UnlockConnections(0,0x1<<crateNum);
@@ -387,7 +387,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: set_alarm_level -c [crate num (int)] -l/L [lower limit (float/int dac value)] -u/U [upper limit (float/int dac value)]  -a [select alarm]\n"
           "0: Vcc\n1:Vee\n2:Vp24\n3:Vm24\n4:Vp8\n5:Temp\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     float lowAlarm = GetFloat(input,'l',-999.0);
@@ -401,7 +401,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     SetAlarmLevel(crateNum,lowAlarm,highAlarm,lowDac,highDac,alarm);
     UnlockConnections(0,0x1<<crateNum);
@@ -409,7 +409,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"set_alarm_dac",13) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_alarm_dac -c [crate num (int)] -0 [dac 0 setting (hex)] -1 [dac 1] -2 [dac 2]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t dacs[3];
@@ -422,7 +422,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     SetAlarmDac(crateNum,dacs);
     UnlockConnections(0,0x1<<crateNum);
@@ -430,7 +430,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"fr",2) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: fr -c [crate num (int)] -s [slot num (int)] -r [register num (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int slotNum = GetInt(input,'s',13);
@@ -441,7 +441,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     uint32_t address = fecRegAddresses[reg] + READ_REG + FEC_SEL*slotNum;
     XL3RW(crateNum,address,0x0);
@@ -450,7 +450,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"fw",2) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: fw -c [crate num (int)] -s [slot num (int)] -r [register num (int)] -d [data (hex)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int slotNum = GetInt(input,'s',13);
@@ -462,7 +462,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     uint32_t address = fecRegAddresses[reg] + WRITE_REG + FEC_SEL*slotNum;
     XL3RW(crateNum,address,data);
@@ -471,7 +471,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"load_relays",11) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: load_relays -c [crate num (int)] -p [set pattern for all slots (hex)] -(00-15) [set pattern for slot (hex)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t patterns[16];
@@ -482,7 +482,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     LoadRelays(crateNum,patterns);
     UnlockConnections(0,0x1<<crateNum);
@@ -490,7 +490,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"read_bundle",11) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: read_bundle -c [crate num (int)] -s [slot num (int)] -q (quiet mode)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int quiet = GetFlag(input,'q');
@@ -501,7 +501,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     ReadBundle(crateNum,slotNum,quiet);
     UnlockConnections(0,0x1<<crateNum);
@@ -510,7 +510,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: setup_chinj -c [crate num (int)] "
           "-s [slot mask (hex)] -p [channel mask (hex)] -d [dac value (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -522,7 +522,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     xl3s[crateNum]->SetupChargeInjection(slotMask,chanMask,dacValue);
     UnlockConnections(0,0x1<<crateNum);
@@ -531,7 +531,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: load_dac -c [crate num (int)] "
           "-s [slot num (int)] -d [dac num (int)] -v [dac value (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int slotNum = GetInt(input,'s',13);
@@ -543,7 +543,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     xl3s[crateNum]->LoadsDac(dacNum,dacValue,slotNum);
     printf("loaded dac %d\n",dacNum);
@@ -553,7 +553,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: sbc_control -c (connect) | -k (kill) | -r (reconnect) "
           "-i [identity file] -m (start orcareadout manually)\n");
-      return NULL;
+      goto err;
     }
     int connect = GetFlag(input,'c');
     int kill = GetFlag(input,'k');
@@ -573,7 +573,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     SBCControl(connect,kill,manualStart,idFile);
     UnlockConnections(1,0x0);
@@ -581,7 +581,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"mtc_init",8) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: mtc_init -x (load xilinx)\n");
-      return NULL;
+      goto err;
     }
     int xilinx = GetFlag(input,'x');
     int busy = LockConnections(1,0x0);
@@ -590,7 +590,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("Those connections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     MTCInit(xilinx);
     UnlockConnections(1,0x0);
@@ -600,7 +600,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("Usage: mr -r [register number (int)]\n");
       lprintf("type \"help mtc_registers\" to get "
           "a list of registers with numbers and descriptions\n");
-      return NULL;
+      goto err;
     }
     int reg = GetInt(input,'r',0);
     int busy = LockConnections(1,0x0);
@@ -609,7 +609,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     uint32_t address = mtcRegAddresses[reg];
     MTCRead(address);
@@ -620,7 +620,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("Usage: mw -r [register number (int)] -d [data (hex)]\n");
       lprintf("type \"help mtc_registers\" to get "
           "a list of registers with numbers and descriptions\n");
-      return NULL;
+      goto err;
     }
     int reg = GetInt(input,'r',0);
     uint32_t data = GetUInt(input,'d',0x0);
@@ -630,7 +630,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     uint32_t address = mtcRegAddresses[reg];
     MTCWrite(address,data);
@@ -639,7 +639,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"mtc_read",8) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: mtc_read -a [address (hex)]\n");
-      return NULL;
+      goto err;
     }
     int address = GetUInt(input,'a',0x0);
     int busy = LockConnections(1,0x0);
@@ -648,7 +648,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     MTCRead(address);
     UnlockConnections(1,0x0);
@@ -656,7 +656,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"mtc_write",9) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: mtc_write -a [address (hex)] -d [data (hex)]\n");
-      return NULL;
+      goto err;
     }
     uint32_t address = GetUInt(input,'a',0x0);
     uint32_t data = GetUInt(input,'d',0x0);
@@ -666,14 +666,14 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     MTCWrite(address,data);
     UnlockConnections(1,0x0);
   }else if (strncmp(input,"mtc_delay",9) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: mtc_delay -t [delay time in ns (float)]\n");
-      return NULL;
+      goto err;
     }
     float delaytime = GetFloat(input,'t',200);
     int busy = LockConnections(1,0x0);
@@ -682,14 +682,14 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     MTCDelay(delaytime);
     UnlockConnections(1,0x0);
   }else if (strncmp(input,"set_mtca_thresholds",19) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_mtca_thresholds -(00-13) [voltage in millivolts (float)] -v [set all voltages (float)]\n");
-      return NULL;
+      goto err;
     }
 
     float voltages[14];
@@ -700,7 +700,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->LoadMTCADacs(voltages);
     lprintf("Finished loading MTCA dacs\n");
@@ -709,7 +709,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"set_gt_mask",11) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_gt_mask -m [mask (hex)] -o ('or' with current mask)\n");
-      return NULL;
+      goto err;
     }
 
     uint32_t mask = GetUInt(input,'m',0x0);
@@ -720,7 +720,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     if (ored){
       mtc->SetGTMask(mask);
@@ -734,7 +734,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"set_gt_crate_mask",17) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_gt_crate_mask -m [mask (hex)] -o ('or' with current mask)\n");
-      return NULL;
+      goto err;
     }
 
     uint32_t mask = GetUInt(input,'m',0x0);
@@ -745,7 +745,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     if (ored){
       mtc->SetGTCrateMask(mask);
@@ -759,7 +759,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"set_ped_crate_mask",18) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_ped_crate_mask -m [mask (hex)] -o ('or' with current mask)\n");
-      return NULL;
+      goto err;
     }
 
     uint32_t mask = GetUInt(input,'m',0x0);
@@ -770,7 +770,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     if (ored){
       mtc->SetPedCrateMask(mask);
@@ -784,7 +784,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"enable_pulser",13) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: enable_pulser\n");
-      return NULL;
+      goto err;
     }
     int busy = LockConnections(1,0x0);
     if (busy){
@@ -792,7 +792,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->EnablePulser();
     lprintf("Pulser enabled\n");
@@ -801,7 +801,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"disable_pulser",14) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: disable_pulser\n");
-      return NULL;
+      goto err;
     }
     int busy = LockConnections(1,0x0);
     if (busy){
@@ -809,7 +809,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->DisablePulser();
     lprintf("Pulser disabled\n");
@@ -818,7 +818,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"enable_pedestal",15) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: enable_pedestal\n");
-      return NULL;
+      goto err;
     }
     int busy = LockConnections(1,0x0);
     if (busy){
@@ -826,7 +826,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->EnablePedestal();
     lprintf("Pedestals enabled\n");
@@ -835,7 +835,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"disable_pedestal",16) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: disable_pedestal\n");
-      return NULL;
+      goto err;
     }
     int busy = LockConnections(1,0x0);
     if (busy){
@@ -843,7 +843,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->DisablePedestal();
     lprintf("Pedestals disabled\n");
@@ -852,7 +852,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"set_pulser_freq",15) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: set_pulser_freq -f [frequency (float)]\n");
-      return NULL;
+      goto err;
     }
     float freq = GetFloat(input,'f',1);
     int busy = LockConnections(1,0x0);
@@ -861,7 +861,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->SetPulserFrequency(freq);
     lprintf("Pulser frequency set\n");
@@ -870,7 +870,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"send_softgt",11) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: send_softgt\n");
-      return NULL;
+      goto err;
     }
     int busy = LockConnections(1,0x0);
     if (busy){
@@ -878,7 +878,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->SoftGT();
     lprintf("Soft gt sent\n");
@@ -887,7 +887,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"multi_softgt",12) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: multi_softgt -n [number of pulses (int)]\n");
-      return NULL;
+      goto err;
     }
     int num = GetInt(input,'n',10);
     int busy = LockConnections(1,0x0);
@@ -896,7 +896,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     mtc->MultiSoftGT(num);
     lprintf("Multi Soft gt sent\n");
@@ -906,7 +906,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: board_id -c [crate_num (int)] "
           "-s [slot mask (hex)] -l (update location in database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int slotMask = GetUInt(input,'s',0xFFFF);
@@ -917,7 +917,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     BoardID(crateNum,slotMask,updateLocation);
     UnlockConnections(0,0x1<<crateNum);
@@ -926,7 +926,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: cald_test -c [crate_num (int)] "
           "-s [slot mask (hex)] -u [upper limit] -l [lower limit] -n [num points to sample] -p [samples per point] -d (update database) \n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -941,7 +941,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     CaldTest(crateNum,slotMask,upper,lower,num,samples,update);
     UnlockConnections(0,0x1<<crateNum);
@@ -950,7 +950,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: cgt_test -c [crate_num (int)] "
           "-s [slot mask (hex)] -p [channel mask (hex)] -d (update database) \n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -962,7 +962,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     CGTTest(crateNum,slotMask,channelMask,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -975,7 +975,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-l [charge lower limit] -u [charge upper limit] "
           "-a [charge select (0=qhl,1=qhs,2=qlx,3=tac)] "
           "-e (enable pedestal) -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -995,7 +995,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,qSelect,pedOn,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1004,7 +1004,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: crate_cbal -c [crate num (int)] "
           "-s [slot mask (hex)] -p [channel mask (hex)] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1016,7 +1016,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     CrateCBal(crateNum,slotMask,channelMask,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1025,7 +1025,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: disc_check -c [crate num (int)] "
           "-s [slot mask (hex)] -n [num pedestals] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1037,7 +1037,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     DiscCheck(crateNum,slotMask,numPeds,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1046,7 +1046,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: fec_test -c [crate_num (int)] "
           "-s [slot mask (hex)] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int update = GetFlag(input,'d');
@@ -1057,7 +1057,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     FECTest(crateNum,slotMask,update);
     UnlockConnections(0,0x1<<crateNum);
@@ -1066,7 +1066,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: fifo_test -c [crate num (int)] "
           "-s [slot mask (hex)] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1077,7 +1077,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     FifoTest(crateNum,slotMask,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1087,7 +1087,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("Usage: gtvalid_test -c [crate num (int)] "
           "-s [slot mask (hex)] -p [channel mask (hex)] "
           "-g [gt cutoff] -t (use twiddle bits) -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1101,7 +1101,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     GTValidTest(crateNum,slotMask,channelMask,gtCutoff,twiddleOn,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1110,7 +1110,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: mb_stability_test -c [crate num (int)] "
           "-s [slot mask (hex)] -n [num pedestals (int)] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1122,7 +1122,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     MbStabilityTest(crateNum,slotMask,numPeds,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1131,7 +1131,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: mem_test -c [crate_num (int)] "
           "-s [slot num (int)] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int slotNum = GetInt(input,'s',13);
@@ -1142,7 +1142,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     MemTest(crateNum,slotNum,update);
     UnlockConnections(0,0x1<<crateNum);
@@ -1154,7 +1154,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-l [lower Q ped check value] -u [upper Q ped check value] "
           "-f [pulser frequency (0 for softgts)] -n [number of pedestals per cell] "
           "-t [gt delay] -w [pedestal width] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1172,7 +1172,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     PedRun(crateNum,slotMask,channelMask,frequency,gtDelay,pedWidth,numPeds,upper,lower,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1183,7 +1183,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-v [dac value (int)] -s [slot mask (hex)] "
           "-f [frequency (float)] -p [channel mask (hex)] "
           "-d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1197,7 +1197,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     SeeReflection(crateNum,slotMask,channelMask,dacValue,frequency,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1210,7 +1210,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-n [max nhit to scan to (int)] -m [min adc count thresh to scan down to (int)] "
           "-d [threshold dac to program (by default the one you are triggering on)] "
           "-q (quick mode - samples every 10th dac count)\n");
-      return NULL;
+      goto err;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
     uint32_t slotMasks[19];
@@ -1228,7 +1228,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     TriggerScan(crateMask,slotMasks,triggerSelect,dacSelect,nhitMax,threshMin,fileName,quick);
     UnlockConnections(1,crateMask);
@@ -1237,7 +1237,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: get_ttot -c [crate num (int)] "
           "-s [slot mask (hex)] -t [target time] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1249,7 +1249,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     GetTTot(crateNum,slotMask,targetTime,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1258,7 +1258,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: set_ttot -c [crate num (int)] "
           "-s [slot mask (hex)] -t [target time] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1270,7 +1270,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     SetTTot(crateNum,slotMask,targetTime,update);
     UnlockConnections(1,0x1<<crateNum);
@@ -1279,7 +1279,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: vmon -c [crate num (int)]"
           "-s [slot mask (hex)] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1290,7 +1290,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     VMon(crateNum,slotMask,update);
     UnlockConnections(0,0x1<<crateNum);
@@ -1298,7 +1298,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"local_vmon",10) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: local_vmon -c [crate num (int)]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     int busy = LockConnections(0,0x1<<crateNum);
@@ -1307,7 +1307,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     LocalVMon(crateNum);
     UnlockConnections(0,0x1<<crateNum);
@@ -1318,7 +1318,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("Usage: zdisc -c [crate num (int)] "
           "-s [slot mask (hex)] -o [offset] -r [rate] "
           "-d (update database)\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1331,7 +1331,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     ZDisc(crateNum,slotMask,rate,offset,update);
     UnlockConnections(0,0x1<<crateNum);
@@ -1350,7 +1350,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Usage: run_pedestals_end_mtc\n");
       if (crate && mtc)
         lprintf("Usage: run_pedestals_end -c [crate mask (hex)]\n");
-      return NULL;
+      goto err;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
     int busy = LockConnections(mtc,crateMask*crate);
@@ -1359,7 +1359,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     RunPedestalsEnd(crateMask,crate,mtc);
     UnlockConnections(mtc,crateMask*crate);
@@ -1383,7 +1383,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       if (mtc)
         lprintf("-f [frequency (float)] -t [gt delay] -w [ped width]");
       lprintf("\n");
-      return NULL;
+      goto err;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
     uint32_t slotMasks[19];
@@ -1399,7 +1399,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     RunPedestals(crateMask,slotMasks,channelMask,frequency,gtDelay,pedWidth,crate,mtc);
     UnlockConnections(mtc,crateMask*crate);
@@ -1412,7 +1412,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("4: crate_cbal, 5: ped_run 6: chinj_scan, 7: set_ttot\n");
       lprintf("8: get_ttot, 9: disc_check, 10: gtvalid_test, 11: zdisc\n");
       lprintf("12: mb_stability_test, 13: fifo_test, 14: cald_test, 15: mem_test\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1424,7 +1424,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     FinalTest(crateNum,slotMask,testMask,skip);
     UnlockConnections(1,0x1<<crateNum);
@@ -1438,7 +1438,7 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("0: fec_test, 1: board_id, 2: cgt_test, 3: crate_cbal\n");
       lprintf("4: ped_run, 5: set_ttot, 6: get_ttot, 7: disc_check\n");
       lprintf("8: gtvalid_test, 9: zdisc, 10: find_noise\n");
-      return NULL;
+      goto err;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
     uint32_t slotMasks[19];
@@ -1454,7 +1454,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     ECAL(crateMask,slotMasks,testMask,loadECAL,createDocs);
     UnlockConnections(1,crateMask);
@@ -1462,7 +1462,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"find_noise",10) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: find_noise -c [crate mask (hex)] -(00-18) [slot masks (hex)] -s [all slot masks (hex)] -d (update database)\n");
-      return NULL;
+      goto err;
     }
     uint32_t crateMask = GetUInt(input,'c',0x4);
     uint32_t slotMasks[19];
@@ -1474,7 +1474,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     FindNoise(crateMask,slotMasks,20,1,updateDB);
     UnlockConnections(1,crateMask);
@@ -1482,7 +1482,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"dac_sweep",9) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: dac_sweep -c [crate number (int)] -s [slot mask (hex)] -m [dac mask (hex)] -n [to pic a specific dac]\n");
-      return NULL;
+      goto err;
     }
     int crateNum = GetInt(input,'c',2);
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
@@ -1495,7 +1495,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("Trying to access a board that has not been connected\n");
       else
         lprintf("ThoseConnections are currently in use.\n");
-      return NULL;
+      goto err;
     }
     DACSweep(crateNum,slotMask,dacMask,dacNum,updateDB);
     UnlockConnections(0,0x1<<crateNum);
@@ -1524,7 +1524,7 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"run_macro",9) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: run_macro -f [file name]\n");
-      return NULL;
+      goto err;
     }
     char fileName[1000];
     GetString(input,fileName,'f',"");
@@ -1558,5 +1558,9 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("XL3 #%d\n",i);
     }
   }
+
+err:
+  free(input);
+  return NULL;
 }
 
