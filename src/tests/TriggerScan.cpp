@@ -17,7 +17,7 @@ int TriggerScan(uint32_t crateMask, uint32_t *slotMasks, int triggerSelect, int 
   int min_nhit = 0;
   int last_zero, one_count,noise_count;
   float values[10000];
-  uint32_t pedestals[19][16];
+  uint32_t pedestals[MAX_XL3_CON][16];
   uint16_t counts[14];
   for (int i=0;i<14;i++)
     counts[i] = 10;
@@ -41,7 +41,7 @@ int TriggerScan(uint32_t crateMask, uint32_t *slotMasks, int triggerSelect, int 
       return -1;
     }
 
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         for (int j=0;j<16;j++)
           if ((0x1<<j) & slotMasks[i]){
@@ -92,7 +92,7 @@ int TriggerScan(uint32_t crateMask, uint32_t *slotMasks, int triggerSelect, int 
         for (int i=0;i<unfull_fec;i++)
           unfull_pedestal |= 0x1<<i;
 
-        for (int icrate=0;icrate<19;icrate++){
+        for (int icrate=0;icrate<MAX_XL3_CON;icrate++){
           if ((0x1<<icrate) & crateMask){
             for (int ifec=0;ifec<16;ifec++){
               if ((0x1<<ifec) & slotMasks[icrate]){

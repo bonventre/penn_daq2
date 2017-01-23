@@ -21,7 +21,7 @@ int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float
     lprintf("Crate Settings:\n");
     lprintf("--------------------------------\n");
     lprintf("Crate Mask:     0x%05x\n",crateMask);
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         lprintf("Crate %d: Slot Mask:    0x%04x\n",i,slotMasks[i]); 
     lprintf("Channel Mask:     0x%08x\n\n",channelMask);
@@ -38,7 +38,7 @@ int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float
 
   // Put all xl3s in init mode for now and reset all the FECs
   if (setupCrates){
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         lprintf("Preparing crate %d.\n",i);
         xl3s[i]->ChangeMode(INIT_MODE,0x0);
@@ -80,7 +80,7 @@ int RunPedestals(int crateMask, uint32_t *slotMasks, uint32_t channelMask, float
 
   // now enable the readout on the xl3s
   if (setupCrates)
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         xl3s[i]->ChangeMode(NORMAL_MODE,slotMasks[i]);
 
@@ -102,7 +102,7 @@ int RunPedestalsEnd(int crateMask, int setupCrates, int setupMTC)
     // put all the crates back into init mode so they stop reading out
     // and turn off the pedestals
     if (setupCrates)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask){
           lprintf("Stopping crate %d\n",i);
           xl3s[i]->ChangeMode(INIT_MODE,0x0);
