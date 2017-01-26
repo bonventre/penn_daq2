@@ -286,17 +286,24 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
                   ped[i].thiscell[j].qhsbar < lower ||
                   ped[i].thiscell[j].qhsbar > upper ||
                   ped[i].thiscell[j].qlxbar < lower ||
-                  ped[i].thiscell[j].qlxbar > upper ||
-                  ped[i].thiscell[j].tacbar > TACBAR_MAX ||
-                  ped[i].thiscell[j].tacbar < TACBAR_MIN)
-
+                  ped[i].thiscell[j].qlxbar > upper)
                 error_flag[i] |= 0x2;
-              //lprintf("%d %d %d %d\n",ped[i].thiscell[j].qhlbar,ped[i].thiscell[j].qhsbar,ped[i].thiscell[j].qlxbar,ped[i].thiscell[j].tacbar);
+              if (ped[i].thiscell[j].tacbar > TACBAR_MAX ||
+                  ped[i].thiscell[j].tacbar < TACBAR_MIN)
+                error_flag[i] |= 0x4;
+              if (ped[i].thiscell[j].qhlrms > 16.0 || 
+                  ped[i].thiscell[j].qhsrms > 8.0  ||
+                  ped[i].thiscell[j].qlxrms > 8.0)
+                error_flag[i] |= 0x8;
             }
             if (error_flag[i] & 0x1)
               lprintf(">>>Wrong no of pedestals for this channel\n");
             if (error_flag[i] & 0x2)
               lprintf(">>>Bad Q pedestal for this channel\n");
+            if (error_flag[i] & 0x4)
+              lprintf(">>>Bad TAC pedestal for this channel\n");
+            if (error_flag[i] & 0x8)
+              lprintf(">>>Bad Q RMS pedestal for this channel\n");
           }
         }
 
@@ -365,7 +372,7 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
           int pass_flag = 1;;
           for (int j=0;j<32;j++)
             if (error_flag[j] != 0)
-              pass_flag = 0;;
+              pass_flag = 0;
           json_append_member(newdoc,"pass",json_mkbool(pass_flag));
           json_append_member(newdoc,"balanced",json_mkbool(balanced));
 
