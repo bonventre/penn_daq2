@@ -974,7 +974,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-f [frequency] -t [gtdelay] -w [ped with] -n [num pedestals] "
           "-l [charge lower limit] -u [charge upper limit] "
           "-a [charge select (0=qhl,1=qhs,2=qlx,3=tac)] "
-          "-e (enable pedestal) -d (update database)\n");
+          "-e [enable pedestals (0=off, 1=on)] -d (update database)\n");
       goto err;
     }
     int crateNum = GetInt(input,'c',2);
@@ -983,11 +983,11 @@ void *ControllerLink::ProcessCommand(void *arg)
     float freq = GetFloat(input,'f',0);
     int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
     int pedWidth = GetInt(input,'w',DEFAULT_PED_WIDTH);
-    int numPeds = GetInt(input,'n',1);
-    float lower = GetFloat(input,'l',0);
+    int numPeds = GetInt(input,'n',10);
+    float lower = GetFloat(input,'l',400);
     float upper = GetFloat(input,'u',5000);
     int qSelect = GetInt(input,'a',0);
-    int pedOn = GetFlag(input,'e');
+    int pedOn = GetInt(input,'e',1);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
