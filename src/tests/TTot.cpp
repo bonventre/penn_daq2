@@ -14,8 +14,8 @@ int GetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
   lprintf("*** Starting Get TTot ******************\n");
 
 
-  uint16_t times[32*16]={0};
-  int tot_errors[16][32]={{0}};
+  uint16_t times[32*16];
+  int tot_errors[16][32];
 
   try {
 
@@ -93,21 +93,13 @@ int GetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int f
 
 int SetTTot(int crateNum, uint32_t slotMask, int targetTime, int updateDB, int finalTest, int ecal)
 {
-  uint16_t allrmps[16][8]={{0}};
-  uint16_t allvsis[16][8]={{0}};
-  uint16_t alltimes[16*32]={0};
-  int tot_errors[16][32] = {{0}};
-  uint16_t rmp[8]={0};
-  uint16_t vsi[8]={0};
-  uint16_t rmpup[8]={0};
-  uint16_t vli[8]={0};
-  uint16_t rmp_high[8]={0};
-  uint16_t rmp_low[8]={0};
+  uint16_t allrmps[16][8],allvsis[16][8],alltimes[16*32];
+  int tot_errors[16][32];
+  uint16_t rmp[8],vsi[8],rmpup[8],vli[8];
+  uint16_t rmp_high[8],rmp_low[8];
   uint16_t chips_not_finished;
-  int diff[32]={0};
-  uint32_t dac_nums[50]={0};
-  uint32_t dac_values[50]={0};
-  uint32_t slot_nums[50]={0};
+  int diff[32];
+  uint32_t dac_nums[50],dac_values[50],slot_nums[50];
   int num_dacs;
   int result;
 
@@ -335,9 +327,8 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
   int time;
   uint32_t chan_done_mask;
   float real_delay;
-  uint32_t init[32]={0};
-  uint32_t fin[32]={0};
-  uint32_t temp[8][32]={{0}};
+  uint32_t init[32],fin[32];
+  uint32_t temp[8][32];
 
   for (int i=0;i<16;i++){
     if ((0x1<<i) & slot_mask){
@@ -433,9 +424,8 @@ int MeasureTTot(int crate, uint32_t slot_mask, int start_time, uint16_t *disc_ti
 int CheckTTot(int crate, int slot_num, uint32_t chan_mask, int goal_time, int *diff)
 {
   float real_delay;
-  uint32_t init[32]={0};
-  uint32_t fin[32]={0};
-  uint32_t temp[8][32]={{0}};
+  uint32_t init[32],fin[32];
+  uint32_t temp[8][32];
 
   // initialize array
   for (int i=0;i<32;i++)
@@ -445,8 +435,7 @@ int CheckTTot(int crate, int slot_num, uint32_t chan_mask, int goal_time, int *d
 
   // measure it twice to make sure we are good
   for (int i=0;i<2;i++){
-   real_delay = mtc->SetGTDelay((float) goal_time - TUB_DELAY);
-
+    real_delay = mtc->SetGTDelay((float) goal_time - TUB_DELAY);
     while (real_delay < ((float) goal_time - TUB_DELAY - 5))
     {
       lprintf("3 - got %f instead of %f, trying again\n",real_delay,(float)goal_time - TUB_DELAY);
@@ -476,6 +465,6 @@ int CheckTTot(int crate, int slot_num, uint32_t chan_mask, int goal_time, int *d
         diff[k] = 0;
       }
     }
- }
+  }
   return 0;
 }
