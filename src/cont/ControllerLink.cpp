@@ -28,13 +28,13 @@
 #include "RunPedestals.h"
 #include "FinalTest.h"
 #include "ECAL.h"
+#include "CreateFECDocs.h"
 #include "FindNoise.h"
 #include "DACSweep.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
 #include "ControllerLink.h"
-
 
 ControllerLink::ControllerLink() : GenericLink(CONT_PORT)
 {
@@ -1432,7 +1432,6 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"ecal",4) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: ecal -c [crate mask (hex)] -s [all slot masks (hex)] -(00-18) [one slot mask (hex)]\n");
-      lprintf("-d (create FEC db docs)\n");
       lprintf("-l [ecal id to update / finish tests (string)] -t [test mask to update / finish (hex)]\n");
       lprintf("For test mask, the bit map is: \n");
       lprintf("0: fec_test, 1: board_id, 2: cgt_test, 3: crate_cbal\n");
@@ -1447,7 +1446,6 @@ void *ControllerLink::ProcessCommand(void *arg)
     char loadECAL[500];
     memset(loadECAL,'\0',sizeof(loadECAL));
     GetString(input,loadECAL,'l',"");
-    int createDocs = GetFlag(input,'d');
     int busy = LockConnections(1,crateMask);
     if (busy){
       if (busy > 9)
@@ -1456,7 +1454,27 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("ThoseConnections are currently in use.\n");
       goto err;
     }
-    ECAL(crateMask,slotMasks,testMask,loadECAL,createDocs);
+    ECAL(crateMask,slotMasks,testMask,loadECAL);
+    UnlockConnections(1,crateMask);
+
+  }else if (strncmp(input,"create_fec_docs",14) == 0){
+    if (GetFlag(input,'h')){
+      lprintf("Usage: create_fec_docs -c [crate mask (hex)] -l [ecal id to upload FEC docs for] \n");
+      goto err;
+    }
+    uint32_t crateMask = GetUInt(input,'c',0x4);
+    char loadECAL[500];
+    memset(loadECAL,'\0',sizeof(loadECAL));
+    GetString(input,loadECAL,'l',"");
+    int busy = LockConnections(1,crateMask);
+    if (busy){
+      if (busy > 9)
+        lprintf("Trying to access a board that has not been connected\n");
+      else
+        lprintf("ThoseConnections are currently in use.\n");
+      goto err;
+    }
+    CreateFECDocs(loadECAL);
     UnlockConnections(1,crateMask);
 
   }else if (strncmp(input,"find_noise",10) == 0){

@@ -317,7 +317,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
   JsonNode *hw = json_find_member(fec_doc,"hw");
   JsonNode *test = json_find_member(fec_doc,"test");
 
-
+  int test_counter[9] = {0}; // Make sure each test is run once in the ECAL
 
   JsonNode *channel_status = json_find_member(fec_doc,"channel");
   json_remove_from_parent(channel_status);
@@ -349,6 +349,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
     json_append_element(vbal,high);
     json_append_element(vbal,low);
     json_append_member(hw,"vbal",vbal);
+    test_counter[0]+=1;
 
   }else if (strcmp(type,"zdisc") == 0){
     JsonNode *vthr_zero = json_mkarray();
@@ -357,6 +358,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
       json_append_element(vthr_zero,json_mknumber(json_get_number(json_find_element(vals,i))));
     }
     json_append_member(hw,"vthr_zero",vthr_zero);
+    test_counter[1]+=1;
 
   }else if (strcmp(type,"set_ttot") == 0){
    JsonNode *tdisc = json_mkobject();
@@ -385,7 +387,8 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
    json_append_member(tdisc,"vsi",vsi);
    json_append_member(tdisc,"vli",vli);
    json_append_member(hw,"tdisc",tdisc);
-   
+   test_counter[2]+=1;
+
   }else if (strcmp(type,"cmos_m_gtvalid") == 0){
     JsonNode *tcmos = json_mkobject();
     json_append_member(tcmos,"vmax",json_mknumber(json_get_number(json_find_member(test_doc,"vmax"))));
@@ -412,6 +415,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
     }
     json_append_member(tcmos,"tac_trim",tac_trim);
     json_append_member(hw,"tcmos",tcmos);
+    test_counter[3]+=1;
 
   }else if (strcmp(type,"find_noise_2") == 0){
     JsonNode *vthr = json_mkarray();
@@ -422,7 +426,8 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
       json_append_element(vthr,json_mknumber(json_get_number(json_find_member(one_chan,"noiseless"))));
     }
     json_append_member(hw,"vthr",vthr);
-  
+    test_counter[4]+=1;
+
   }else if (strcmp(type,"ped_run") == 0){
     JsonNode *errors = json_find_member(test_doc,"error_flags");
     for (i=0;i<32;i++){
@@ -430,6 +435,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<i);
       }
     }
+    test_counter[5]+=1;
 
   }else if (strcmp(type,"cgt_test") == 0){
     JsonNode *errors = json_find_member(test_doc,"errors");
@@ -438,6 +444,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<i);
       }
     }
+    test_counter[6]+=1;
 
   }else if (strcmp(type,"get_ttot") == 0){
     JsonNode *channels = json_find_member(test_doc,"channels");
@@ -448,6 +455,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<chan_num);
       }
     }
+    test_counter[7]+=1;
 
   }else if (strcmp(type,"disc_check") == 0){
     JsonNode *channels = json_find_member(test_doc,"channels");
@@ -458,6 +466,7 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<chan_num);
       }
     }
+    test_counter[8]+=1;
 
   }else if (strcmp(type,"cmos_m_gtvalid") == 0){
     JsonNode *channels = json_find_member(test_doc,"channels");
@@ -492,6 +501,13 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
       json_append_element(new_relays,json_mknumber(1));
   }
   json_append_member(fec_doc,"relay_on",new_relays);
+
+  for(i=0; i < 9; i++){
+    if(test_counter[i] < 1){
+      lprintf("One of the tests did not run, will not create FEC doc \n");
+      return -1;
+    }
+  }
 
   return 0;
 }
@@ -743,7 +759,7 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
   return 0;
 }
 
-int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
+int GenerateFECDocFromECAL(const char* id)
 {
   lprintf("*** Generating FEC documents from ECAL ***\n");
 
@@ -762,7 +778,6 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
   }
   JsonNode *ecalconfig_doc = json_decode(ecaldoc_response->resp.data);
 
-  uint32_t testedMask = 0x0;
   uint32_t crateMask = 0x0;
   uint16_t slotMasks[20];
   for (int i=0;i<20;i++){
@@ -811,7 +826,6 @@ int GenerateFECDocFromECAL(uint32_t testMask, const char* id)
       for (int j=0;j<16;j++){
         if ((0x1<<j) & slotMasks[i]){
           lprintf("crate %d slot %d\n",i,j);
-          testedMask = 0x0;
 
           // lets generate the fec document
           JsonNode *doc;

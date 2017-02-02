@@ -21,7 +21,7 @@
 #include "MTCCmds.h"
 #include "ECAL.h"
 
-int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char* loadECAL, int createFECDocs)
+int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char* loadECAL)
 {
   time_t curtime = time(NULL);
   struct timeval moretime;
@@ -244,9 +244,6 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     lprintf("ECAL finished!\n");
 
   }
-
-  if (createFECDocs)
-    GenerateFECDocFromECAL(0x0, ecalID);
 
   lprintf("**********************************************\n");
   lprintf("*** Make sure the ECAL cable is unplugged ****\n");

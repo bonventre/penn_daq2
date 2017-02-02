@@ -24,7 +24,7 @@ int CreateFECDBDoc(int crate, int card, JsonNode** doc_p, JsonNode *ecal_doc);
 int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc);
 int PostFECDBDoc(int crate, int slot, JsonNode *doc);
 int UpdateFECDBDoc(JsonNode *doc);
-int GenerateFECDocFromECAL(uint32_t testMask, const char* id);
+int GenerateFECDocFromECAL(const char* id);
 
 void SetupDebugDoc(int crateNum, int slotNum, JsonNode* doc);
 int PostDebugDoc(int crate, int card, JsonNode* doc, int updateConfig=1);

@@ -121,6 +121,7 @@ COMMAND commands[] = {
     { "run_pedestals_crate", (Function *)NULL, (char *)NULL },
     { "final_test", (Function *)NULL, (char *)NULL },
     { "ecal", (Function *)NULL, (char *)NULL },
+    { "create_fec_docs", (Function *)NULL, (char *)NULL },
     { "find_noise", (Function *)NULL, (char *)NULL },
     { "dac_sweep", (Function *)NULL, (char *)NULL },
     { "check_recv_queues", (Function *)NULL, (char *)NULL },
