@@ -291,9 +291,10 @@ int PedRun(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequenc
               if (ped[i].thiscell[j].tacbar > TACBAR_MAX ||
                   ped[i].thiscell[j].tacbar < TACBAR_MIN)
                 error_flag[i] |= 0x4;
-              if (ped[i].thiscell[j].qhlrms > 16.0 || 
-                  ped[i].thiscell[j].qhsrms > 8.0  ||
-                  ped[i].thiscell[j].qlxrms > 8.0)
+              if (ped[i].thiscell[j].qhlrms > 24.0 || 
+                  ped[i].thiscell[j].qhsrms > 24.0 ||
+                  ped[i].thiscell[j].qlxrms > 24.0 ||
+                  ped[i].thiscell[j].tacrms > 100.0)
                 error_flag[i] |= 0x8;
             }
             if (error_flag[i] & 0x1)
