@@ -12,7 +12,7 @@
 #include <event2/buffer.h>
 #include <event2/thread.h>
 
-#define MAX_XL3_CON     19
+#define MAX_XL3_CON     20
 #define MAX_CONT_CON    1
 #define MAX_VIEW_CON    3
 #define MAX_SBC_CON     1

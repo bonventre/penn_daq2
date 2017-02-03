@@ -36,7 +36,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
   if (useDebug){
     // use zdisc debug values
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         xl3s[i]->UpdateCrateConfig(slotMasks[i]);
         for (int j=0;j<16;j++){
@@ -80,7 +80,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     }
   }else{
     // use the ECAL values
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){
@@ -129,7 +129,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   }
 
   // set all vthr dacs to 255 in all crates in all slots
-  for (int i=0;i<19;i++){
+  for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & crateMask){
       for (int j=0;j<16;j++){
         if ((0x1<<j) & slotMasks[i]){
@@ -150,12 +150,12 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   }
 
   // enable all slots pedestals
-  for (int i=0;i<19;i++)
+  for (int i=0;i<MAX_XL3_CON;i++)
     if ((0x1<<i) & crateMask)
       xl3s[i]->SetCratePedestals(0xFFFF,0xFFFFFFFF);
 
   // enable readout on all crates
-  for (int i=0;i<19;i++)
+  for (int i=0;i<MAX_XL3_CON;i++)
     if ((0x1<<i) & crateMask)
       xl3s[i]->ChangeMode(NORMAL_MODE,slotMasks[i]);
 
@@ -169,14 +169,14 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   // lower it further. 
   // set up masks of which channels we've found the right threshold
 
-  uint32_t found_above[19][16];
-  uint32_t found_below[19][16];
-  uint32_t done_channel[19][16];
-  uint32_t error_channel[19][16];
+  uint32_t found_above[MAX_XL3_CON][16];
+  uint32_t found_below[MAX_XL3_CON][16];
+  uint32_t done_channel[MAX_XL3_CON][16];
+  uint32_t error_channel[MAX_XL3_CON][16];
 
 
   // set up variables, going to start all at zero+50
-  for (int i=0;i<19;i++)
+  for (int i=0;i<MAX_XL3_CON;i++)
     for (int j=0;j<16;j++){
       error_channel[i][j] = 0x0;
       done_channel[i][j] = 0x0;
@@ -199,7 +199,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   // loop until all channels done
   while (done == 0){
     // load new thresholds
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){
@@ -216,7 +216,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
               free(vthr_zeros);
               free(current_vthr);
 
-              for (int c=0;c<19;c++)
+              for (int c=0;c<MAX_XL3_CON;c++)
                 if ((0x1<<c) & crateMask)
                   xl3s[c]->ChangeMode(INIT_MODE,slotMasks[c]);
               return -1;
@@ -228,7 +228,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
     // now that we have our new thresholds, we will measure total count, wait,
     // then measure total count again
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF,total_count1);
         xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF00,total_count2);
@@ -257,7 +257,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
       usleep(SLEEP_TIME);
 
     // measure total count again
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF,total_count1);
         xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF00,total_count2);
@@ -291,7 +291,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
     // now we check each channel and see how we should adjust each threshold
     printf("-----------------\n");
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){
@@ -372,7 +372,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     }
 
     done = 1;
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){
@@ -391,7 +391,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   // we should now have every channel with no extra noise. Now lower each
   // channel one by one, make sure it wasn't some other noisy channel making it
   // look noisy
-  for (int i=0;i<19;i++){
+  for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & crateMask){
     }
   }
@@ -399,7 +399,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
   if (updateDB){
     lprintf("Updating the database\n");
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){
@@ -427,7 +427,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     }
   }
 
-  for (int c=0;c<19;c++)
+  for (int c=0;c<MAX_XL3_CON;c++)
     if ((0x1<<c) & crateMask)
       xl3s[c]->ChangeMode(INIT_MODE,slotMasks[c]);
 

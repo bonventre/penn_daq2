@@ -8,7 +8,7 @@ MTCModel *mtc;
 XL3Model *xl3s[MAX_XL3_CON];
 ControllerLink *contConnection;
 pthread_mutex_t startTestLock;
-char finalTestIDs[19][16][500];
+char finalTestIDs[MAX_XL3_CON][16][500];
 char ecalID[500];
 
 long int startTime=0, endTime=0, lastPrintTime=0, recvBytes=0, megaBundleCount=0; 

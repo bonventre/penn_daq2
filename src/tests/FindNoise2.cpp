@@ -21,7 +21,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   char get_db_address[500];
   if (useDebug){
     // use zdisc debug values
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         xl3s[i]->UpdateCrateConfig(slotMasks[i]);
         for (int j=0;j<16;j++){
@@ -63,7 +63,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     }
   }else{
     // use the ECAL values
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){
@@ -123,7 +123,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   }
 
   // set all vthr dacs to 255 in all crates all slots
-  for (int i=0;i<19;i++){
+  for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & crateMask){
       for (int j=0;j<16;j++){
         if ((0x1<<j) & slotMasks[i]){
@@ -141,20 +141,20 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     }
   }
 
-  for (int i=0;i<19;i++)
+  for (int i=0;i<MAX_XL3_CON;i++)
     if ((0x1<<i) & crateMask)
       xl3s[i]->SetCratePedestals(0xFFFF,0xFFFFFFFF);
 
 
-  uint32_t done_mask[19*16];
+  uint32_t done_mask[MAX_XL3_CON*16];
   uint32_t total_count1[8][32];
   uint32_t total_count2[8][32];
   uint32_t mycount[3];
   uint32_t result;
   
   // figure out which boards are there and talking to us
-  uint32_t existMask[19];
-  for (int i=0;i<19;i++){
+  uint32_t existMask[MAX_XL3_CON];
+  for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & crateMask){
       existMask[i] = slotMasks[i];
       for (int j=0;j<16;j++){
@@ -176,13 +176,13 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
   // loop over channels
   for (int k=0;k<32;k++){
-    for (int i=0;i<19*16;i++){
+    for (int i=0;i<MAX_XL3_CON*16;i++){
       done_mask[i] = 0x0;
     }
 
     // set pedestal masks (remove just the channel we are working on)
     lprintf("Chan %d\n",k);
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         xl3s[i]->SetCratePedestals(0xFFFF,~(0x1<<k));
         xl3s[i]->ChangeMode(NORMAL_MODE,existMask[i]);
@@ -193,7 +193,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     uint32_t crateDoneMask = 0x0;
     do {
       int iter = threshAboveZero - STARTING_THRESH;
-      for (int i=0;i<19;i++){
+      for (int i=0;i<MAX_XL3_CON;i++){
         if ((0x1<<i) & crateMask){
           int numDacs = 0;
           for (int j=0;j<16;j++){
@@ -240,7 +240,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
       usleep(SLEEP_TIME);
 
-      for (int i=0;i<19;i++){
+      for (int i=0;i<MAX_XL3_CON;i++){
         if ((0x1<<i) & crateMask){
           xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF,total_count1);
           xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF00,total_count2);
@@ -288,10 +288,10 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     }while((++threshAboveZero <= MAX_THRESH) && (crateDoneMask != crateMask));
 
     // now we do it again in init mode for noise without readout
-    for (int i=0;i<19*16;i++)
+    for (int i=0;i<MAX_XL3_CON*16;i++)
       done_mask[i] = 0x0;
 
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         xl3s[i]->ChangeMode(INIT_MODE,existMask[i]);
       }
@@ -301,7 +301,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
     crateDoneMask = 0x0;
     do {
       int iter = threshAboveZero - STARTING_THRESH;
-      for (int i=0;i<19;i++){
+      for (int i=0;i<MAX_XL3_CON;i++){
         if ((0x1<<i) & crateMask){
           int numDacs = 0;
           for (int j=0;j<16;j++){
@@ -348,7 +348,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
       usleep(SLEEP_TIME);
 
-      for (int i=0;i<19;i++){
+      for (int i=0;i<MAX_XL3_CON;i++){
         if ((0x1<<i) & crateMask){
           xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF,total_count1);
           xl3s[i]->GetCmosTotalCount(slotMasks[i] & 0xFF00,total_count2);
@@ -397,7 +397,7 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
 
   if (updateDB){
     lprintf("Updating the database\n");
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       if ((0x1<<i) & crateMask){
         for (int j=0;j<16;j++){
           if ((0x1<<j) & slotMasks[i]){

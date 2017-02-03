@@ -689,7 +689,7 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
   char masks[8];
 
   JsonNode *crates = json_mkarray();
-  for (int i=0;i<19;i++){
+  for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & crateMask){
       JsonNode *one_crate = json_mkobject();
       json_append_member(one_crate,"crate_id",json_mknumber(i));
@@ -821,7 +821,7 @@ int GenerateFECDocFromECAL(const char* id)
   }
 
   // loop over crates/slots, create a fec document for each
-  for (int i=0;i<19;i++){
+  for (int i=0;i<MAX_XL3_CON;i++){
     if ((0x1<<i) & crateMask){
       for (int j=0;j<16;j++){
         if ((0x1<<j) & slotMasks[i]){
