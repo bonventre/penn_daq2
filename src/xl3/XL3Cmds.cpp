@@ -399,7 +399,7 @@ int CrateInit(int crateNum,uint32_t slotMask, int xilinxLoad,
     }
     JsonNode *ctc_doc = json_decode(ctc_response->resp.data);
     JsonNode *ctc_delay_a = json_find_member(ctc_doc,"delay");
-    uint32_t ctc_delay = strtoul(json_get_string(json_find_element(ctc_delay_a,crateNum)),(char**) NULL,16);
+    uint32_t ctc_delay = 0;//strtoul(json_get_string(json_find_element(ctc_delay_a,crateNum)),(char**) NULL,16);
     json_delete(ctc_doc); // delete the head node
     pr_free(ctc_response);
 

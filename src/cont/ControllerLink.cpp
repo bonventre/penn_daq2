@@ -1439,9 +1439,9 @@ void *ControllerLink::ProcessCommand(void *arg)
       lprintf("8: gtvalid_test, 9: zdisc, 10: find_noise\n");
       goto err;
     }
-    uint32_t crateMask = GetUInt(input,'c',0x4);
+    uint32_t crateMask = GetUInt(input,'c',0x0);
     uint32_t slotMasks[MAX_XL3_CON];
-    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0xFFFF);
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0x0);
     uint32_t testMask = GetUInt(input,'t',0xFFFFFFFF);
     char loadECAL[500];
     memset(loadECAL,'\0',sizeof(loadECAL));
@@ -1459,10 +1459,13 @@ void *ControllerLink::ProcessCommand(void *arg)
 
   }else if (strncmp(input,"create_fec_docs",14) == 0){
     if (GetFlag(input,'h')){
-      lprintf("Usage: create_fec_docs -c [crate mask (hex)] -l [ecal id to upload FEC docs for] \n");
+      lprintf("Usage: create_fec_docs -c [crate mask (hex)] -s [slot mask (hex)] -l [ecal id to upload FEC docs for] \n");
+      lprintf("You don't need to specify a crate or slot mask if you wish to upload FEC docs for all crate/slots in the ECAL.\n");
       goto err;
     }
-    uint32_t crateMask = GetUInt(input,'c',0x4);
+    uint32_t crateMask = GetUInt(input,'c',0x0);
+    uint32_t slotMasks[MAX_XL3_CON];
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0x0);
     char loadECAL[500];
     memset(loadECAL,'\0',sizeof(loadECAL));
     GetString(input,loadECAL,'l',"");
@@ -1474,7 +1477,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("ThoseConnections are currently in use.\n");
       goto err;
     }
-    CreateFECDocs(loadECAL);
+    CreateFECDocs(crateMask, slotMasks, loadECAL);
     UnlockConnections(1,crateMask);
 
   }else if (strncmp(input,"find_noise",10) == 0){

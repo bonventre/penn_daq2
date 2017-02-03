@@ -11,6 +11,8 @@
 #include "Json.h"
 #include "DB.h"
 
+int test_counter[9];
+
 int GetNewID(char* newid)
 {
   char get_db_address[500];
@@ -317,8 +319,6 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
   JsonNode *hw = json_find_member(fec_doc,"hw");
   JsonNode *test = json_find_member(fec_doc,"test");
 
-  int test_counter[9] = {0}; // Make sure each test is run once in the ECAL
-
   JsonNode *channel_status = json_find_member(fec_doc,"channel");
   json_remove_from_parent(channel_status);
   JsonNode *chan_problems = json_find_member(channel_status,"problem");
@@ -501,13 +501,6 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
       json_append_element(new_relays,json_mknumber(1));
   }
   json_append_member(fec_doc,"relay_on",new_relays);
-
-  for(i=0; i < 9; i++){
-    if(test_counter[i] < 1){
-      lprintf("One of the tests did not run, will not create FEC doc \n");
-      return -1;
-    }
-  }
 
   return 0;
 }
@@ -759,7 +752,7 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
   return 0;
 }
 
-int GenerateFECDocFromECAL(const char* id)
+int GenerateFECDocFromECAL(uint32_t crateMask, uint32_t *slotMasks, const char* id)
 {
   lprintf("*** Generating FEC documents from ECAL ***\n");
 
@@ -777,29 +770,6 @@ int GenerateFECDocFromECAL(const char* id)
     return -1;
   }
   JsonNode *ecalconfig_doc = json_decode(ecaldoc_response->resp.data);
-
-  uint32_t crateMask = 0x0;
-  uint16_t slotMasks[20];
-  for (int i=0;i<20;i++){
-    slotMasks[i] = 0x0;
-  }
-
-  // get the configuration
-  JsonNode *crates = json_find_member(ecalconfig_doc,"crates");
-  int num_crates = json_get_num_mems(crates);
-  for (int i=0;i<num_crates;i++){
-    JsonNode *one_crate = json_find_element(crates,i);
-    int crate_num = (int) json_get_number(json_find_member(one_crate,"crate_id"));
-    crateMask |= (0x1<<crate_num);
-    JsonNode *slots = json_find_member(one_crate,"slots");
-    int num_slots = json_get_num_mems(slots);
-    for (int j=0;j<num_slots;j++){
-      JsonNode *one_slot = json_find_element(slots,j);
-      int slot_num = (int) json_get_number(json_find_member(one_slot,"slot_id"));
-      slotMasks[crate_num] |= (0x1<<slot_num);
-    }
-  }
-
 
   // get all the ecal test results for all crates/slots
   sprintf(get_db_address,"%s/%s/%s/get_ecal?startkey=\"%s\"&endkey=\"%s\"",DB_SERVER,DB_BASE_NAME,DB_VIEWDOC,id,id);
@@ -831,6 +801,10 @@ int GenerateFECDocFromECAL(const char* id)
           JsonNode *doc;
           CreateFECDBDoc(i,j,&doc,ecalconfig_doc);
 
+          for(int testRan = 0; testRan < 9; testRan++){
+             test_counter[testRan]=0;
+          }
+
           for (int k=0;k<total_rows;k++){
             JsonNode *ecalone_row = json_find_element(ecal_rows,k);
             JsonNode *test_doc = json_find_member(ecalone_row,"value");
@@ -842,7 +816,18 @@ int GenerateFECDocFromECAL(const char* id)
             }
           }
 
-          PostFECDBDoc(i,j,doc);
+          int didalltestsrun = 0;
+          for(int testRan = 0; testRan < 9; testRan++){
+            if(test_counter[testRan] == 0){
+              didalltestsrun+=1;
+            }
+          }
+          if(didalltestsrun==0){
+            PostFECDBDoc(i,j,doc);
+          }
+          else{
+              lprintf("WARNING: A test did not run for crate %d slot %d, not posting a FEC doc for that crate/slot.\n",i,j);
+          }
 
           json_delete(doc); // only delete the head node
         }
@@ -855,7 +840,7 @@ int GenerateFECDocFromECAL(const char* id)
   json_delete(ecalconfig_doc);
   pr_free(ecaldoc_response);
 
-  lprintf("Finished creating fec document!\n");
+  lprintf("Finished.\n");
   lprintf("**************************\n");
 
   return 0;

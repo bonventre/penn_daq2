@@ -3,7 +3,7 @@
 
 #include <unistd.h>
 
-int CreateFECDocs(const char* ecalID);
+int CreateFECDocs(uint32_t crateMask, uint32_t *slotMasks, const char* ecalID);
 
 #endif
 

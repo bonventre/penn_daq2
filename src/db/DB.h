@@ -24,7 +24,7 @@ int CreateFECDBDoc(int crate, int card, JsonNode** doc_p, JsonNode *ecal_doc);
 int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc);
 int PostFECDBDoc(int crate, int slot, JsonNode *doc);
 int UpdateFECDBDoc(JsonNode *doc);
-int GenerateFECDocFromECAL(const char* id);
+int GenerateFECDocFromECAL(uint32_t crateMask, uint32_t *slotMasks, const char* id);
 
 void SetupDebugDoc(int crateNum, int slotNum, JsonNode* doc);
 int PostDebugDoc(int crate, int card, JsonNode* doc, int updateConfig=1);
@@ -33,6 +33,7 @@ int PostECALDoc(uint32_t crateMask, uint32_t *slotMasks, char *logfile, char *id
 
 int UpdateLocation(uint16_t *ids, int *crates, int *slots, int *positions, int boardcount);
 int RemoveFromConfig(JsonNode *config_doc, char ids[][5], int boardcount);
+
 
 #endif
 
