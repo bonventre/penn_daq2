@@ -60,7 +60,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     }
     JsonNode *ecalconfig_doc = json_decode(ecaldoc_response->resp.data);
 
-    for (int i=0;i<19;i++){
+    for (int i=0;i<MAX_XL3_CON;i++){
       slotMasks[i] = 0x0;
     }
 
@@ -82,14 +82,14 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     pr_free(ecaldoc_response);
     json_delete(ecalconfig_doc);
 
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         lprintf("crate %d: 0x%04x\n",i,slotMasks[i]);
 
     lprintf("You will be updating ECAL %s\n",loadECAL);
     strcpy(ecalID,loadECAL);
   }else{
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
     GetNewID(ecalID);
     lprintf("Creating new ECAL %s\n",ecalID);
@@ -119,7 +119,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
 
   if (testMask != 0x0){
 
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],1,0,0,0,0,0,0,0);
     MTCInit(1);
@@ -144,96 +144,96 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
 
     int testCounter = 0;
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           FECTest(i,slotMasks[i],1,0,1);
     testCounter++;
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           BoardID(i,slotMasks[i]);
     testCounter++;
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           CGTTest(i,slotMasks[i],0xFFFFFFFF,1,0,1);
     testCounter++;
     MTCInit(1);
 
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],0,0,0,0,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           CrateCBal(i,slotMasks[i],0xFFFFFFFF,1,0,1);
     testCounter++;
 
     // load cbal values
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],0,1,0,0,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           PedRun(i,slotMasks[i],0xFFFFFFFF,0,DEFAULT_GT_DELAY,DEFAULT_PED_WIDTH,50,1000,300,1,1,0,1);
     testCounter++;
 
     MTCInit(1);
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],0,1,0,0,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           SetTTot(i,slotMasks[i],420,1,0,1);
     testCounter++;
 
     // load cbal and tdisc values
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],0,1,0,1,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           GetTTot(i,slotMasks[i],400,1,0,1);
     testCounter++;
 
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],0,1,0,1,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           DiscCheck(i,slotMasks[i],500000,1,0,1);
     testCounter++;
 
     MTCInit(1);
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],0,1,0,1,0,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           GTValidTest(i,slotMasks[i],0xFFFFFFFF,410,0,1,0,1);
     testCounter++;
 
     MTCInit(1);
     // load cbal, tdisc, tcmos values
-    for (int i=0;i<19;i++)
+    for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
         CrateInit(i,slotMasks[i],0,1,0,1,1,0,0,0);
 
     if ((0x1<<testCounter) & testMask)
-      for (int i=0;i<19;i++)
+      for (int i=0;i<MAX_XL3_CON;i++)
         if ((0x1<<i) & crateMask)
           ZDisc(i,slotMasks[i],10000,0,1,0,1);
     testCounter++;
