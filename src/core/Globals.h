@@ -16,7 +16,7 @@ extern XL3Model *xl3s[MAX_XL3_CON];
 extern ControllerLink *contConnection;
 extern pthread_mutex_t startTestLock;
 extern struct event_base *evBase;
-extern char finalTestIDs[19][16][500];
+extern char finalTestIDs[MAX_XL3_CON][16][500];
 extern char ecalID[500];
 
 extern long int startTime, endTime, lastPrintTime, recvBytes, megaBundleCount; 
