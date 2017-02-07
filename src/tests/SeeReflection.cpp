@@ -64,6 +64,8 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
 
             if (strncmp(channel_results[j],"quit",4) == 0){
               lprintf("Quitting.\n");
+              mtc->DisablePulser();
+              xl3s[crateNum]->DeselectFECs();
               return 0;
             }
 
