@@ -11,7 +11,8 @@
 #include "Json.h"
 #include "DB.h"
 
-int test_counter[9];
+const static int ntests = 9; 
+int test_counter[ntests];
 
 int GetNewID(char* newid)
 {
@@ -801,7 +802,7 @@ int GenerateFECDocFromECAL(uint32_t crateMask, uint32_t *slotMasks, const char* 
           JsonNode *doc;
           CreateFECDBDoc(i,j,&doc,ecalconfig_doc);
 
-          for(int testRan = 0; testRan < 9; testRan++){
+          for(int testRan = 0; testRan < ntests; testRan++){
              test_counter[testRan]=0;
           }
 
@@ -817,7 +818,7 @@ int GenerateFECDocFromECAL(uint32_t crateMask, uint32_t *slotMasks, const char* 
           }
 
           int didalltestsrun = 0;
-          for(int testRan = 0; testRan < 9; testRan++){
+          for(int testRan = 0; testRan < ntests; testRan++){
             if(test_counter[testRan] == 0){
               didalltestsrun+=1;
             }

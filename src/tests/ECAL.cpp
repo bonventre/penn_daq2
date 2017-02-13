@@ -99,6 +99,8 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
   }else{
     for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
+        lprintf("crate %d: 0x%04x\n",i,slotMasks[i]);
+
     GetNewID(ecalID);
     lprintf("Creating new ECAL %s\n",ecalID);
   }
