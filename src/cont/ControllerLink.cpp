@@ -973,7 +973,7 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-s [slot mask (hex)] -p [channel mask (hex)] "
           "-f [frequency] -t [gtdelay] -w [ped with] -n [num pedestals] "
           "-l [charge lower limit] -u [charge upper limit] "
-          "-a [charge select (0=qhl,1=qhs,2=qlx,3=tac)] "
+          "-q [lower limit on QHL for max DAC chinj] "
           "-e [enable pedestals (0=off, 1=on)] -d (update database)\n");
       goto err;
     }
@@ -984,9 +984,9 @@ void *ControllerLink::ProcessCommand(void *arg)
     int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
     int pedWidth = GetInt(input,'w',DEFAULT_PED_WIDTH);
     int numPeds = GetInt(input,'n',10);
-    float lower = GetFloat(input,'l',400);
-    float upper = GetFloat(input,'u',5000);
-    int qSelect = GetInt(input,'a',0);
+    float lower = GetFloat(input,'l',200);
+    float upper = GetFloat(input,'u',3000);
+    float pmt = GetFloat(input, 'q', 1000);
     int pedOn = GetInt(input,'e',1);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
@@ -997,7 +997,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("ThoseConnections are currently in use.\n");
       goto err;
     }
-    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,qSelect,pedOn,update);
+    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,pmt,pedOn,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"crate_cbal",10) == 0){
