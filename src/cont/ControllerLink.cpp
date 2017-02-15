@@ -987,7 +987,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     int numPeds = GetInt(input,'n',10);
     float lower = GetFloat(input,'l',200);
     float upper = GetFloat(input,'u',3000);
-    float pmt = GetFloat(input, 'q', 1000);
+    float pmt = GetFloat(input, 'q', 200);
     int pedOn = GetInt(input,'e',1);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);

@@ -29,6 +29,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
   uint32_t result, select_reg;
   uint32_t default_ch_mask;
   int chinj_err[16];
+  float pedestal_charge[32]={0};
 
   pmt_buffer = (uint32_t *) malloc( 0x20000*sizeof(uint32_t));
   ped = (struct pedestal *) malloc( 32 * sizeof(struct pedestal));
@@ -304,16 +305,20 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
                     ped[i].thiscell[j].qhsbar, ped[i].thiscell[j].qhsrms,
                     ped[i].thiscell[j].qlxbar, ped[i].thiscell[j].qlxrms,
                     ped[i].thiscell[j].tacbar, ped[i].thiscell[j].tacrms);
-              }
-              if (j==0){ // Only the first cell
+                if (dacvalue == 0){
+                  pedestal_charge[i] = ped[i].thiscell[j].qhlbar;
+                } 
                 if (dacvalue == 250){ // Only the large DAC value
-                  if(ped[i].thiscell[j].qhlbar < pmt){ // Checks whether integrator is geting pmt input
+                  // Checks whether integrator is getting pmt input
+                  float charge_difference = ped[i].thiscell[j].qhlbar - pedestal_charge[i];
+                  if(charge_difference < pmt){
                      chinj_err[slot_iter]++;
                      scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
+                     lprintf("Difference between pedestal and max chinj is %4.1f\n",charge_difference); 
                      lprintf("Probably missing pmt input channel %d\n", i);
                   }
                 }
-              }               
+              }
             }
           }
 
