@@ -24,11 +24,11 @@ int FindNoise(uint32_t crateMask, uint32_t *slotMasks, float frequency, int useD
   uint32_t dac_nums[50];
   uint32_t dac_values[50];
 
-  uint32_t *vthr_zeros = (uint32_t *) malloc(sizeof(uint32_t) * 10000);
-  uint32_t *current_vthr = (uint32_t *) malloc(sizeof(uint32_t) * 10000);
+  uint32_t *vthr_zeros = (uint32_t *) malloc(sizeof(uint32_t) * 10300);
+  uint32_t *current_vthr = (uint32_t *) malloc(sizeof(uint32_t) * 10300);
 
   // malloc some room to store the total counts in between measurements
-  uint32_t *readout_noise = (uint32_t *) malloc(sizeof(uint32_t) * 10000);
+  uint32_t *readout_noise = (uint32_t *) malloc(sizeof(uint32_t) * 10300);
 
   char get_db_address[500];
 
