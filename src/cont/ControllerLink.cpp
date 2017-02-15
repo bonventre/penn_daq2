@@ -20,6 +20,7 @@
 #include "MemTest.h"
 #include "PedRun.h"
 #include "SeeReflection.h"
+#include "SeeReflectionEsum.h"
 #include "TriggerScan.h"
 #include "TTot.h"
 #include "VMon.h"
@@ -1200,6 +1201,31 @@ void *ControllerLink::ProcessCommand(void *arg)
       goto err;
     }
     SeeReflection(crateNum,slotMask,channelMask,dacValue,frequency,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"esum_see_refl",13) == 0){
+    if (GetFlag(input,'h')){
+      lprintf("Usage: esum_see_refl -c [crate num (int)] "
+          "-v [dac value (int)] -s [slot mask (hex)] "
+          "-f [frequency (float)] "
+          "-d (update database)\n");
+      goto err;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    int dacValue = GetInt(input,'v',255);
+    float frequency = GetFloat(input,'f',10);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      if (busy > 9)
+        lprintf("Trying to access a board that has not been connected\n");
+      else
+        lprintf("ThoseConnections are currently in use.\n");
+      goto err;
+    }
+    SeeReflectionEsum(crateNum,slotMask,dacValue,frequency,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"trigger_scan",12) == 0){
