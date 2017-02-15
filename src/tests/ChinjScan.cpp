@@ -12,7 +12,7 @@
 #include "MTCModel.h"
 #include "ChinjScan.h"
 
-int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int numPedestals, float upper, float lower, int qSelect, int pedOn, int updateDB, int finalTest)
+int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int numPedestals, float upper, float lower, float pmt, int pedOn, int updateDB, int finalTest)
 {
   lprintf("*** Starting Charge Injection Test *****\n");
 
@@ -29,6 +29,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
   uint32_t result, select_reg;
   uint32_t default_ch_mask;
   int chinj_err[16];
+  float pedestal_charge[32]={0};
 
   pmt_buffer = (uint32_t *) malloc( 0x20000*sizeof(uint32_t));
   ped = (struct pedestal *) malloc( 32 * sizeof(struct pedestal));
@@ -270,38 +271,32 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
                 qlxs[dac_iter*16*32*2+slot_iter*32*2+i*2+1] = ped[i].thiscell[j].qlxbar;
                 tacs[dac_iter*16*32*2+slot_iter*32*2+i*2+1] = ped[i].thiscell[j].tacbar;
               }
-              if (qSelect == 0){
-                if (ped[i].thiscell[j].qhlbar < lower ||
-                    ped[i].thiscell[j].qhlbar > upper) {
-                  chinj_err[slot_iter]++;
-                  //pt_printsend(">>>>>Qhl Extreme Value<<<<<\n");
-                  if (j%2 == 0)
-                    scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
-                  else
-                    scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
-                }
+              if (ped[i].thiscell[j].qhlbar < lower ||
+                  ped[i].thiscell[j].qhlbar > upper) {
+                chinj_err[slot_iter]++;
+                //pt_printsend(">>>>>Qhl Extreme Value<<<<<\n");
+                if (j%2 == 0)
+                  scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
+                else
+                  scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
               }
-              else if (qSelect == 1){
-                if (ped[i].thiscell[j].qhsbar < lower ||
-                    ped[i].thiscell[j].qhsbar > upper) {
-                  chinj_err[slot_iter]++;
-                  //pt_printsend(">>>>>Qhs Extreme Value<<<<<\n");
-                  if (j%2 == 0)
-                    scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
-                  else
-                    scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
-                }
+              if (ped[i].thiscell[j].qhsbar < lower ||
+                  ped[i].thiscell[j].qhsbar > upper) {
+                chinj_err[slot_iter]++;
+                //pt_printsend(">>>>>Qhs Extreme Value<<<<<\n");
+                if (j%2 == 0)
+                  scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
+                else
+                  scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
               }
-              else if (qSelect == 2){
-                if (ped[i].thiscell[j].qlxbar < lower ||
-                    ped[i].thiscell[j].qlxbar > upper) {
-                  chinj_err[slot_iter]++;
-                  //pt_printsend(">>>>>Qlx Extreme Value<<<<<\n");
-                  if (j%2 == 0)
-                    scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
-                  else
-                    scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
-                }
+              if (ped[i].thiscell[j].qlxbar < lower ||
+                  ped[i].thiscell[j].qlxbar > upper) {
+                chinj_err[slot_iter]++;
+                //pt_printsend(">>>>>Qlx Extreme Value<<<<<\n");
+                if (j%2 == 0)
+                  scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
+                else
+                  scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
               }
               if (j==0){
                 lprintf("%2d %3d %4d %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f %6.1f %4.1f\n",
@@ -310,6 +305,19 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
                     ped[i].thiscell[j].qhsbar, ped[i].thiscell[j].qhsrms,
                     ped[i].thiscell[j].qlxbar, ped[i].thiscell[j].qlxrms,
                     ped[i].thiscell[j].tacbar, ped[i].thiscell[j].tacrms);
+                if (dacvalue == 0){
+                  pedestal_charge[i] = ped[i].thiscell[j].qhlbar;
+                } 
+                if (dacvalue == 250){ // Only the large DAC value
+                  // Checks whether integrator is getting pmt input
+                  float charge_difference = ped[i].thiscell[j].qhlbar - pedestal_charge[i];
+                  if(charge_difference < pmt){
+                     chinj_err[slot_iter]++;
+                     scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
+                     lprintf("Difference between pedestal and max chinj is %4.1f\n",charge_difference); 
+                     lprintf("Probably missing pmt input channel %d\n", i);
+                  }
+                }
               }
             }
           }
