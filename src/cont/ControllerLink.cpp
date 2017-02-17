@@ -21,6 +21,7 @@
 #include "PedRun.h"
 #include "SeeReflection.h"
 #include "SeeReflectionEsum.h"
+#include "ScanReflections.h"
 #include "TriggerScan.h"
 #include "TTot.h"
 #include "VMon.h"
@@ -1241,7 +1242,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
     int triggerSelect = GetInt(input,'t',0);
-    int dacCount = GetInt(input,'v',0);
+    int dacCounts = GetInt(input,'v',0);
     float frequency = GetFloat(input,'f',20);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);

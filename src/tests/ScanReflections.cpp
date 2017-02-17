@@ -10,12 +10,20 @@
 #include "MTCModel.h"
 #include "ScanReflections.h"
 
-int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int triggerSelect, int dacCounts, float frequency, int updateDB)
+int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int triggerSelect, uint16_t dacCounts, float frequency, int updateDB)
 {
   lprintf("*** Starting See Reflection ************\n");
   lprintf("MAKE SURE YOU HAVE REINITIALIZED WITH TRIGGERS ENABLED FIRST! (-t OPTION IN CRATE_INIT\n");
 
   char channel_results[32][100];
+
+  uint16_t counts[14];
+  for(int i = 0; i < 14; i++){
+    if(i == triggerSelect)
+      counts[i] = dacCounts;
+    else
+      counts[i] = 0;
+  } 
 
   try {
 
@@ -30,8 +38,8 @@ int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int tr
     }
 
     mtc->UnsetGTMask(0xFFFFFFFF);
-    mtc->LoadMTCADacsByCounts(dacCounts);
-    uleep(500);
+    mtc->LoadMTCADacsByCounts(counts);
+    usleep(500);
     mtc->SetGTMask(0x1<<(triggerSelect)-1);
 
     // loop over slots

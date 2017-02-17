@@ -108,6 +108,7 @@ COMMAND commands[] = {
     { "ped_run", (Function *)NULL, (char *)NULL },
     { "see_refl", (Function *)NULL, (char *)NULL },
     { "esum_see_refl", (Function *)NULL, (char *)NULL },
+    { "scan_refl", (Function *)NULL, (char *)NULL },
     { "trigger_scan", (Function *)NULL, (char *)NULL },
     { "get_ttot", (Function *)NULL, (char *)NULL },
     { "set_ttot", (Function *)NULL, (char *)NULL },

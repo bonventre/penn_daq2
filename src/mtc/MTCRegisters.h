@@ -139,7 +139,7 @@
 #define MSK_CRATE23 0x00400000UL
 #define MSK_CRATE24 0x00800000UL
 #define MSK_CRATE25 0x01000000UL
-#define MSK_TUB_B   MAK_CRATE20         // everyone's second favorite board!
+#define MSK_TUB_B   MSK_CRATE20         // everyone's second favorite board!
 #define MSK_TUB     MSK_CRATE21         // everyone's favorite board!  
 #define MSK_TUBII   MSK_CRATE24         // Eric's favorite board!!
 /* Threshold Monitoring */
