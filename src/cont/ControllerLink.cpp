@@ -1229,7 +1229,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     SeeReflectionEsum(crateNum,slotMask,dacValue,frequency,update);
     UnlockConnections(1,0x1<<crateNum);
 
-  }else if (strncmp(input,"scan_refl",8) == 0){
+  }else if (strncmp(input,"scan_refl",9) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: see_refl -c [crate num (int)] "
           "-v [dac value (int)] -s [slot mask (hex)] "
