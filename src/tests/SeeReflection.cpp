@@ -21,7 +21,7 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
 
     // set up pulser
     int errors = mtc->SetupPedestals(frequency, DEFAULT_PED_WIDTH, DEFAULT_GT_DELAY,0,
-        (0x1<<crateNum),(0x1<<crateNum) | MSK_TUB);
+        (0x1<<crateNum),(0x1<<crateNum) | MSK_TUB | MSK_TUB_B);
     if (errors){
       lprintf("Error setting up MTC for pedestals. Exiting\n");
       mtc->UnsetPedCrateMask(MASKALL);
