@@ -78,7 +78,6 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
       dacvalue = dac_iter*10;
       if(quickOn && dac_iter == 1){ // Just run pedestal and max chinj
         dacvalue = 250;
-        dac_iter = 26;
         ndacsteps = 2;
       } 
 
@@ -269,7 +268,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
                 qhls[dac_iter*16*32*2+slot_iter*32*2+i*2] = ped[i].thiscell[j].qhlbar;
                 qhss[dac_iter*16*32*2+slot_iter*32*2+i*2] = ped[i].thiscell[j].qhsbar;
                 qlxs[dac_iter*16*32*2+slot_iter*32*2+i*2] = ped[i].thiscell[j].qlxbar;
-                tacs[dac_iter*16*32*2+slot_iter*32*2+i*2] = ped[i].thiscell[j].tacbar;
+                tacs[dac_iter*16*32*2+slot_iter*32*2+i*2] = ped[i].thiscell[j].tacbar; 
               }
               if (j == 1){
                 qhls[dac_iter*16*32*2+slot_iter*32*2+i*2+1] = ped[i].thiscell[j].qhlbar;
@@ -308,23 +307,28 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
                     ped[i].thiscell[j].qhsbar, ped[i].thiscell[j].qhsrms,
                     ped[i].thiscell[j].qlxbar, ped[i].thiscell[j].qlxrms,
                     ped[i].thiscell[j].tacbar, ped[i].thiscell[j].tacrms);
+              }
+              if(j==0 || j ==1){
                 if (dacvalue == 0){
                   pedestal_charge[i] = ped[i].thiscell[j].qhlbar;
-                } 
+                }
                 if (dacvalue == 250){ // Only the large DAC value
                   // Checks whether integrator is getting pmt input
                   float charge_difference = ped[i].thiscell[j].qhlbar - pedestal_charge[i];
                   if(charge_difference < pmt){
                      chinj_err[slot_iter]++;
-                     scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
-                     lprintf("Difference between pedestal and max chinj is %4.1f\n",charge_difference); 
-                     lprintf("Probably missing pmt input channel %d\n", i);
+                     if(j%2)
+                       scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
+                     else{
+                       scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2+1]++;
+                       lprintf("Difference between pedestal and max chinj is %4.1f\n",charge_difference); 
+                       lprintf("Probably missing pmt input channel %d\n", i);
+                     }
                   }
                 }
               }
             }
           }
-
         } // end if slotmask
       } // end loop over slots
 
