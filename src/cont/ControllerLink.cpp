@@ -975,7 +975,9 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-f [frequency] -t [gtdelay] -w [ped with] -n [num pedestals] "
           "-l [charge lower limit] -u [charge upper limit] "
           "-q [lower limit on QHL for max DAC chinj] "
-          "-e [enable pedestals (0=off, 1=on)] -d (update database)\n");
+          "-e [enable pedestals (0=off, 1=on)] "
+          "-o [do a quick scan rather than the full]"
+          "-d (update database)\n");
       goto err;
     }
     int crateNum = GetInt(input,'c',2);
@@ -989,6 +991,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     float upper = GetFloat(input,'u',3000);
     float pmt = GetFloat(input, 'q', 200);
     int pedOn = GetInt(input,'e',1);
+    int quickOn = GetFlag(input,'o');
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
@@ -998,7 +1001,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("ThoseConnections are currently in use.\n");
       goto err;
     }
-    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,pmt,pedOn,update);
+    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,pmt,pedOn,quickOn,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"crate_cbal",10) == 0){
