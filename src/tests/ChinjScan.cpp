@@ -12,7 +12,7 @@
 #include "MTCModel.h"
 #include "ChinjScan.h"
 
-int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int numPedestals, float upper, float lower, float pmt, int pedOn, int updateDB, int finalTest)
+int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequency, int gtDelay, int pedWidth, int numPedestals, float upper, float lower, float pmt, int pedOn, int quickOn, int updateDB, int finalTest)
 {
   lprintf("*** Starting Charge Injection Test *****\n");
 
@@ -72,9 +72,15 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
 
   try {
 
-    for (int dac_iter=0;dac_iter<26;dac_iter++){
+    int ndacsteps = 26;
+    for (int dac_iter=0;dac_iter<ndacsteps;dac_iter++){
 
       dacvalue = dac_iter*10;
+      if(quickOn && dac_iter == 1){ // Just run pedestal and max chinj
+        dacvalue = 250;
+        dac_iter = 26;
+        ndacsteps = 2;
+      } 
 
       for (int slot_iter = 0; slot_iter < 16; slot_iter ++){
         if ((0x1 << slot_iter) & slotMask){
@@ -274,7 +280,6 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
               if (ped[i].thiscell[j].qhlbar < lower ||
                   ped[i].thiscell[j].qhlbar > upper) {
                 chinj_err[slot_iter]++;
-                //pt_printsend(">>>>>Qhl Extreme Value<<<<<\n");
                 if (j%2 == 0)
                   scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
                 else
@@ -283,7 +288,6 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
               if (ped[i].thiscell[j].qhsbar < lower ||
                   ped[i].thiscell[j].qhsbar > upper) {
                 chinj_err[slot_iter]++;
-                //pt_printsend(">>>>>Qhs Extreme Value<<<<<\n");
                 if (j%2 == 0)
                   scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
                 else
@@ -292,7 +296,6 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
               if (ped[i].thiscell[j].qlxbar < lower ||
                   ped[i].thiscell[j].qlxbar > upper) {
                 chinj_err[slot_iter]++;
-                //pt_printsend(">>>>>Qlx Extreme Value<<<<<\n");
                 if (j%2 == 0)
                   scan_errors[dac_iter*16*32*2+slot_iter*32*2+i*2]++;
                 else
@@ -324,22 +327,6 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
 
         } // end if slotmask
       } // end loop over slots
-
-
-      //    if (arg.q_select == 0){
-      //    pt_printsend("Qhl lower, Upper bounds = %f %f\n",arg.chinj_lower,arg.chinj_upper);
-      //    pt_printsend("Number of Qhl overflows = %d\n",chinj_err[slot_iter]);
-      //    }
-      //    else if (arg.q_select == 1){
-      //    pt_printsend("Qhs lower, Upper bounds = %f %f\n",arg.chinj_lower,arg.chinj_upper);
-      //    pt_printsend("Number of Qhs overflows = %d\n",chinj_err[slot_iter]);
-      //    }
-      //    else if (arg.q_select == 2){
-      //    pt_printsend("Qlx lower, Upper bounds = %f %f\n",arg.chinj_lower,arg.chinj_upper);
-      //    pt_printsend("Number of Qlx overflows = %d\n",chinj_err[slot_iter]);
-      //    }
-
-
 
       //disable trigger enables
       mtc->UnsetPedCrateMask(MASKALL);
@@ -382,7 +369,7 @@ int ChinjScan(int crateNum, uint32_t slotMask, uint32_t channelMask, float frequ
             JsonNode *tacoddtemp = json_mkarray();
             JsonNode *erroreventemp = json_mkarray();
             JsonNode *erroroddtemp = json_mkarray();
-            for (int k=0;k<26;k++){
+            for (int k=0;k<ndacsteps;k++){
               json_append_element(qhleventemp,json_mknumber(qhls[k*16*32*2+i*32*2+j*2]));	
               json_append_element(qhloddtemp,json_mknumber(qhls[k*16*32*2+i*32*2+j*2+1]));	
               json_append_element(qhseventemp,json_mknumber(qhss[k*16*32*2+i*32*2+j*2]));	
