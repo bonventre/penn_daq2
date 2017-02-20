@@ -9,11 +9,12 @@
 #include "XL3Model.h"
 #include "MTCModel.h"
 #include "ScanReflections.h"
+#include "XL3Cmds.h"
+#include "MTCCmds.h"
 
 int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int triggerSelect, uint16_t dacCounts, float frequency, int updateDB)
 {
-  lprintf("*** Starting See Reflection ************\n");
-  lprintf("MAKE SURE YOU HAVE REINITIALIZED WITH TRIGGERS ENABLED FIRST! (-t OPTION IN CRATE_INIT\n");
+  lprintf("*** Starting Scan Reflection ************\n");
 
   char channel_results[32][100];
 
@@ -37,16 +38,17 @@ int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int tr
       return -1;
     }
 
-    lprintf("Setting MTC trigger thresholds!\n");
-
-    mtc->UnsetGTMask(0xFFFFFFFF);
-    mtc->LoadMTCADacsByCounts(counts);
-    usleep(500);
-    mtc->SetGTMask(0x1<<(triggerSelect)-1);
-
     // loop over slots
     for (int i=0;i<16;i++){
-      if ((0x1<<i) & slotMask){
+      if ((0x1<<i) & slotMask){ 
+
+        CrateInit(crateNum,slotMask,0,0,0,0,0,0,0,0,1);
+
+        mtc->UnsetGTMask(0xFFFFFFFF);
+        mtc->LoadMTCADacsByCounts(counts);
+        usleep(500);
+        mtc->SetGTMask(0x1<<(triggerSelect)-1);
+
         // loop over channels
         for (int j=0;j<32;j++){
           if ((0x1<<j) & channelMask){
@@ -81,8 +83,10 @@ int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int tr
               xl3s[crateNum]->DeselectFECs();
               return 0;
             }
+
           } // end pattern mask
         } // end loop over channels
+        CrateInit(crateNum,slotMask,0,0,0,0,0,0,0,0,0);
 
         // update the database
         if (updateDB){

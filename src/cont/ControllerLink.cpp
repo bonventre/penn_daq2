@@ -1233,7 +1233,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     if (GetFlag(input,'h')){
       lprintf("Usage: see_refl -c [crate num (int)] "
           "-v [dac value (int)] -s [slot mask (hex)] "
-          "-t [trigger to enable (0-13)] -v [threshold dac] "
+          "-t [trigger to enable (00-13)] -v [threshold dac] "
           "-f [frequency (float)] -p [channel mask (hex)] "
           "-d (update database)\n");
       goto err;

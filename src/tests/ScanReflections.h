@@ -2,6 +2,8 @@
 #define _SCAN_REFLECTIONS_H
 
 #include <unistd.h>
+#include <iostream>
+#include <cmath>
 
 #define MAX_ERRORS 50
 
