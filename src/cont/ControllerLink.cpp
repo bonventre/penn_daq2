@@ -20,6 +20,7 @@
 #include "MemTest.h"
 #include "PedRun.h"
 #include "SeeReflection.h"
+#include "SeeReflectionEsum.h"
 #include "TriggerScan.h"
 #include "TTot.h"
 #include "VMon.h"
@@ -973,8 +974,10 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-s [slot mask (hex)] -p [channel mask (hex)] "
           "-f [frequency] -t [gtdelay] -w [ped with] -n [num pedestals] "
           "-l [charge lower limit] -u [charge upper limit] "
-          "-a [charge select (0=qhl,1=qhs,2=qlx,3=tac)] "
-          "-e [enable pedestals (0=off, 1=on)] -d (update database)\n");
+          "-q [lower limit on QHL for max DAC chinj] "
+          "-e [enable pedestals (0=off, 1=on)] "
+          "-o [do a quick scan rather than the full]"
+          "-d (update database)\n");
       goto err;
     }
     int crateNum = GetInt(input,'c',2);
@@ -984,10 +987,11 @@ void *ControllerLink::ProcessCommand(void *arg)
     int gtDelay = GetInt(input,'t',DEFAULT_GT_DELAY);
     int pedWidth = GetInt(input,'w',DEFAULT_PED_WIDTH);
     int numPeds = GetInt(input,'n',10);
-    float lower = GetFloat(input,'l',400);
-    float upper = GetFloat(input,'u',5000);
-    int qSelect = GetInt(input,'a',0);
+    float lower = GetFloat(input,'l',200);
+    float upper = GetFloat(input,'u',3000);
+    float pmt = GetFloat(input, 'q', 200);
     int pedOn = GetInt(input,'e',1);
+    int quickOn = GetFlag(input,'o');
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
@@ -997,7 +1001,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("ThoseConnections are currently in use.\n");
       goto err;
     }
-    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,qSelect,pedOn,update);
+    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,pmt,pedOn,quickOn,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"crate_cbal",10) == 0){
@@ -1200,6 +1204,31 @@ void *ControllerLink::ProcessCommand(void *arg)
       goto err;
     }
     SeeReflection(crateNum,slotMask,channelMask,dacValue,frequency,update);
+    UnlockConnections(1,0x1<<crateNum);
+
+  }else if (strncmp(input,"esum_see_refl",13) == 0){
+    if (GetFlag(input,'h')){
+      lprintf("Usage: esum_see_refl -c [crate num (int)] "
+          "-v [dac value (int)] -s [slot mask (hex)] "
+          "-f [frequency (float)] "
+          "-d (update database)\n");
+      goto err;
+    }
+    int crateNum = GetInt(input,'c',2);
+    uint32_t slotMask = GetUInt(input,'s',0xFFFF);
+    uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
+    int dacValue = GetInt(input,'v',255);
+    float frequency = GetFloat(input,'f',10);
+    int update = GetFlag(input,'d');
+    int busy = LockConnections(1,0x1<<crateNum);
+    if (busy){
+      if (busy > 9)
+        lprintf("Trying to access a board that has not been connected\n");
+      else
+        lprintf("ThoseConnections are currently in use.\n");
+      goto err;
+    }
+    SeeReflectionEsum(crateNum,slotMask,dacValue,frequency,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"trigger_scan",12) == 0){

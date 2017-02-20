@@ -8,14 +8,13 @@
 #include "ControllerLink.h"
 #include "XL3Model.h"
 #include "MTCModel.h"
-#include "SeeReflection.h"
+#include "SeeReflectionEsum.h"
 
-int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dacValue, float frequency, int updateDB, int finalTest)
+int SeeReflectionEsum(int crateNum, uint32_t slotMask, int dacValue, float frequency, int updateDB, int finalTest)
 {
-  lprintf("*** Starting See Reflection ************\n");
-  lprintf("MAKE SURE YOU HAVE REINITIALIZED WITH TRIGGERS ENABLED FIRST! (-t OPTION IN CRATE_INIT\n");
+  lprintf("*** Starting See Reflection ESUM ************\n");
 
-  char channel_results[32][100];
+  char channel_results[8][100];
 
   try {
 
@@ -33,44 +32,28 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
     for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
         // loop over channels
-        for (int j=0;j<32;j++){
-          if ((0x1<<j) & channelMask){
-            uint32_t temp_pattern = 0x1<<j;
-            memset(channel_results[j],'\0',100);
+        for (int j=0;j<8;j++){
+         int four_channels = j*4;
+         uint32_t temp_pattern = 0xf<<four_channels;
+          memset(channel_results[j],'\0',100);
 
-            // turn on pedestals for just this one channel
-            errors += xl3s[crateNum]->SetCratePedestals((0x1<<i),temp_pattern);
-            if (errors){
-              lprintf("Error setting up pedestals, Slot %d, channel %d.\n",i,j);
-              if (errors > MAX_ERRORS){
-                lprintf("Too many errors. Exiting\n");
-                mtc->DisablePulser();
-                mtc->UnsetPedCrateMask(MASKALL);
-                mtc->UnsetGTCrateMask(MASKALL);
-                return -1;
-              }
-            }
+          // set up charge injection for four channels at a time
+          xl3s[crateNum]->SetupChargeInjection((0x1<<i),temp_pattern,dacValue);
+          // wait until something is typed
+          lprintf("Slot %d, channel %d. If good, hit enter. Otherwise type in a description of the problem (or just \"fail\") and hit enter.\n",i,j);
 
-            // set up charge injection for this channel
-            xl3s[crateNum]->SetupChargeInjection((0x1<<i),temp_pattern,dacValue);
-            // wait until something is typed
-            lprintf("Slot %d, channel %d. If good, hit enter. Otherwise type in a description of the problem (or just \"fail\") and hit enter.\n",i,j);
+          contConnection->GetInput(channel_results[j],100);
 
-            contConnection->GetInput(channel_results[j],100);
+          for (int k=0;k<strlen(channel_results[j]);k++)
+            if (channel_results[j][k] == '\n')
+              channel_results[j][k] = '\0';
 
-            for (int k=0;k<strlen(channel_results[j]);k++)
-              if (channel_results[j][k] == '\n')
-                channel_results[j][k] = '\0';
-
-            if (strncmp(channel_results[j],"quit",4) == 0){
-              lprintf("Quitting.\n");
-              mtc->DisablePulser();
-              xl3s[crateNum]->DeselectFECs();
-              return 0;
-            }
-
-
-          } // end pattern mask
+          if (strncmp(channel_results[j],"quit",4) == 0){
+            lprintf("Quitting.\n");
+            mtc->DisablePulser();
+            xl3s[crateNum]->DeselectFECs();
+            return 0;
+          }
         } // end loop over channels
 
         // clear chinj for this slot
@@ -81,11 +64,11 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
           lprintf("updating the database\n");
           lprintf("updating slot %d\n",i);
           JsonNode *newdoc = json_mkobject();
-          json_append_member(newdoc,"type",json_mkstring("see_refl"));
+          json_append_member(newdoc,"type",json_mkstring("see_refl_esum"));
 
           int passflag = 1;
           JsonNode *all_channels = json_mkarray();
-          for (int j=0;j<32;j++){
+          for (int j=0;j<8;j++){
             JsonNode *one_chan = json_mkobject();
             json_append_member(one_chan,"id",json_mknumber(j));
             if (strlen(channel_results[j]) != 0){
@@ -115,7 +98,7 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
       lprintf("No errors.\n");
   }
   catch(const char* s){
-    lprintf("SeeReflection: %s\n",s);
+    lprintf("SeeReflectionEsum: %s\n",s);
   }
 
   lprintf("****************************************\n");
