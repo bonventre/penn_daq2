@@ -21,7 +21,7 @@
 #include "MTCCmds.h"
 #include "ECAL.h"
 
-int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char* loadECAL, int createFECDocs)
+int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, int quickFlag, const char* loadECAL)
 {
   time_t curtime = time(NULL);
   struct timeval moretime;
@@ -59,26 +59,34 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
       return -1;
     }
     JsonNode *ecalconfig_doc = json_decode(ecaldoc_response->resp.data);
+ 
+    // get the configuration of the loaded ECAL is crate/slot mask not specified
+    if(crateMask == 0x0 && *slotMasks == 0x0){
+      for (int i=0;i<MAX_XL3_CON;i++){
+        slotMasks[i] = 0x0;
+      }
 
-    for (int i=0;i<MAX_XL3_CON;i++){
-      slotMasks[i] = 0x0;
-    }
-
-    // get the configuration
-    JsonNode *crates = json_find_member(ecalconfig_doc,"crates");
-    int num_crates = json_get_num_mems(crates);
-    for (int i=0;i<num_crates;i++){
-      JsonNode *one_crate = json_find_element(crates,i);
-      int crate_num = (int) json_get_number(json_find_member(one_crate,"crate_id"));
-      crateMask |= (0x1<<crate_num);
-      JsonNode *slots = json_find_member(one_crate,"slots");
-      int num_slots = json_get_num_mems(slots);
-      for (int j=0;j<num_slots;j++){
-        JsonNode *one_slot = json_find_element(slots,j);
-        int slot_num = (int) json_get_number(json_find_member(one_slot,"slot_id"));
-        slotMasks[crate_num] |= (0x1<<slot_num);
+      JsonNode *crates = json_find_member(ecalconfig_doc,"crates");
+      int num_crates = json_get_num_mems(crates);
+      for (int i=0;i<num_crates;i++){
+        JsonNode *one_crate = json_find_element(crates,i);
+        int crate_num = (int) json_get_number(json_find_member(one_crate,"crate_id"));
+        crateMask |= (0x1<<crate_num);
+        JsonNode *slots = json_find_member(one_crate,"slots");
+        int num_slots = json_get_num_mems(slots);
+        for (int j=0;j<num_slots;j++){
+          JsonNode *one_slot = json_find_element(slots,j);
+          int slot_num = (int) json_get_number(json_find_member(one_slot,"slot_id"));
+          slotMasks[crate_num] |= (0x1<<slot_num);
+        }
       }
     }
+    else if((crateMask != 0x0 && *slotMasks == 0x0) ||
+            (crateMask == 0x0 && *slotMasks != 0x0)){
+      lprintf("Specify both a crate and slot mask if you wish to run tests on a specific crate/slot, rather than every crate/slot in the loaded ECAL.\n");
+      return -1;
+    }
+
     pr_free(ecaldoc_response);
     json_delete(ecalconfig_doc);
 
@@ -91,20 +99,31 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
   }else{
     for (int i=0;i<MAX_XL3_CON;i++)
       if ((0x1<<i) & crateMask)
+        lprintf("crate %d: 0x%04x\n",i,slotMasks[i]);
+
     GetNewID(ecalID);
     lprintf("Creating new ECAL %s\n",ecalID);
   }
-  if (testMask == 0xFFFFFFFF || (testMask & 0x3FF) == 0x3FF){
+  if ((testMask == 0xFFFFFFFF || (testMask & 0x3FF) == 0x3FF) && (!quickFlag)){
     lprintf("Doing all tests\n");
     testMask = 0xFFFFFFFF;
-  }else if (testMask != 0x0){
+  }
+  else if ((testMask != 0x0) && (!quickFlag)){
     lprintf("Doing ");
     for (int i=0;i<11;i++)
       if ((0x1<<i) & testMask)
         lprintf("%s ",testList[i]);
     lprintf("\n");
-  }else{
+  }
+  else if (!quickFlag){
     lprintf("Not adding any tests\n");
+  }
+  else if(quickFlag){ // Do only ECAL tests that set hardware settings
+    testMask = 0x768; 
+    lprintf("Doing only essential ECAL tests: ");
+    for (int i=0;i<11;i++)
+      if ((0x1<<i) & testMask)
+        lprintf("%s ",testList[i]);
   }
 
   lprintf("------------------------------------------\n");
@@ -244,9 +263,6 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     lprintf("ECAL finished!\n");
 
   }
-
-  if (createFECDocs)
-    GenerateFECDocFromECAL(0x0, ecalID);
 
   lprintf("**********************************************\n");
   lprintf("*** Make sure the ECAL cable is unplugged ****\n");
