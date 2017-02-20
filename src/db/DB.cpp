@@ -11,7 +11,7 @@
 #include "Json.h"
 #include "DB.h"
 
-const static int ntests = 9; 
+const static int ntests = 5; 
 int test_counter[ntests];
 
 int GetNewID(char* newid)
@@ -436,7 +436,6 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<i);
       }
     }
-    test_counter[5]+=1;
 
   }else if (strcmp(type,"cgt_test") == 0){
     JsonNode *errors = json_find_member(test_doc,"errors");
@@ -445,7 +444,6 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<i);
       }
     }
-    test_counter[6]+=1;
 
   }else if (strcmp(type,"get_ttot") == 0){
     JsonNode *channels = json_find_member(test_doc,"channels");
@@ -456,7 +454,6 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<chan_num);
       }
     }
-    test_counter[7]+=1;
 
   }else if (strcmp(type,"disc_check") == 0){
     JsonNode *channels = json_find_member(test_doc,"channels");
@@ -467,7 +464,6 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<chan_num);
       }
     }
-    test_counter[8]+=1;
 
   }else if (strcmp(type,"cmos_m_gtvalid") == 0){
     JsonNode *channels = json_find_member(test_doc,"channels");
@@ -478,8 +474,6 @@ int AddECALTestResults(JsonNode *fec_doc, JsonNode *test_doc)
         chan_prob_array |= (0x1<<chan_num);
       }
     }
-
-
 
   }
 

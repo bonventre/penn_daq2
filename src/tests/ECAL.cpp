@@ -21,7 +21,7 @@
 #include "MTCCmds.h"
 #include "ECAL.h"
 
-int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char* loadECAL)
+int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, int quickFlag, const char* loadECAL)
 {
   time_t curtime = time(NULL);
   struct timeval moretime;
@@ -104,17 +104,26 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, const char*
     GetNewID(ecalID);
     lprintf("Creating new ECAL %s\n",ecalID);
   }
-  if (testMask == 0xFFFFFFFF || (testMask & 0x3FF) == 0x3FF){
+  if ((testMask == 0xFFFFFFFF || (testMask & 0x3FF) == 0x3FF) && (!quickFlag)){
     lprintf("Doing all tests\n");
     testMask = 0xFFFFFFFF;
-  }else if (testMask != 0x0){
+  }
+  else if ((testMask != 0x0) && (!quickFlag)){
     lprintf("Doing ");
     for (int i=0;i<11;i++)
       if ((0x1<<i) & testMask)
         lprintf("%s ",testList[i]);
     lprintf("\n");
-  }else{
+  }
+  else if (!quickFlag){
     lprintf("Not adding any tests\n");
+  }
+  else if(quickFlag){ // Do only ECAL tests that set hardware settings
+    testMask = 0x768; 
+    lprintf("Doing only essential ECAL tests: ");
+    for (int i=0;i<11;i++)
+      if ((0x1<<i) & testMask)
+        lprintf("%s ",testList[i]);
   }
 
   lprintf("------------------------------------------\n");
