@@ -37,6 +37,8 @@ int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int tr
       return -1;
     }
 
+    lprintf("Setting MTC trigger thresholds!\n");
+
     mtc->UnsetGTMask(0xFFFFFFFF);
     mtc->LoadMTCADacsByCounts(counts);
     usleep(500);
@@ -63,6 +65,9 @@ int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int tr
                 return -1;
               }
             }
+
+            // wait until something is typed
+            lprintf("Slot %d, channel %d. If good, hit enter. Otherwise type in a description of the problem (or just \"fail\") and hit enter.\n",i,j);
 
             contConnection->GetInput(channel_results[j],100);
 
