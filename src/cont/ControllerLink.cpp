@@ -30,13 +30,13 @@
 #include "RunPedestals.h"
 #include "FinalTest.h"
 #include "ECAL.h"
+#include "CreateFECDocs.h"
 #include "FindNoise.h"
 #include "DACSweep.h"
 #include "MTCCmds.h"
 #include "XL3Cmds.h"
 #include "NetUtils.h"
 #include "ControllerLink.h"
-
 
 ControllerLink::ControllerLink() : GenericLink(CONT_PORT)
 {
@@ -976,7 +976,9 @@ void *ControllerLink::ProcessCommand(void *arg)
           "-f [frequency] -t [gtdelay] -w [ped with] -n [num pedestals] "
           "-l [charge lower limit] -u [charge upper limit] "
           "-q [lower limit on QHL for max DAC chinj] "
-          "-e [enable pedestals (0=off, 1=on)] -d (update database)\n");
+          "-e [enable pedestals (0=off, 1=on)] "
+          "-o [do a quick scan rather than the full]"
+          "-d (update database)\n");
       goto err;
     }
     int crateNum = GetInt(input,'c',2);
@@ -990,6 +992,7 @@ void *ControllerLink::ProcessCommand(void *arg)
     float upper = GetFloat(input,'u',3000);
     float pmt = GetFloat(input, 'q', 200);
     int pedOn = GetInt(input,'e',1);
+    int quickOn = GetFlag(input,'o');
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
@@ -999,7 +1002,7 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("ThoseConnections are currently in use.\n");
       goto err;
     }
-    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,pmt,pedOn,update);
+    ChinjScan(crateNum,slotMask,channelMask,freq,gtDelay,pedWidth,numPeds,upper,lower,pmt,pedOn,quickOn,update);
     UnlockConnections(1,0x1<<crateNum);
 
   }else if (strncmp(input,"crate_cbal",10) == 0){
@@ -1486,22 +1489,22 @@ void *ControllerLink::ProcessCommand(void *arg)
   }else if (strncmp(input,"ecal",4) == 0){
     if (GetFlag(input,'h')){
       lprintf("Usage: ecal -c [crate mask (hex)] -s [all slot masks (hex)] -(00-18) [one slot mask (hex)]\n");
-      lprintf("-d (create FEC db docs)\n");
       lprintf("-l [ecal id to update / finish tests (string)] -t [test mask to update / finish (hex)]\n");
+      lprintf("-q [quick flag: use to only run essential ECAL tests (expert only). This will override your test mask]\n");
       lprintf("For test mask, the bit map is: \n");
       lprintf("0: fec_test, 1: board_id, 2: cgt_test, 3: crate_cbal\n");
       lprintf("4: ped_run, 5: set_ttot, 6: get_ttot, 7: disc_check\n");
       lprintf("8: gtvalid_test, 9: zdisc, 10: find_noise\n");
       goto err;
     }
-    uint32_t crateMask = GetUInt(input,'c',0x4);
+    uint32_t crateMask = GetUInt(input,'c',0x0);
     uint32_t slotMasks[MAX_XL3_CON];
-    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0xFFFF);
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0x0);
     uint32_t testMask = GetUInt(input,'t',0xFFFFFFFF);
+    int quickFlag = GetFlag(input,'q');
     char loadECAL[500];
     memset(loadECAL,'\0',sizeof(loadECAL));
     GetString(input,loadECAL,'l',"");
-    int createDocs = GetFlag(input,'d');
     int busy = LockConnections(1,crateMask);
     if (busy){
       if (busy > 9)
@@ -1510,7 +1513,30 @@ void *ControllerLink::ProcessCommand(void *arg)
         lprintf("ThoseConnections are currently in use.\n");
       goto err;
     }
-    ECAL(crateMask,slotMasks,testMask,loadECAL,createDocs);
+    ECAL(crateMask,slotMasks,testMask,quickFlag,loadECAL);
+    UnlockConnections(1,crateMask);
+
+  }else if (strncmp(input,"create_fec_docs",14) == 0){
+    if (GetFlag(input,'h')){
+      lprintf("Usage: create_fec_docs -c [crate mask (hex)] -s [slot mask (hex)] -l [ecal id to upload FEC docs for] \n");
+      lprintf("You don't need to specify a crate or slot mask if you wish to upload FEC docs for all crate/slots in the ECAL.\n");
+      goto err;
+    }
+    uint32_t crateMask = GetUInt(input,'c',0x0);
+    uint32_t slotMasks[MAX_XL3_CON];
+    GetMultiUInt(input,MAX_XL3_CON,'s',slotMasks,0x0);
+    char loadECAL[500];
+    memset(loadECAL,'\0',sizeof(loadECAL));
+    GetString(input,loadECAL,'l',"");
+    int busy = LockConnections(1,crateMask);
+    if (busy){
+      if (busy > 9)
+        lprintf("Trying to access a board that has not been connected\n");
+      else
+        lprintf("ThoseConnections are currently in use.\n");
+      goto err;
+    }
+    CreateFECDocs(crateMask, slotMasks, loadECAL);
     UnlockConnections(1,crateMask);
 
   }else if (strncmp(input,"find_noise",10) == 0){
