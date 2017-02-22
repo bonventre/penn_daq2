@@ -119,7 +119,7 @@ int ECAL(uint32_t crateMask, uint32_t *slotMasks, uint32_t testMask, int quickFl
     lprintf("Not adding any tests\n");
   }
   else if(quickFlag){ // Do only ECAL tests that set hardware settings
-    testMask = 0x768; 
+    testMask = 0x728; 
     lprintf("Doing only essential ECAL tests: ");
     for (int i=0;i<11;i++)
       if ((0x1<<i) & testMask)
