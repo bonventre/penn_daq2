@@ -1234,8 +1234,8 @@ void *ControllerLink::ProcessCommand(void *arg)
 
   }else if (strncmp(input,"scan_refl",9) == 0){
     if (GetFlag(input,'h')){
-      lprintf("Usage: see_refl -c [crate num (int)] "
-          "-v [dac value (int)] -s [slot mask (hex)] "
+      lprintf("Usage: scan_refl -c [crate num (int)] "
+          "-s [slot mask (hex)] "
           "-t [trigger to enable (00-13)] -v [threshold dac] "
           "-f [frequency (float)] -p [channel mask (hex)] "
           "-d (update database)\n");
@@ -1245,8 +1245,8 @@ void *ControllerLink::ProcessCommand(void *arg)
     uint32_t slotMask = GetUInt(input,'s',0xFFFF);
     uint32_t channelMask = GetUInt(input,'p',0xFFFFFFFF);
     int triggerSelect = GetInt(input,'t',0);
-    int dacCounts = GetInt(input,'v',0);
     float frequency = GetFloat(input,'f',20);
+    int dacCounts = GetInt(input,'v',0);
     int update = GetFlag(input,'d');
     int busy = LockConnections(1,0x1<<crateNum);
     if (busy){
