@@ -133,12 +133,13 @@
 #define MSK_CRATE17 0x00010000UL
 #define MSK_CRATE18 0x00020000UL
 #define MSK_CRATE19 0x00040000UL
-#define MSK_CRATE20 0x00080000UL
+#define MSK_CRATE20 0x00080000UL        // the TUB bottom!
 #define MSK_CRATE21 0x00100000UL        // the TUB!
 #define MSK_CRATE22 0x00200000UL
 #define MSK_CRATE23 0x00400000UL
 #define MSK_CRATE24 0x00800000UL
 #define MSK_CRATE25 0x01000000UL
+#define MSK_TUB_B   MSK_CRATE20         // everyone's second favorite board!
 #define MSK_TUB     MSK_CRATE21         // everyone's favorite board!  
 #define MSK_TUBII   MSK_CRATE24         // Eric's favorite board!!
 /* Threshold Monitoring */

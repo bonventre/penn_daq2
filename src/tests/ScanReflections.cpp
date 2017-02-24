@@ -8,20 +8,29 @@
 #include "ControllerLink.h"
 #include "XL3Model.h"
 #include "MTCModel.h"
-#include "SeeReflection.h"
+#include "ScanReflections.h"
+#include "XL3Cmds.h"
+#include "MTCCmds.h"
 
-int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dacValue, float frequency, int updateDB, int finalTest)
+int ScanReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int triggerSelect, uint16_t dacCounts, float frequency, int updateDB)
 {
-  lprintf("*** Starting See Reflection ************\n");
-  lprintf("MAKE SURE YOU HAVE REINITIALIZED WITH TRIGGERS ENABLED FIRST! (-t OPTION IN CRATE_INIT\n");
+  lprintf("*** Starting Scan Reflection ************\n");
 
   char channel_results[32][100];
+
+  uint16_t counts[14];
+  for(int i = 0; i < 14; i++){
+    if(i == triggerSelect)
+      counts[i] = dacCounts;
+    else
+      counts[i] = 0;
+  } 
 
   try {
 
     // set up pulser
     int errors = mtc->SetupPedestals(frequency, DEFAULT_PED_WIDTH, DEFAULT_GT_DELAY,0,
-        (0x1<<crateNum),(0x1<<crateNum) | MSK_TUB | MSK_TUB_B);
+        (0x1<<crateNum), (0x1<<crateNum) | MSK_TUB | MSK_TUB_B);
     if (errors){
       lprintf("Error setting up MTC for pedestals. Exiting\n");
       mtc->UnsetPedCrateMask(MASKALL);
@@ -31,7 +40,15 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
 
     // loop over slots
     for (int i=0;i<16;i++){
-      if ((0x1<<i) & slotMask){
+      if ((0x1<<i) & slotMask){ 
+
+        CrateInit(crateNum,slotMask,0,0,0,0,0,0,0,0,1);
+
+        mtc->UnsetGTMask(0xFFFFFFFF);
+        mtc->LoadMTCADacsByCounts(counts);
+        usleep(500);
+        mtc->SetGTMask(0x1<<(triggerSelect)-1);
+
         // loop over channels
         for (int j=0;j<32;j++){
           if ((0x1<<j) & channelMask){
@@ -51,8 +68,6 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
               }
             }
 
-            // set up charge injection for this channel
-            xl3s[crateNum]->SetupChargeInjection((0x1<<i),temp_pattern,dacValue);
             // wait until something is typed
             lprintf("Slot %d, channel %d. If good, hit enter. Otherwise type in a description of the problem (or just \"fail\") and hit enter.\n",i,j);
 
@@ -69,19 +84,17 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
               return 0;
             }
 
-
           } // end pattern mask
         } // end loop over channels
-
-        // clear chinj for this slot
-        xl3s[crateNum]->SetupChargeInjection((0x1<<i),0x0,dacValue);
+        CrateInit(crateNum,slotMask,0,0,0,0,0,0,0,0,0);
 
         // update the database
         if (updateDB){
           lprintf("updating the database\n");
           lprintf("updating slot %d\n",i);
           JsonNode *newdoc = json_mkobject();
-          json_append_member(newdoc,"type",json_mkstring("see_refl"));
+          json_append_member(newdoc,"type",json_mkstring("scan_refl"));
+          json_append_member(newdoc,"trig_type",json_mknumber(triggerSelect));
 
           int passflag = 1;
           JsonNode *all_channels = json_mkarray();
@@ -98,14 +111,13 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
           }
           json_append_member(newdoc,"channels",all_channels);
           json_append_member(newdoc,"pass",json_mkbool(passflag));
-          if (finalTest)
-            json_append_member(newdoc,"final_test_id",json_mkstring(finalTestIDs[crateNum][i]));	
           PostDebugDoc(crateNum,i,newdoc);
           json_delete(newdoc); // Only have to delete the head node
         }
       } // end if slot mask
     } // end loop over slots
 
+    mtc->UnsetGTMask(0xFFFFFFFF);
     mtc->DisablePulser();
     xl3s[crateNum]->DeselectFECs();
 
@@ -115,7 +127,7 @@ int SeeReflection(int crateNum, uint32_t slotMask, uint32_t channelMask, int dac
       lprintf("No errors.\n");
   }
   catch(const char* s){
-    lprintf("SeeReflection: %s\n",s);
+    lprintf("ScanReflection: %s\n",s);
   }
 
   lprintf("****************************************\n");
