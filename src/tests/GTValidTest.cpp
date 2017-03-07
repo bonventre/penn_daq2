@@ -12,7 +12,7 @@
 #include "MTCModel.h"
 #include "GTValidTest.h"
 
-int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtCutoff, int twiddleOn, int updateDB, int finalTest, int ecal)
+int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtCutoff, int twiddleOn, int setOnly, int updateDB, int finalTest, int ecal)
 {
   lprintf("*** Starting GT Valid Test *************\n");
 
@@ -310,6 +310,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
     // we are done getting our dac values. lets measure and display the final gtvalids
     for (int i=0;i<16;i++){
       if ((0x1<<i) & slotMask){
+        if (!setOnly){
         for (int wt=0;wt<2;wt++){
           lprintf("\nMeasuring GTVALID for crate %d, slot %d, TAC %d\n",
               crateNum,i,wt);
@@ -345,6 +346,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
 
 
         } // end loop over tacs
+        }
 
         // print out
         lprintf("\n--------------------------------------------------------\n");
@@ -358,6 +360,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
         else
           lprintf("ISETA: %hu\n",ISETA_NO_TWIDDLE);
         lprintf("Found ISETM0: %d, ISETM1: %d\n",isetm[0][i],isetm[1][i]);
+        if (!setOnly){
         lprintf("Chan Tacbits GTValid 0/1:\n");
         for (int j=0;j<32;j++){
           if ((0x1<<j) & channelMask){
@@ -379,6 +382,7 @@ int GTValidTest(int crateNum, uint32_t slotMask, uint32_t channelMask, float gtC
             cmax[1],gmax[1]);
         lprintf(">>> Minimum TAC1 GTValid - Chan %02d: %4.1f\n",
             cmin[1],gmin[1]);
+        }
 
         slot_errors = 0;
         if (abs(isetm[1][i] - isetm[0][i]) > 10)
